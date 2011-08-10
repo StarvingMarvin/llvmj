@@ -6,7 +6,7 @@ configure_file (
   "${PROJECT_BINARY_DIR}/llvmjConfig.h"
 )
        
-include_directories("${PROJECT_BINARY_DIR}")
+include_directories("${PROJECT_BINARY_DIR}" /usr/lib/llvm-2.9/include)
 
 link_directories(/usr/lib/llvm)
 
