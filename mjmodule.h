@@ -11,11 +11,19 @@ using namespace llvm;
 class MjModule
 {
 public:
-    MjModule();
+    MjModule(const char* programName);
 private:
     Module *module;
+
     Type *MJChar;
     Type *MJInt;
+    Type *MJArray;
+
+    Function *mainWrap;
+    Function *ord;
+    Function *chr;
+    Function *len;
+
 };
 
 #endif // MJMODULE_H
