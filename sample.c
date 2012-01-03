@@ -22,7 +22,7 @@ int ord(char c) {
 
 
 
-int chr(int i) {
+char chr(int i) {
 
   return (char) i;
 

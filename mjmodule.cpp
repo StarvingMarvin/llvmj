@@ -1,7 +1,7 @@
 #include "mjmodule.h"
 
-MjModule::MjModule()
+MjModule::MjModule(const char *programName)
 {
-    module = new Module("MjModule", getGlobalContext());
+    module = new Module(programName, getGlobalContext());
 
 }
