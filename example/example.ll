@@ -18,28 +18,28 @@ define i32 @len(%MJArray* nocapture byval %arr) {
   %diff = sub i64 %endInt, %beginInt
 
   %elemSizePtr = getelementptr inbounds %MJArray* %arr, i64 0, i32 2
-  %elemSize = load i32* %elemSizePtr
-  %elemSize = sext i32 %elemSize to i64
-  %div = sdiv i64 %diff, %elemSize
-  %div = trunc i64 %div to i32
+  %elemSize32 = load i32* %elemSizePtr
+  %elemSize = sext i32 %elemSize32 to i64
+  %div32 = sdiv i64 %diff, %elemSize
+  %div = trunc i64 %div32 to i32
   ret i32 %div
 }
 
 %List = type { i32, %List* }
 
-@inputNumbersStr = global %MJArray*
-@sortedListStr = global %MJArray*
+@inputNumbersStr = global %MJArray* zeroinitializer, align 8
+@sortedListStr = global %MJArray* zeroinitializer, align 8
 
 @MAX_SIZE = constant i32 100
 
-@list = global %List*
+@list = global %List* zeroinitializer, align 8
 
 define %List* @cons(i32 %val, %List* %list) {
     %1 = call i8* @malloc(i64 16)
     %newHead = bitcast i8* %1 to %List*
     %valPtr = bitcast i8* %1 to i32*
     store i32 %val, i32* %valPtr
-    %tailPtr = getelementptr %List** %newHead, i32 0, i32 1
+    %tailPtr = getelementptr %List* %newHead, i32 0, i32 1
     store %List* %list, %List** %tailPtr
     ret %List* %newHead
 }
@@ -50,10 +50,10 @@ define void @insertAfter(%List* %list, i32 %val) {
     %valPtr = bitcast i8* %1 to i32*
     store i32 %val, i32* %valPtr
 
-    %tailPtr = getelementptr %List** %list, i32 0, i32 1
+    %tailPtr = getelementptr %List* %list, i32 0, i32 1
     %tail = load %List** %tailPtr
 
-    %newTailPtr = getelementptr %List** %newElem, i32 0, i32 1
+    %newTailPtr = getelementptr %List* %newElem, i32 0, i32 1
     store %List* %tail, %List** %newTailPtr
     store %List* %newElem, %List** %tailPtr
 
@@ -131,22 +131,32 @@ define void @insertAfter(%List* %list, i32 %val) {
 ;}
 ;
 ;declare i32 @__isoc99_scanf(i8*, ...)
-;
-;define void @writeList(%struct.LL* %list) nounwind uwtable {
-  ;%1 = icmp eq %struct.LL* %list, null
-  ;br i1 %1, label %6, label %.lr.ph..lr.ph.split_crit_edge
-;
-;.lr.ph..lr.ph.split_crit_edge:                    ; preds = %0
-  ;%2 = getelementptr inbounds %struct.LL* %list, i64 0, i32 0
-  ;br label %3
-;
-;; <label>:3                                       ; preds = %3, %.lr.ph..lr.ph.split_crit_edge
-  ;%4 = load i32* %2, align 4, !tbaa !3
-  ;%5 = tail call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([5 x i8]* @.str1, i64 0, i64 0), i32 %4) nounwind
-  ;br label %3
-;
-;; <label>:6                                       ; preds = %0
-  ;%putchar = tail call i32 @putchar(i32 10) nounwind
-  ;ret void
-;}
 
+define void @writeList(%List* %list) {
+    %listNull = icmp eq %List* %list, null
+    br i1 %listNull, label %loopexit, label %loop
+
+loop:
+    %cur =  phi %List* [%next, %loop], [%list, %0]
+    %valPtr = getelementptr %List* %cur, i64 0, i32 0
+    %val = load i32* %valPtr
+    %printed = tail call i32 (i8*, ...)* @printf(i8* getelementptr inbounds ([5 x i8]* @.str1, i64 0, i64 0), i32 %val) nounwind
+    %nextPtr = getelementptr %List* %cur, i64 0, i32 1
+    %next = load %List** %nextPtr
+    %nextNull = icmp eq %List* %next, null
+    br i1 %nextNull, label %loopexit, label %loop
+
+loopexit:
+    %putchar = tail call i32 @putchar(i32 10) nounwind
+    ret void
+}
+
+declare i32 @printf(i8* nocapture, ...) nounwind
+declare i32 @putchar(i32)
+
+define i32 @main(i32 %argc, i8** nocapture %argv) {
+    %ret = call %List* @cons(i32 5, %List* null);
+    store %List* %ret, %List** @list
+    call void @writeList(%List* %ret);
+    ret i32 0;
+}
