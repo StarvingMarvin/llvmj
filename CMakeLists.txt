@@ -14,7 +14,10 @@ find_library(LLVM_LIB
                 NAMES LLVM-2.9 LLVM LLVM-2.8 libLLVM-2.9 libLLVM libLLVM-2.8
                 PATHS /usr/lib/llvm /usr/lib /usr/lib/llvm-2.9/lib /usr/lib/x86_64-linux-gnu)
 
+add_subdirectory(example)
+
 add_executable(llvmj llvmj.cpp mjmodule.cpp)
 
 target_link_libraries(llvmj ${LLVM_LIB})
+
 
