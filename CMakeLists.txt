@@ -15,6 +15,7 @@ find_library(LLVM_LIB
                 PATHS /usr/lib/llvm /usr/lib /usr/lib/llvm-2.9/lib /usr/lib/x86_64-linux-gnu)
 
 add_subdirectory(example)
+add_subdirectory(thesis)
 
 add_executable(llvmj llvmj.cpp mjmodule.cpp)
 

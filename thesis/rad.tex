@@ -1,0 +1,44 @@
+\documentclass[a4paper,12pt]{report}
+
+\usepackage[serbian]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{tikz}
+\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,petri}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\newcommand{\LL}[1]{$LL(#1)$ {}}
+\newcommand{\LLk}{\LL{k}}
+\newcommand{\LLa}{\LL{\ast}}
+
+\newcommand{\mj}[1]{\textit{#1}}
+
+
+%opening
+\title{MicroJava na LLVM infrastrukturi}
+\author{Luka Stojanović}
+
+
+\begin{document}
+
+
+\input{titlepage.tex}
+
+\input{abstract.tex}
+
+\tableofcontents
+
+\input{intro.tex}
+
+\input{microjava.tex}
+
+\input{antlr.tex}
+
+\input{llvm.tex}
+
+\input{appendix.tex}
+
+\input{bib.tex}
+
+\end{document}
