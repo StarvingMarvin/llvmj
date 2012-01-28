@@ -16,6 +16,7 @@ find_library(LLVM_LIB
 
 add_subdirectory(example)
 add_subdirectory(thesis)
+add_subdirectory(src)
 
 add_executable(llvmj llvmj.cpp mjmodule.cpp)
 
