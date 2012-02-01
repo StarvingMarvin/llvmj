@@ -1,2 +1,2 @@
 
-ADD_LIBRARY(symbols type.cpp symbol.cpp)
+ADD_LIBRARY(symbols type.cpp symbol.cpp scope.cpp)

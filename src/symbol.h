@@ -11,11 +11,15 @@ private:
 
 public:
 
+	Symbol();
+
     Symbol(char* name, Type type);
 
-    char* name() { return _name; }
+    Symbol(const Symbol &s);
 
-    Type type() { return _type; }
+    char* name() const { return _name; }
+
+    Type type() const { return _type; }
 
 };
 
