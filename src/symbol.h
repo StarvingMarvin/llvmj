@@ -21,6 +21,8 @@ public:
 
     Type type() const { return _type; }
 
+    bool valid() const { return _type.valid(); }
+
 };
 
 #endif // SYMBOL_H

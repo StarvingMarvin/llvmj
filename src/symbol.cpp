@@ -7,9 +7,11 @@ Symbol::Symbol(char* name, Type type)
 }
 
 Symbol::Symbol(const Symbol &s) {
-	
+	_name = s._name;
+    _type = s._type;
 }
 
 Symbol::Symbol() {
-	
+	_name = "";
 }
+
