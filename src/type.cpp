@@ -5,7 +5,7 @@ Type::Type() {
     _valid = false;
 }
 
-Type::Type(char *name)
+Type::Type(const char *name)
 {
     _name = name;
     _valid = true;

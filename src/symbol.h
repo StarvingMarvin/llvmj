@@ -6,18 +6,18 @@
 class Symbol
 {
 private:
-    char* _name;
+    const char* _name;
     Type _type;
 
 public:
 
 	Symbol();
 
-    Symbol(char* name, Type type);
+    Symbol(const char* name, Type type);
 
     Symbol(const Symbol &s);
 
-    char* name() const { return _name; }
+    const char* name() const { return _name; }
 
     Type type() const { return _type; }
 

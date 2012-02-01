@@ -6,13 +6,13 @@
 class Type
 {
 private:
-    char *_name;
+    const char *_name;
     bool _valid;
 public:
     Type();
-    Type(char *name);
+    Type(const char *name);
     Type(const Type &t);
-    char *name() const { return _name; }
+    const char *name() const { return _name; }
     bool valid() const { return _valid; }
 };
 
