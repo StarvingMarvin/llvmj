@@ -8,20 +8,20 @@
 class Scope
 {
 private:
-    char *_name;
+    const std::string _name;
     Scope *_parent;
-    llvm::StringMap<Symbol> symbolTable;
+    llvm::StringMap<const Symbol*> symbolTable;
 
 public:
-    Scope(char *name, Scope *parent);
+    Scope(const std::string name, Scope *parent);
 
-    char *name() { return _name; }
+    const std::string name() const { return _name; }
 
-    Scope *parent() { return _parent; }
+    Scope *parent() const { return _parent; }
 
-    void define (const Symbol &s);
+    void define (const Symbol *s);
 
-    Symbol resolve(char *name);
+    const Symbol * resolve(const std::string name);
 
 };
 

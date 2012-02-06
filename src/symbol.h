@@ -6,22 +6,22 @@
 class Symbol
 {
 private:
-    const char* _name;
-    Type _type;
+    const std::string _name;
+    const Type _type;
 
 public:
 
 	Symbol();
 
-    Symbol(const char* name, Type type);
+    Symbol(const std::string name, const Type type);
 
     Symbol(const Symbol &s);
 
-    const char* name() const { return _name; }
+    const std::string name() const { return _name; }
 
-    Type type() const { return _type; }
+    const Type type() const { return _type; }
 
-    bool valid() const { return _type.valid(); }
+    bool defined() const { return ! (_type == UNDEFINED_TYPE); }
 
 };
 

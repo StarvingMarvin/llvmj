@@ -7,14 +7,17 @@
 using namespace std;
 
 class A {
-	private:
-	int x;
+private:
+	const int x;
+    int *y;
 	
-	public:
-	A() { x = 0; }
-	A(int i) { x = i; }
-	A(const A &a) { x = a.x; }
+public:
+	A() : x(-1) { }
+	A(int i) : x(i) { }
+	A(const A &a) : x(a.x) { }
 	int X() const { return x; }
+    void setY(int &_y) { y = &_y; }
+    int & Y() {return }
 	
 };
 
@@ -23,16 +26,17 @@ ostream& operator<<(ostream &os, const A &a) {
 }
 
 int main(int argc, char **argv) {
-	llvm::StringMap<A> map;
-	A a = A(1);
-	map["jedan"] = a;
-	map["jedan"] = A(2);
+	llvm::StringMap<const A*> map;
+	const A a = A(1);
+	const A b = A(2);
+	map["jedan"] = &a;
+	map["jedan"] = &b;
 	
 	A br = 3;
 	
 	cout << "Hello World!" << endl;
 	
-	A jedan = map["jedan"];
+	A jedan = * map["jedan"];
 	
 	cout << jedan << endl;
 	cout << a << endl;

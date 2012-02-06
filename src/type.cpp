@@ -1,18 +1,47 @@
 #include "type.h"
 
-Type::Type() {
-    _name = "MJ.INVALID";
-    _valid = false;
-}
+//
+// Basic types
+//
 
-Type::Type(const char *name)
+Type::Type(const std::string name):
+    _name(name)
 {
-    _name = name;
-    _valid = true;
 }
 
-Type::Type(const Type &t) {
-    _name = t._name;
-    _valid = t._valid;
+Type::Type(const Type &t):
+    _name(t._name)
+{
+}
+
+bool Type::operator==(const Type &t) const {
+    return _name == t._name;
+}
+
+bool Type::compatible(const Type &t) const {
+    return *this == t;
+}
+
+
+
+//
+// Reference types
+//
+
+ReferenceType::ReferenceType(const std::string name): 
+    Type(name)
+{}
+
+bool ReferenceType::compatible(const Type &t) const {
+    return t == NULL_TYPE || *this == t;
+}
+
+//
+// Array types
+//
+ArrayType::ArrayType(const Type &valueType):
+    ReferenceType("[" + valueType.name() + "]"),
+    _valueType(valueType) {
+
 }
 

@@ -1,17 +1,20 @@
 #include "symbol.h"
 
-Symbol::Symbol(const char* name, Type type)
+Symbol::Symbol(const std::string name, const Type type):
+    _name(name),
+    _type(type)
 {
-    this->_name = name;
-    this->_type = type;
 }
 
-Symbol::Symbol(const Symbol &s) {
-	_name = s._name;
-    _type = s._type;
+Symbol::Symbol(const Symbol &s):
+    _name(s.name()),
+    _type(s.type())
+{
 }
 
-Symbol::Symbol() {
-	_name = "";
+Symbol::Symbol() :
+    _type(UNDEFINED_TYPE),
+    _name("")
+{
 }
 
