@@ -23,3 +23,4 @@ ADD_CUSTOM_COMMAND(COMMAND pdflatex
 
 ADD_CUSTOM_TARGET(Thesis ALL
                     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/rad.pdf)
+

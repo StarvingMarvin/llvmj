@@ -14,6 +14,7 @@ find_library(LLVM_LIB
                 NAMES LLVM-2.9 LLVM LLVM-2.8 libLLVM-2.9 libLLVM libLLVM-2.8
                 PATHS /usr/lib/llvm /usr/lib /usr/lib/llvm-2.9/lib /usr/lib/x86_64-linux-gnu)
 
+add_subdirectory(parser)
 add_subdirectory(example)
 add_subdirectory(thesis)
 
