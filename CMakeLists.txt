@@ -17,9 +17,10 @@ find_library(LLVM_LIB
 add_subdirectory(parser)
 add_subdirectory(example)
 add_subdirectory(thesis)
+add_subdirectory(src)
+add_subdirectory(test)
 
 add_executable(llvmj llvmj.cpp mjmodule.cpp)
 
 target_link_libraries(llvmj ${LLVM_LIB})
-
 
