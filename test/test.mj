@@ -1,0 +1,165 @@
+class Example
+    final int MAX_SIZE = 100;
+    char inputNumbersStr[];
+    char sortedListStr[];
+
+    class List {
+        int val;
+        List tail;
+    }
+
+    List list;
+
+{
+    void write(char string[])
+        int i;
+        int l;
+    {
+        i = 0;
+        l = len(string);
+        while (i < l) {
+            print(string[i]);
+            i++;
+        }
+
+    }
+
+    void writeln(char string[]) {
+        write(string);
+        print(eol);
+    }
+
+    List cons(int newElem, List list)
+        List newList;
+    {
+        newList = new List;
+        newList.val = newElem;
+        newList.tail = list;
+        return newList;
+    }
+
+    void insertAfter(List list, int elem)
+        List newElem;
+    {
+        newElem = new List;
+        newElem.val = elem;
+        newElem.tail = list.tail;
+        list.tail = newElem;
+    }
+
+    int size(List list)
+        int s;
+        List next;
+    {
+        s = 0;
+        next = list;
+        while (next != null) {
+            s++;
+            next = next.tail;
+        }
+        return s;
+    }
+
+    void init() {
+        inputNumbersStr = new char[32];
+        inputNumbersStr[0] = 'I';
+        inputNumbersStr[1] = 'n';
+        inputNumbersStr[2] = 'p';
+        inputNumbersStr[3] = 'u';
+        inputNumbersStr[4] = 't';
+        inputNumbersStr[5] = ' ';
+        inputNumbersStr[6] = 'n';
+        inputNumbersStr[7] = 'u';
+        inputNumbersStr[8] = 'm';
+        inputNumbersStr[9] = 'b';
+        inputNumbersStr[10] = 'e';
+        inputNumbersStr[11] = 'r';
+        inputNumbersStr[12] = 's';
+        inputNumbersStr[13] = ' ';
+        inputNumbersStr[14] = '(';
+        inputNumbersStr[15] = 'N';
+        inputNumbersStr[16] = 'e';
+        inputNumbersStr[17] = 'g';
+        inputNumbersStr[18] = 'a';
+        inputNumbersStr[19] = 't';
+        inputNumbersStr[20] = 'i';
+        inputNumbersStr[21] = 'v';
+        inputNumbersStr[22] = 'e';
+        inputNumbersStr[23] = ' ';
+        inputNumbersStr[24] = 'h';
+        inputNumbersStr[25] = 'a';
+        inputNumbersStr[26] = 'l';
+        inputNumbersStr[27] = 't';
+        inputNumbersStr[28] = 's';
+        inputNumbersStr[29] = ')';
+        inputNumbersStr[30] = ':';
+        inputNumbersStr[31] = ' ';
+
+        sortedListStr = new char[13];
+        sortedListStr[0] = 'S';
+        sortedListStr[1] = 'o';
+        sortedListStr[2] = 'r';
+        sortedListStr[3] = 't';
+        sortedListStr[4] = 'e';
+        sortedListStr[5] = 'd';
+        sortedListStr[6] = ' ';
+        sortedListStr[7] = 'l';
+        sortedListStr[8] = 'i';
+        sortedListStr[9] = 's';
+        sortedListStr[10] = 't';
+        sortedListStr[11] = ':';
+        sortedListStr[12] = ' ';
+    }
+
+    List readList()
+        List cur;
+        List head;
+        int i;
+        int v;
+    {
+        read(v);
+
+        if (v < 0) {
+            return null;
+        }
+
+        head = cons(v, null);
+        i = 1;
+
+        while(i < MAX_SIZE && v > 0) {
+            read(v);
+            if (v < 0) {
+                break;
+            }
+            if (v < head.val) {
+                head = cons(v, head);
+            }
+            cur = head;
+            while (v > cur.tail.val) {
+                cur = cur.tail;
+            }
+            insertAfter(cur, v);
+        }
+
+        return head;
+    }
+
+    void writeList(List list)
+        List cur;
+    {
+        cur = list;
+        while(cur != null) {
+            print(cur.val);
+            print(',', 2);
+        }
+        print(eol);
+    }
+
+    void main() {
+        init();
+        write(inputNumberStr);
+        list = readList();
+        write(sortedListStr);
+        writeList(list);
+    }
+}
