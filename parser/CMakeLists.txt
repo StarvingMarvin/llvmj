@@ -15,15 +15,7 @@ ADD_CUSTOM_COMMAND(COMMAND ${ANTLR}
                     DEPENDS ${SRC}/MicroJavaTree.g ${DST}/MicroJava.tokens
                     OUTPUT ${DST}/MicroJavaTree.h ${DST}/MicroJavaTree.c)
 
-#ADD_CUSTOM_COMMAND(COMMAND chmod
-#                    ARGS +x example.bc
-#                    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/example.bc
-#                    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/example.bcx)
-
-#ADD_CUSTOM_TARGET(Grammar ALL echo
-#   DEPENDS   ${CMAKE_CURRENT_BINARY_DIR}/example.bcx)
-
 INCLUDE_DIRECTORIES(${DST})
 
-ADD_LIBRARY(parser ${DST}/MicroJavaLexer.c ${DST}/MicroJavaParser.c) #${DST}/MicroJavaTree.c
+ADD_LIBRARY(Parser ${DST}/MicroJavaLexer.c ${DST}/MicroJavaParser.c) #${DST}/MicroJavaTree.c
 

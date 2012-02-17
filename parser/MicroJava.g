@@ -55,23 +55,24 @@ var_decl:	type IDENT ('[' ']' -> ^(DEFARR type IDENT)
 			 (',' IDENT ('[' ']' -> ^(DEFARR type IDENT)
 				| -> ^(DEFVAR type IDENT)))* ';';
 
+
 class_decl
 	:	'class' IDENT '{' var_decl* '}' -> ^(DEFCLASS IDENT var_decl*);
 
 method_decl
-	:	('void'|type) IDENT '(' formal_params? ')' var_decl+ '{' (statement)* '}';
+	:	('void'|type) IDENT '(' formal_params? ')' var_decl* '{' (statement)* '}';
 
 type 	:	IDENT ;
 
 formal_params
-	:	var_decl (',' var_decl)* -> ^(FORMAL_PARAMS var_decl+);
+	:	type IDENT('[' ']')? (',' type IDENT('[' ']')?)*;
 
 statement
 	:	while_stat
 	|	'break' ';'!
 	|	'return' expr ';'!
 	|	'read' '('! designator ')'! ';'!
-	|	'print' '(' expr (',' width=NUMBER -> ^(PRINT expr $width) | -> ^(PRINT expr)) ')' ';' 
+	|	'print' '('! expr (','! NUMBER)? ')'! ';'! 
 	|	des_stat
 	|	'{' statement* '}' -> ^(BLOCK statement*)
 	| 	if_stat;
@@ -85,7 +86,7 @@ while_stat	:	'while' '(' condition ')' statement -> ^(WHILE condition statement)
 des_stat
 	:	designator (
 			'=' expr ';' /* -> ^('=' designator expr) */
-			| '(' actual_params? ')' ';' -> ^(CALL designator actual_params)
+			| '(' actual_params? ')' ';' -> ^(CALL designator actual_params?)
 			| '++' ';' -> ^(INC designator)
 			| '--' ';' -> ^(DEC designator));
 	
@@ -101,18 +102,16 @@ condition_term
 condition_fact
 	:	expr RELOP expr /*-> ^(RELOP expr expr)*/;
 	
-expr	:	term (ADDOP term)*
-		| '-' expr -> ^(EXPR NEG expr);
+expr	:	term (ADDOP term)* 
+		| '-' expr;
 
 term	:	factor (MULOP factor)*;
 
-factor	:	designator ('(' actual_params? ')' -> ^(CALL designator actual_params?))?
+factor	:	designator ('(' actual_params? ')')?
 	|	NUMBER
 	|	CHAR
-	|	'new' type (
-			'['expr']' /*->  ^(ARR_NEW type expr)*/
-			| -> ^(CLASS_NEW type))
-	|	'(' expr ')' -> expr;
+	|	'new' type ('['expr']')?
+	|	'('! expr ')'!;
 
 designator
 	:	IDENT ('.' IDENT | '[' expr ']')*;
@@ -130,6 +129,6 @@ NUMBER	:	('0'..'9')+;
 CHAR	:	'\'' (' '..'~') '\'';
 
 COMMENT
-    : '//' ~('\n'|'\r')* '\r'? '\n' {skip();};
+    : '//' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;};
     
-WS	:	(' '|'\t'|'\r'|'n')+ {skip();};
+WS	:	(' '|'\t'|'\r'|'\n')+ {$channel=HIDDEN;};
