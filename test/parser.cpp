@@ -1,12 +1,128 @@
 
 #include "MicroJavaLexer.h"
 #include "MicroJavaParser.h"
+#include <cassert>
+#include <cstring>
 
-    int ANTLR3_CDECL
-main	(int argc, char *argv[])
-{
+
+class TestParser {
+public:
+    TestParser(const char* inputStr);
+    virtual void printAST() = 0;
+    virtual bool valid();
+    virtual ~TestParser();
+    pMicroJavaParser parser() { return psr; }
+private:
+    pANTLR3_INPUT_STREAM	    input;
+    pMicroJavaLexer			    lxr;
+    pANTLR3_COMMON_TOKEN_STREAM	    tstream;
+    pMicroJavaParser			    psr;
+};
+
+
+TestParser::TestParser(const char* inputStr) {
+    input = antlr3NewAsciiStringInPlaceStream 
+                ((pANTLR3_UINT8)inputStr, (ANTLR3_UINT64) strlen(inputStr), NULL);
+
+    lxr	    = MicroJavaLexerNew(input);
+    tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr));
+    psr	    = MicroJavaParserNew(tstream);
+    printf ("== Testing ==\n%s\n ", inputStr);
+}
+
+bool TestParser::valid() {
+    int errorCount = psr->pParser->rec->state->errorCount;
+    printf("errorCount: %d\n", errorCount);
+    return errorCount == 0;
+}
+
+TestParser::~TestParser() {
+    psr	    ->free  (psr);		psr		= NULL;
+    tstream ->free  (tstream);	tstream	= NULL;
+    lxr	    ->free  (lxr);	    lxr		= NULL;
+    input   ->close (input);	input	= NULL;
+}
+
+class DesignatorParser : public TestParser {
+public:
+    DesignatorParser(const char* inputStr);
+    virtual void printAST();
+private:
+    MicroJavaParser_designator_return designatorAST;
+};
+
+DesignatorParser::DesignatorParser(const char* inputStr) 
+    : TestParser(inputStr) {
+    designatorAST = parser()->designator(parser());
+}
+
+void DesignatorParser::printAST() {
+    assert (valid()); 
+    printf("Nodes: %s\n", designatorAST.tree->
+            toStringTree(designatorAST.tree)->chars);
+}
+
+class ExpressionParser : public TestParser {
+public:
+    ExpressionParser(const char* inputStr);
+    virtual void printAST();
+private:
+    MicroJavaParser_expr_return expressionAST;
+};
+
+ExpressionParser::ExpressionParser(const char* inputStr)
+    : TestParser(inputStr) {
+    
+    expressionAST = parser()->expr(parser());
+}
+
+void ExpressionParser::printAST() {
+    assert(valid());
+    printf("Nodes: %s\n", expressionAST.tree->
+            toStringTree(expressionAST.tree)->chars);
+}
+
+void testDesignator() {
+    DesignatorParser("a.b").printAST();
+    DesignatorParser("a[b]").printAST();
+    DesignatorParser("a.b[c]").printAST();
+    DesignatorParser("a[b].c").printAST();
+    DesignatorParser("a[b].c.d[1].e.f[2]").printAST();
+
+    assert(!DesignatorParser("a.").valid());
+    assert(!DesignatorParser("a..b").valid());
+    assert(!DesignatorParser("a[b").valid());
+    assert(!DesignatorParser("a[]").valid());
+    assert(!DesignatorParser("[a]").valid());
+
+}
+
+void testExpression() {
+    ExpressionParser(" 1 + 2").printAST();
+    ExpressionParser(" 1 - 2").printAST();
+    ExpressionParser(" 1 * 2").printAST();
+    ExpressionParser(" 1 + 2 + 3").printAST();
+    ExpressionParser(" 1 - 2 - 3").printAST();
+    ExpressionParser(" 1 + 2 - a").printAST();
+    ExpressionParser(" a + 2 * b").printAST();
+    ExpressionParser(" a * 2 * b").printAST();
+    ExpressionParser("(1 + a) / 5").printAST();
+    ExpressionParser("a[i] + 2").printAST();
+    ExpressionParser("1 - x.y").printAST();
+    ExpressionParser("1 * 2 / 3 + 4 * (a + b.x) / c[3]").printAST();
+}
+
+void testCondition() {
+
+}
+
+void testStatement() {
+
+}
+
+void testProgram (const char* filename){
     // Name of the input file. Note that we always use the abstract type pANTLR3_UINT8
-    pANTLR3_UINT8	    fName;
+    pANTLR3_UINT8	    fName = (pANTLR3_UINT8)filename;
 
     // The ANTLR3 character input stream, which abstracts the input source such that
     // it is easy to provide input from different sources such as files, or 
@@ -65,14 +181,6 @@ main	(int argc, char *argv[])
     // for this example, the input will always default to ./input if there is no explicit
     // argument.
     //
-    if (argc < 2 || argv[1] == NULL)
-    {
-        fName	=(pANTLR3_UINT8)"./input"; // Note in VS2005 debug, working directory must be configured
-    }
-    else
-    {
-        fName	= (pANTLR3_UINT8)argv[1];
-    }
 
     input	= antlr3AsciiFileStreamNew(fName);
 
@@ -135,7 +243,7 @@ main	(int argc, char *argv[])
     if (psr->pParser->rec->state->errorCount > 0)
     {
         fprintf(stderr, "The parser returned %d errors, tree walking aborted.\n", psr->pParser->rec->state->errorCount);
-        return 1;
+        exit(1);
     }
     else
     {
@@ -160,7 +268,17 @@ main	(int argc, char *argv[])
     lxr	    ->free  (lxr);	    lxr		= NULL;
     input   ->close (input);	input	= NULL;
 
-    return 0;
 }
 
+int main (int argc, char *argv[]) {
+
+    testDesignator();
+    testExpression();
+
+    const char *fName = (argc < 2 || argv[1] == NULL)?
+                        "./input" : argv[1];
+
+    testProgram(fName);
+    return 0;
+}
 

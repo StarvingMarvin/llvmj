@@ -1,6 +1,7 @@
 grammar MicroJava;
 
 options {
+    k = 2;
     output=AST;
     language=C;
 }
@@ -60,21 +61,27 @@ class_decl
 	:	'class' IDENT '{' var_decl* '}' -> ^(DEFCLASS IDENT var_decl*);
 
 method_decl
-	:	('void'|type) IDENT '(' formal_params? ')' var_decl* '{' (statement)* '}';
+	:	t=('void'|type) IDENT '(' formal_params? ')' var_decl* '{' statement* '}'
+    -> ^(DEFN $t IDENT formal_params? var_decl* ^(statement)*);
 
 type 	:	IDENT ;
 
+formal_param
+    :   type IDENT 
+            ('[' ']' -> ^(ARR type IDENT) 
+            | -> ^(type IDENT));
+
 formal_params
-	:	type IDENT('[' ']')? (',' type IDENT('[' ']')?)*;
+	:	formal_param (',' formal_param)* -> formal_param+;
 
 statement
 	:	while_stat
 	|	'break' ';'!
-	|	'return' expr ';'!
-	|	'read' '('! designator ')'! ';'!
-	|	'print' '('! expr (','! NUMBER)? ')'! ';'! 
+	|	'return'^ expr ';'!
+	|	'read'^ '('! designator ')'! ';'!
+	|	'print'^ '('! expr (','! NUMBER)? ')'! ';'! 
 	|	des_stat
-	|	'{' statement* '}' -> ^(BLOCK statement*)
+	|	'{' statement* '}' -> ^(statement)*
 	| 	if_stat;
 	
 if_stat	:	'if' '(' condition ')' ifStatement=statement 
@@ -85,40 +92,45 @@ while_stat	:	'while' '(' condition ')' statement -> ^(WHILE condition statement)
 
 des_stat
 	:	designator (
-			'=' expr ';' /* -> ^('=' designator expr) */
+			'=' expr ';'  -> ^('=' designator expr)
 			| '(' actual_params? ')' ';' -> ^(CALL designator actual_params?)
-			| '++' ';' -> ^(INC designator)
-			| '--' ';' -> ^(DEC designator));
+			| '++' ';' -> ^('++' designator)
+			| '--' ';' -> ^('--' designator));
 	
 actual_params
 	:	expr (',' expr)*;
 	
 condition
-	:	condition_term ('||' condition_term)* /*-> ^('||' condition_term*)*/;
+	:	condition_term ('||' condition_term)* -> ^('||' condition_term*);
 
 condition_term
-	:	condition_fact ('&&' condition_fact)* /*-> ^('&&' condition_fact*)*/;
+	:	condition_fact ('&&' condition_fact)* -> ^('&&' condition_fact*);
 
 condition_fact
-	:	expr RELOP expr /*-> ^(RELOP expr expr)*/;
+	:	expr RELOP^ expr;
 	
-expr	:	term (ADDOP term)* 
-		| '-' expr;
+expr	:	term (addop^ term)*
+		| MINUS^ expr;
 
-term	:	factor (MULOP factor)*;
+term	:	factor (MULOP^ factor)*;
 
 factor	:	designator ('(' actual_params? ')')?
 	|	NUMBER
 	|	CHAR
-	|	'new' type ('['expr']')?
+	|	'new' type ('['expr']'-> ^('new' ARR type) | -> ^('new' type))
 	|	'('! expr ')'!;
 
 designator
 	:	IDENT ('.' IDENT | '[' expr ']')*;
 	
-RELOP	:	'=='|'!='|'>'|'>='|'<'|'<=';
 
-ADDOP	:	'+'|'-';
+addop   :   PLUS | MINUS;
+
+PLUS    :   '+';
+
+MINUS    :   '-';
+
+RELOP	:	'=='|'!='|'>'|'>='|'<'|'<=';
 
 MULOP	:	'*'|'/'|'%';
 
