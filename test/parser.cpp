@@ -27,7 +27,7 @@ TestParser::TestParser(const char* inputStr) {
     lxr	    = MicroJavaLexerNew(input);
     tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr));
     psr	    = MicroJavaParserNew(tstream);
-    printf ("== Testing ==\n%s\n ", inputStr);
+    printf ("== Testing ==\n%s\n", inputStr);
 }
 
 bool TestParser::valid() {
@@ -62,6 +62,21 @@ void DesignatorParser::printAST() {
             toStringTree(designatorAST.tree)->chars);
 }
 
+void testDesignator() {
+    DesignatorParser("a.b").printAST();
+    DesignatorParser("a[b]").printAST();
+    DesignatorParser("a.b[c]").printAST();
+    DesignatorParser("a[b].c").printAST();
+    DesignatorParser("a[b].c.d[1].e.f[2]").printAST();
+
+    assert(!DesignatorParser("a.").valid());
+    assert(!DesignatorParser("a..b").valid());
+    assert(!DesignatorParser("a[b").valid());
+    assert(!DesignatorParser("a[]").valid());
+    assert(!DesignatorParser("[a]").valid());
+
+}
+
 class ExpressionParser : public TestParser {
 public:
     ExpressionParser(const char* inputStr);
@@ -82,41 +97,67 @@ void ExpressionParser::printAST() {
             toStringTree(expressionAST.tree)->chars);
 }
 
-void testDesignator() {
-    DesignatorParser("a.b").printAST();
-    DesignatorParser("a[b]").printAST();
-    DesignatorParser("a.b[c]").printAST();
-    DesignatorParser("a[b].c").printAST();
-    DesignatorParser("a[b].c.d[1].e.f[2]").printAST();
-
-    assert(!DesignatorParser("a.").valid());
-    assert(!DesignatorParser("a..b").valid());
-    assert(!DesignatorParser("a[b").valid());
-    assert(!DesignatorParser("a[]").valid());
-    assert(!DesignatorParser("[a]").valid());
-
-}
-
 void testExpression() {
     ExpressionParser(" 1 + 2").printAST();
     ExpressionParser(" 1 - 2").printAST();
     ExpressionParser(" 1 * 2").printAST();
     ExpressionParser(" 1 + 2 + 3").printAST();
     ExpressionParser(" 1 - 2 - 3").printAST();
-    ExpressionParser(" 1 + 2 - a").printAST();
-    ExpressionParser(" a + 2 * b").printAST();
-    ExpressionParser(" a * 2 * b").printAST();
+    ExpressionParser(" a + 2 - 1").printAST();
+    //ExpressionParser(" a + 2 * b").printAST();
+    //ExpressionParser(" a * 2 * b").printAST();
     ExpressionParser("(1 + a) / 5").printAST();
     ExpressionParser("a[i] + 2").printAST();
-    ExpressionParser("1 - x.y").printAST();
-    ExpressionParser("1 * 2 / 3 + 4 * (a + b.x) / c[3]").printAST();
+    //ExpressionParser("1 - x.y").printAST();
+    ExpressionParser("1 * 2 / 3 + f(4,2) * (a + b.x) / c[3] - 5").printAST();
 }
 
+class ConditionParser : public TestParser {
+public:
+    ConditionParser(const char* inputStr);
+    virtual void printAST();
+private:
+    MicroJavaParser_condition_return conditionAST;
+};
+
+ConditionParser::ConditionParser(const char* inputStr) 
+    : TestParser(inputStr) {
+    conditionAST = parser()->condition(parser());
+}
+
+void ConditionParser::printAST() {
+    //assert (valid()); 
+    printf("Nodes: %s\n", conditionAST.tree->
+            toStringTree(conditionAST.tree)->chars);
+}
 void testCondition() {
-
+    ConditionParser("a > 0").printAST();
+    ConditionParser("x == y + 1").printAST();
 }
+
+class StatementParser : public TestParser {
+public:
+    StatementParser(const char* inputStr) 
+        : TestParser(inputStr) 
+    {
+        statementAST = parser()->statement(parser());
+    }
+    virtual void printAST(){
+        assert (valid()); 
+        printf("Nodes: %s\n", statementAST.tree->
+                toStringTree(statementAST.tree)->chars);
+    }
+private:
+    MicroJavaParser_statement_return statementAST;
+};
+
 
 void testStatement() {
+    StatementParser("x = x + 1;").printAST();
+    StatementParser("x = a - b;").printAST();
+    StatementParser("while (a > 0) {}").printAST();
+    StatementParser("if (x == y) {a = 0;} else {a = b;}").printAST();
+    StatementParser("print(x, 3);").printAST();
 
 }
 
@@ -274,6 +315,8 @@ int main (int argc, char *argv[]) {
 
     testDesignator();
     testExpression();
+    testCondition();
+    testStatement();
 
     const char *fName = (argc < 2 || argv[1] == NULL)?
                         "./input" : argv[1];

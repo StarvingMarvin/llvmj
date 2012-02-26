@@ -77,7 +77,7 @@ formal_params
 statement
 	:	while_stat
 	|	'break' ';'!
-	|	'return'^ expr ';'!
+	|	'return'^ expr? ';'!
 	|	'read'^ '('! designator ')'! ';'!
 	|	'print'^ '('! expr (','! NUMBER)? ')'! ';'! 
 	|	des_stat
@@ -98,13 +98,13 @@ des_stat
 			| '--' ';' -> ^('--' designator));
 	
 actual_params
-	:	expr (',' expr)*;
+	:	expr (','! expr)*;
 	
 condition
-	:	condition_term ('||' condition_term)* -> ^('||' condition_term*);
+	:	condition_term ('||'^ condition_term)*;
 
 condition_term
-	:	condition_fact ('&&' condition_fact)* -> ^('&&' condition_fact*);
+	:	condition_fact ('&&'^ condition_fact)*;
 
 condition_fact
 	:	expr RELOP^ expr;
@@ -114,14 +114,15 @@ expr	:	term (addop^ term)*
 
 term	:	factor (MULOP^ factor)*;
 
-factor	:	designator ('(' actual_params? ')')?
+factor	:	designator ('(' actual_params? ')' -> ^(CALL designator actual_params?) 
+                        | -> designator)
 	|	NUMBER
 	|	CHAR
 	|	'new' type ('['expr']'-> ^('new' ARR type) | -> ^('new' type))
 	|	'('! expr ')'!;
 
 designator
-	:	IDENT ('.' IDENT | '[' expr ']')*;
+	:	IDENT ('.'^ IDENT | '['^ expr ']'!)*;
 	
 
 addop   :   PLUS | MINUS;
