@@ -1,38 +1,51 @@
 grammar MicroJava;
 
 options {
-    k = 2;
     output=AST;
     language=C;
 }
 
 tokens {
-	PROGRAM;
-	DEFN;
-	DEFCLASS;
-	DEFARR;
-	DEFVAR;
-	DEFCONST;
-	
-	VAR;
-	ARR;
-	ARR_NEW;
-	CLASS_NEW;
-	
-	FORMAL_PARAMS;
-	CONDITION;
-	IF;
-	WHILE;
-	BREAK;
-	RETURN;
-	EXPR;
-	BLOCK;
-	READ;
-	PRINT;
-	CALL;
-	INC;
-	DEC;
-	NEG;
+    PROGRAM;
+    DEF;
+    FN;
+    CLASS;
+    VAR;
+    CONST;
+    ARR;
+
+    CALL;
+
+    CLASS   = 'class';
+    NEW     = 'new';
+    FINAL   = 'final';
+    VOID    = 'void';
+    IF      = 'if';
+    ELSE    = 'else';
+    WHILE   = 'while';
+    BREAK   = 'break';
+    PRINT   = 'print';
+    READ    = 'read';
+    RETURN  = 'return';
+
+    PLUS    = '+';
+    MINUS   = '-';
+    INC     = '++';
+    DEC     = '--';
+    SET     = '=';
+    OR      = '||';
+    AND     = '&&';
+
+    MUL     = '*';
+    DIV     = '/';
+    MOD     = '%';
+
+    EQL      = '==';
+    NEQ      = '!=';
+    GRT      = '>';
+    GRE      = '>=';
+    LST      = '<';
+    LSE      = '<=';
 }
 
 
@@ -42,106 +55,106 @@ tokens {
 @lexer::header{
 }
 
-program :	'class' IDENT (const_decl|var_decl|class_decl)* '{' method_decl* '}'
-			-> ^(PROGRAM const_decl* class_decl* var_decl* method_decl*);
+program : CLASS IDENT (const_decl|var_decl|class_decl)* '{' method_decl* '}'
+            -> ^(PROGRAM IDENT const_decl* class_decl* var_decl* method_decl*);
 
 const_decl
-	:	'final' type IDENT '=' literal ';' -> ^(DEFCONST type IDENT literal);
-	
-literal :	NUMBER | CHAR ;
-	
+    :   FINAL type IDENT '=' literal ';' -> ^(DEF ^(CONST type IDENT) literal);
 
-var_decl:	type IDENT ('[' ']' -> ^(DEFARR type IDENT)
-				| -> ^(DEFVAR type IDENT))
-			 (',' IDENT ('[' ']' -> ^(DEFARR type IDENT)
-				| -> ^(DEFVAR type IDENT)))* ';';
+literal : NUMBER | CHAR ;
+
+var_decl: type IDENT ('[' ']' -> ^(DEF ^(ARR type IDENT))
+                | -> ^(DEF ^(VAR type IDENT)))
+            (',' IDENT ('[' ']' -> ^(DEF ^(ARR type IDENT))
+                | -> ^(DEF ^(VAR type IDENT))))* ';';
 
 
 class_decl
-	:	'class' IDENT '{' var_decl* '}' -> ^(DEFCLASS IDENT var_decl*);
+    :   CLASS IDENT '{' var_decl* '}' -> ^(DEF ^(CLASS IDENT) var_decl*);
+
+method_type
+    :   VOID | type;
 
 method_decl
-	:	t=('void'|type) IDENT '(' formal_params? ')' var_decl* '{' statement* '}'
-    -> ^(DEFN $t IDENT formal_params? var_decl* ^(statement)*);
+    :   method_type IDENT '(' formal_params? ')' var_decl* '{' statement* '}'
+            -> ^(DEF ^(FN method_type IDENT formal_params?) var_decl* statement*);
 
-type 	:	IDENT ;
+type    : IDENT ;
 
 formal_param
     :   type IDENT 
-            ('[' ']' -> ^(ARR type IDENT) 
-            | -> ^(type IDENT));
+            ('[' ']' -> ^(DEF ^(ARR type IDENT)) 
+            | -> ^(DEF ^(VAR type IDENT)));
 
 formal_params
-	:	formal_param (',' formal_param)* -> formal_param+;
+    :   formal_param (',' formal_param)* -> formal_param+;
 
 statement
-	:	while_stat
-	|	'break' ';'!
-	|	'return'^ expr? ';'!
-	|	'read'^ '('! designator ')'! ';'!
-	|	'print'^ '('! expr (','! NUMBER)? ')'! ';'! 
-	|	des_stat
-	|	'{' statement* '}' -> ^(statement)*
-	| 	if_stat;
-	
-if_stat	:	'if' '(' condition ')' ifStatement=statement 
-			('else' elseStatement=statement -> ^(IF condition $ifStatement $elseStatement)
-			| -> ^(IF condition $ifStatement));
-			
-while_stat	:	'while' '(' condition ')' statement -> ^(WHILE condition statement);
+    :   while_stat
+        | BREAK ';'!
+        | RETURN^ expr? ';'!
+        | READ^ '('! designator ')'! ';'!
+        | PRINT^ '('! expr (','! NUMBER)? ')'! ';'! 
+        | des_stat
+        | '{' statement* '}' -> ^(statement)*
+        | if_stat;
+
+if_stat : IF '(' condition ')' ifStatement=statement 
+            (ELSE elseStatement=statement -> ^(IF condition $ifStatement $elseStatement)
+            | -> ^(IF condition $ifStatement));
+
+while_stat
+    :   WHILE^ '('! condition ')'! statement;
 
 des_stat
-	:	designator (
-			'=' expr ';'  -> ^('=' designator expr)
-			| '(' actual_params? ')' ';' -> ^(CALL designator actual_params?)
-			| '++' ';' -> ^('++' designator)
-			| '--' ';' -> ^('--' designator));
-	
+    :   designator (
+            SET expr ';'  -> ^(SET designator expr)
+            | '(' actual_params? ')' ';' -> ^(CALL designator actual_params?)
+            | INC ';' -> ^(INC designator)
+            | DEC ';' -> ^(DEC designator));
+
 actual_params
-	:	expr (','! expr)*;
-	
+    :   expr (','! expr)*;
+
 condition
-	:	condition_term ('||'^ condition_term)*;
+    :   condition_term (OR^ condition_term)*;
 
 condition_term
-	:	condition_fact ('&&'^ condition_fact)*;
+    :   condition_fact (AND^ condition_fact)*;
 
 condition_fact
-	:	expr RELOP^ expr;
-	
-expr	:	term (addop^ term)*
-		| MINUS^ expr;
+    :   expr relop^ expr;
 
-term	:	factor (MULOP^ factor)*;
+expr    :   term (addop^ term)*
+        | MINUS^ expr;
 
-factor	:	designator ('(' actual_params? ')' -> ^(CALL designator actual_params?) 
+term    : factor (mulop^ factor)*;
+
+factor  : designator ('(' actual_params? ')' -> ^(CALL designator actual_params?) 
                         | -> designator)
-	|	NUMBER
-	|	CHAR
-	|	'new' type ('['expr']'-> ^('new' ARR type) | -> ^('new' type))
-	|	'('! expr ')'!;
+        | NUMBER
+        | CHAR
+        | NEW type ('['expr']'-> ^(NEW ^(ARR type expr)) | -> ^(NEW ^(VAR type)))
+        |   '('! expr ')'!;
 
 designator
-	:	IDENT ('.'^ IDENT | '['^ expr ']'!)*;
-	
+    :   IDENT ('.'^ IDENT | '['^ expr ']'!)*;
+
 
 addop   :   PLUS | MINUS;
 
-PLUS    :   '+';
+relop   :   EQL | NEQ | LST | LSE | GRT | GRE;
 
-MINUS    :   '-';
+mulop   :   MUL | DIV | MOD;
 
-RELOP	:	'=='|'!='|'>'|'>='|'<'|'<=';
+IDENT   :   ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;
 
-MULOP	:	'*'|'/'|'%';
+NUMBER  :   ('0'..'9')+;
 
-IDENT 	:	('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;
-
-NUMBER	:	('0'..'9')+;
-
-CHAR	:	'\'' (' '..'~') '\'';
+CHAR    :   '\'' (' '..'~') '\'';
 
 COMMENT
     : '//' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;};
     
 WS	:	(' '|'\t'|'\r'|'\n')+ {$channel=HIDDEN;};
+
