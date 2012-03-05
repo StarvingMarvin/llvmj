@@ -19,9 +19,10 @@ find_library(ANTLR_LIB
     PATHS /usr/lib /usr/lib/antlr3 /usr/lib/antlr /usr/lib/x86_64-linux-gnu)
 
 add_subdirectory(parser)
+add_subdirectory(src)
+add_subdirectory(utils)
 add_subdirectory(example)
 add_subdirectory(thesis)
-add_subdirectory(src)
 add_subdirectory(test)
 
 add_executable(llvmj llvmj.cpp mjmodule.cpp)
