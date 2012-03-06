@@ -11,11 +11,9 @@ private:
 
 public:
 
-	Symbol();
+    Symbol();
 
     Symbol(const std::string name, const Type type);
-
-    Symbol(const Symbol &s);
 
     const std::string name() const { return _name; }
 
@@ -23,6 +21,15 @@ public:
 
     bool defined() const { return ! (_type == UNDEFINED_TYPE); }
 
+};
+
+class VariableSymbol : public Symbol
+{
+public:
+    VariableSymbol(const std::string name, const Type type, const bool final);
+    const bool final() const {return _final;}
+private:
+    const bool _final;
 };
 
 #endif // SYMBOL_H

@@ -9,11 +9,6 @@ Type::Type(const std::string name):
 {
 }
 
-Type::Type(const Type &t):
-    _name(t._name)
-{
-}
-
 bool Type::operator==(const Type &t) const {
     return _name == t._name;
 }

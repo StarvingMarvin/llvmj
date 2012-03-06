@@ -3,6 +3,7 @@
 
 #include "symbol.h"
 #include "llvm/ADT/StringMap.h"
+#include <vector>
 
 
 class Scope
@@ -11,6 +12,8 @@ private:
     const std::string _name;
     Scope *_parent;
     llvm::StringMap<const Symbol*> symbolTable;
+    Scope(Scope & s){}
+    void operator=(Scope& s){}
 
 public:
     Scope(const std::string name, Scope *parent);
@@ -23,6 +26,19 @@ public:
 
     const Symbol * resolve(const std::string name);
 
+};
+
+class Method : public Symbol, public Scope {
+public:
+    Method(const std::string name, const Type type, Scope *parent);
+    bool matchArguments(std::vector<Type> args);
+private:
+    std::vector<Symbol> formalArguments;
+};
+
+class Class : public Type, public Symbol, public Scope {
+public:
+    Class(std::string name, Scope *parent);
 };
 
 #endif // SCOPE_H

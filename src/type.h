@@ -11,7 +11,6 @@ private:
     const std::string _name;
 public:
     Type(const std::string name);
-    Type(const Type &t);
     const std::string name() const { return _name; }
     virtual bool operator==(const Type &t) const;
     virtual bool compatible(const Type &t) const;

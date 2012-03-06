@@ -6,15 +6,15 @@ Symbol::Symbol(const std::string name, const Type type):
 {
 }
 
-Symbol::Symbol(const Symbol &s):
-    _name(s.name()),
-    _type(s.type())
-{
-}
-
 Symbol::Symbol() :
     _type(UNDEFINED_TYPE),
     _name("")
+{
+}
+
+VariableSymbol::VariableSymbol(const std::string name, const Type type, const bool final):
+    Symbol(name, type),
+    _final(final)
 {
 }
 
