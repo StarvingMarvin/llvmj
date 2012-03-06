@@ -1,5 +1,5 @@
 
-#include "scope.h"
+#include "symbols/scope.h"
 #include <iostream>
 #include <cassert>
 

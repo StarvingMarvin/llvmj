@@ -4,7 +4,7 @@
 
 set(BIN ${CMAKE_CURRENT_BINARY_DIR})
 
-include_directories("${PROJECT_BINARY_DIR}/parser")
+include_directories("${PROJECT_BINARY_DIR}/src/parser")
 add_executable(test-parser parser.cpp)
 target_link_libraries(test-parser ${ANTLR_LIB} Parser)
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test.mj 
