@@ -13,8 +13,11 @@ tokens {
     VAR;
     CONST;
     ARR;
+    LIT;
 
     CALL;
+    INT_T;
+    CHAR_T;
 
     CLASS   = 'class';
     NEW     = 'new';
@@ -61,7 +64,8 @@ program : CLASS IDENT (const_decl|var_decl|class_decl)* '{' method_decl* '}'
 const_decl
     :   FINAL type IDENT '=' literal ';' -> ^(DEF ^(CONST type IDENT) literal);
 
-literal : NUMBER | CHAR ;
+literal : NUMBER -> ^(LIT INT_T NUMBER)
+        | CHAR -> ^(LIT CHAR_T CHAR);
 
 var_decl: type IDENT ('[' ']' -> ^(DEF ^(ARR type IDENT))
                 | -> ^(DEF ^(VAR type IDENT)))
@@ -132,8 +136,7 @@ term    : factor (mulop^ factor)*;
 
 factor  : designator ('(' actual_params? ')' -> ^(CALL designator actual_params?) 
                         | -> designator)
-        | NUMBER
-        | CHAR
+        | literal
         | NEW type ('['expr']'-> ^(NEW ^(ARR type expr)) | -> ^(NEW ^(VAR type)))
         |   '('! expr ')'!;
 
@@ -151,10 +154,14 @@ IDENT   :   ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;
 
 NUMBER  :   ('0'..'9')+;
 
-CHAR    :   '\'' (' '..'~') '\'';
+CHAR    :   '\'' PRINTABLE_CHAR '\'' {SETTEXT($PRINTABLE_CHAR->getText($PRINTABLE_CHAR));};
+
+fragment
+PRINTABLE_CHAR
+    :   ' '..'~';
 
 COMMENT
-    : '//' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;};
+    : '//' ~('\n'|'\r')* '\r'? '\n' {SKIP();};
     
-WS	:	(' '|'\t'|'\r'|'\n')+ {$channel=HIDDEN;};
+WS	:	(' '|'\t'|'\r'|'\n')+ {SKIP();;};
 
