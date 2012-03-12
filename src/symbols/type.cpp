@@ -1,5 +1,7 @@
 #include "type.h"
 
+using namespace MJ;
+
 //
 // Basic types
 //
@@ -23,7 +25,7 @@ bool Type::compatible(const Type &t) const {
 // Reference types
 //
 
-ReferenceType::ReferenceType(const std::string name): 
+ReferenceType::ReferenceType(const std::string name):
     Type(name)
 {}
 

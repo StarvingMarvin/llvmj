@@ -6,23 +6,22 @@
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 
-using namespace llvm;
 
 class MjModule
 {
 public:
     MjModule(const char* programName);
 private:
-    Module *module;
+    llvm::Module *module;
 
-    Type *MJChar;
-    Type *MJInt;
-    Type *MJArray;
+    llvm::Type *MJChar;
+    llvm::Type *MJInt;
+    llvm::Type *MJArray;
 
-    Function *mainWrap;
-    Function *ord;
-    Function *chr;
-    Function *len;
+    llvm::Function *mainWrap;
+    llvm::Function *ord;
+    llvm::Function *chr;
+    llvm::Function *len;
 
 };
 

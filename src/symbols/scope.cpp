@@ -1,5 +1,7 @@
 #include "scope.h"
 
+using namespace MJ;
+
 Scope::Scope(const std::string name, Scope *parent):
     _name(name),
     _parent(parent)

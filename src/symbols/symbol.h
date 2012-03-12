@@ -3,33 +3,37 @@
 
 #include "type.h"
 
-class Symbol
-{
-private:
-    const std::string _name;
-    const Type _type;
+namespace MJ {
 
-public:
+    class Symbol
+    {
+        private:
+            const std::string _name;
+            const Type _type;
 
-    Symbol();
+        public:
 
-    Symbol(const std::string name, const Type type);
+            Symbol();
 
-    const std::string name() const { return _name; }
+            Symbol(const std::string name, const Type type);
 
-    const Type type() const { return _type; }
+            const std::string name() const { return _name; }
 
-    bool defined() const { return ! (_type == UNDEFINED_TYPE); }
+            const Type type() const { return _type; }
 
-};
+            bool defined() const { return ! (_type == UNDEFINED_TYPE); }
 
-class VariableSymbol : public Symbol
-{
-public:
-    VariableSymbol(const std::string name, const Type type, const bool final);
-    const bool final() const {return _final;}
-private:
-    const bool _final;
-};
+    };
+
+    class VariableSymbol : public Symbol
+    {
+        public:
+            VariableSymbol(const std::string name, const Type type, const bool final);
+            const bool final() const {return _final;}
+        private:
+            const bool _final;
+    };
+
+}
 
 #endif // SYMBOL_H

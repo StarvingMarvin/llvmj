@@ -15,7 +15,6 @@ ADD_CUSTOM_COMMAND(COMMAND ${ANTLR}
                     DEPENDS ${SRC}/MicroJavaTree.g ${DST}/MicroJava.tokens
                     OUTPUT ${DST}/MicroJavaTree.h ${DST}/MicroJavaTree.c)
 
-INCLUDE_DIRECTORIES(${DST})
+ADD_LIBRARY(Parser parser.cpp ${DST}/MicroJavaLexer.c ${DST}/MicroJavaParser.c)
 
-ADD_LIBRARY(Parser ${DST}/MicroJavaLexer.c ${DST}/MicroJavaParser.c) #${DST}/MicroJavaTree.c
 
