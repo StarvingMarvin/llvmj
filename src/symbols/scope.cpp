@@ -1,50 +1,34 @@
+
+#include <cstdlib>
 #include "scope.h"
 
-using namespace MJ;
+using namespace mj;
+using std::string;
+using std::vector;
+using std::map;
 
-Scope::Scope(const std::string name, Scope *parent):
-    _name(name),
+Scope::Scope(Scope *parent):
     _parent(parent)
 {
-    //symbolTable = llvm::StringMap<Symbol>();
 }
 
-void Scope::define(const Symbol *s) {
-    symbolTable[s->name()] = s;
-    //Symbol s1 = s;
-}
-
-const Symbol * Scope::resolve(const std::string name) {
-    return symbolTable[name];
-    //return Symbol();
-}
-
-Method::Method(const std::string name, const Type type, Scope *parent):
-    Symbol(name, type),
-    Scope(name, parent)
-{
-}
-
-bool Method::matchArguments(std::vector<Type> arguments)
-{
-    
-    int argCount = arguments.size();
-    if (argCount != formalArguments.size()) {
-        return false;
+void Scope::define(Symbol *s) {
+    const string name = s->name();
+    if (symbolTable[name] != NULL) {
+        throw "Symbol already defined!";
     }
+    symbolTable[name] = s;
+}
 
-    for (int i = 0; i < argCount; i++) {
-        if (!formalArguments[i].type().compatible(arguments[i])) {
-            return false;
+const Symbol * Scope::resolve(const string name) {
+    const Symbol *res = symbolTable[name];
+    if (res == NULL) {
+        if (_parent != NULL) {
+            res = _parent->resolve(name);
         }
     }
-    return true;
+    return res;
 }
 
-Class::Class(const std::string name, Scope *parent):
-    Type(name),
-    Symbol(*this),
-    Scope(name, parent)
-{
-}
 
+ 

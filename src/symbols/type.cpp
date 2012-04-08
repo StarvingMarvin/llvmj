@@ -1,18 +1,19 @@
 #include "type.h"
 
-using namespace MJ;
+using namespace mj;
+using std::string;
 
 //
 // Basic types
 //
 
-Type::Type(const std::string name):
-    _name(name)
+Type::Type(const string name):
+    Symbol(name)
 {
 }
 
 bool Type::operator==(const Type &t) const {
-    return _name == t._name;
+    return name() == t.name();
 }
 
 bool Type::compatible(const Type &t) const {
@@ -25,7 +26,7 @@ bool Type::compatible(const Type &t) const {
 // Reference types
 //
 
-ReferenceType::ReferenceType(const std::string name):
+ReferenceType::ReferenceType(const string name):
     Type(name)
 {}
 

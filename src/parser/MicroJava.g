@@ -13,11 +13,10 @@ tokens {
     VAR;
     CONST;
     ARR;
-    LIT;
 
     CALL;
-    INT_T;
-    CHAR_T;
+    LIT_INT;
+    LIT_CHAR;
 
     CLASS   = 'class';
     NEW     = 'new';
@@ -64,13 +63,13 @@ program : CLASS IDENT (const_decl|var_decl|class_decl)* '{' method_decl* '}'
 const_decl
     :   FINAL type IDENT '=' literal ';' -> ^(DEF ^(CONST type IDENT) literal);
 
-literal : NUMBER -> ^(LIT INT_T NUMBER)
-        | CHAR -> ^(LIT CHAR_T CHAR);
+literal : NUMBER -> ^(LIT_INT NUMBER)
+        | CHAR -> ^(LIT_CHAR CHAR);
 
 var_decl: type IDENT ('[' ']' -> ^(DEF ^(ARR type IDENT))
-                | -> ^(DEF ^(VAR type IDENT)))
+                            | -> ^(DEF ^(VAR type IDENT)))
             (',' IDENT ('[' ']' -> ^(DEF ^(ARR type IDENT))
-                | -> ^(DEF ^(VAR type IDENT))))* ';';
+                            | -> ^(DEF ^(VAR type IDENT))))* ';';
 
 
 class_decl

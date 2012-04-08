@@ -1,30 +1,39 @@
 
 #include <cstdlib>
-#include "symbols/scope.h"
+#include <memory>
+
+#include "llvmjConfig.h"
+#include "symbols/symbols.h"
 #include "parser/parser.h"
 #include "codegen/mjmodule.h"
 
-using namespace MJ;
+using namespace mj;
+using std::auto_ptr;
 
-Scope *collectSymbols(AST ast);
-MjModule generateCode(AST ast, Scope *global);
+auto_ptr<Scope> collectSymbols(AST ast);
+MjModule generateCode(AST ast, auto_ptr<Scope> global);
 
 int main(int argc, char** argv) {
 
     const char *filename = (argc < 2 || argv[1] == NULL)?
                         "./input" : argv[1];
-    AST ast = parse(filename);
-    Scope *global = collectSymbols(ast);
+    Parser p(filename);
+    AST ast = p.parse();
+    auto_ptr<Scope> global = collectSymbols(ast);
     MjModule module = generateCode(ast, global);
 
     return 0;
 }
 
-Scope *collectSymbols(AST ast) {
-    return new Scope("", NULL);
+auto_ptr<Scope> collectSymbols(AST ast) {
+    auto_ptr<Scope> global = makeGlobalScope();
+
+
+
+    return global;
 }
 
-MjModule generateCode(AST ast, Scope *global) {
+MjModule generateCode(AST ast, auto_ptr<Scope> global) {
     return MjModule("");
 }
 

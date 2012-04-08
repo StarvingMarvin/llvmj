@@ -2,44 +2,33 @@
 #define SCOPE_H
 
 #include "symbol.h"
-#include "llvm/ADT/StringMap.h"
-#include <vector>
 
-namespace MJ {
+#include <memory>
+#include <vector>
+#include <map>
+#include <cstdlib>
+
+namespace mj {
 
     class Scope
     {
-        private:
-            const std::string _name;
-            Scope *_parent;
-            llvm::StringMap<const Symbol*> symbolTable;
-            Scope(Scope & s){}
-            void operator=(Scope& s){}
-
         public:
-            Scope(const std::string name, Scope *parent);
-
-            const std::string name() const { return _name; }
+            Scope(Scope *parent);
 
             Scope *parent() const { return _parent; }
 
-            void define (const Symbol *s);
+            virtual void define (Symbol *s);
 
-            const Symbol * resolve(const std::string name);
+            virtual const Symbol * resolve(const std::string name);
 
-    };
+        protected:
+            std::map<const std::string, const Symbol*> symbolTable;
 
-    class Method : public Symbol, public Scope {
-        public:
-            Method(const std::string name, const Type type, Scope *parent);
-            bool matchArguments(std::vector<Type> args);
         private:
-            std::vector<Symbol> formalArguments;
-    };
+            Scope(Scope & s){}
+            void operator=(Scope& s){}
+            Scope *_parent;
 
-    class Class : public Type, public Symbol, public Scope {
-        public:
-            Class(std::string name, Scope *parent);
     };
 
 }

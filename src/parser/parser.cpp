@@ -1,11 +1,19 @@
 
 #include "parser.h"
+#include <cassert>
 
-using namespace MJ;
+using namespace mj;
+using std::string;
 
-Parser::Parser(const std::string filename)
+Parser::Parser(const string filename):
+    input(0),
+    lxr(0),
+    tstream(0),
+    psr(0),
+    ast(0)
 {
-    pANTLR3_UINT8 fName = (pANTLR3_UINT8)filename.c_str();
+    
+    fName = (pANTLR3_UINT8) filename.c_str();
 }
 
 AST Parser::parse() throw(ParserException) {
@@ -74,12 +82,6 @@ Parser::~Parser() {
         input->close(input);
         input = NULL;
     }
-}
-
-
-AST MJ::parse(std::string filename) throw(ParserException) {
-    Parser p(filename);
-    p.parse();
 }
 
 

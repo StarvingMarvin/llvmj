@@ -6,6 +6,8 @@ configure_file (
     "${PROJECT_BINARY_DIR}/llvmjConfig.h"
     )
 
+set(CMAKE_CXX_FLAGS "-Wall")
+
 include_directories("${PROJECT_BINARY_DIR}" 
                     "${PROJECT_BINARY_DIR}/src"  
                     src 
@@ -31,7 +33,7 @@ find_library(ANTLR_LIB
 add_subdirectory(src)
 add_subdirectory(utils)
 add_subdirectory(example)
-add_subdirectory(thesis)
+add_subdirectory(thesis EXCLUDE_FROM_ALL)
 add_subdirectory(test)
 
 

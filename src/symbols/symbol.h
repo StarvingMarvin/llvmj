@@ -1,39 +1,26 @@
 #ifndef SYMBOL_H
 #define SYMBOL_H
 
-#include "type.h"
+#include <string>
+#include <iostream>
 
-namespace MJ {
+namespace mj {
 
     class Symbol
     {
         private:
-            const std::string _name;
-            const Type _type;
+            std::string _name;
 
         public:
 
-            Symbol();
-
-            Symbol(const std::string name, const Type type);
+            Symbol(const std::string name);
 
             const std::string name() const { return _name; }
 
-            const Type type() const { return _type; }
-
-            bool defined() const { return ! (_type == UNDEFINED_TYPE); }
-
-    };
-
-    class VariableSymbol : public Symbol
-    {
-        public:
-            VariableSymbol(const std::string name, const Type type, const bool final);
-            const bool final() const {return _final;}
-        private:
-            const bool _final;
     };
 
 }
+
+std::ostream& operator<<(std::ostream &os, const mj::Symbol& s);
 
 #endif // SYMBOL_H

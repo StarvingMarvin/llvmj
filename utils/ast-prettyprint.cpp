@@ -3,7 +3,7 @@
 
 #define INDENT_INC 2
 
-using namespace MJ;
+using namespace mj;
 
 const ANTLR3_UINT32 special_tokens[] = {PROGRAM, DEF, IF, WHILE};
 const int SPECIAL_SIZE = sizeof(special_tokens) / sizeof(ANTLR3_UINT32);
@@ -62,7 +62,8 @@ void _indent(int ammount) {
 void _pp_special(AST node, int indent) {
     _indent(indent);
 
-    printf("(%s", node->getText(node)->chars);
+    pANTLR3_STRING txt = node->getText(node);
+    printf("(%s", txt->chars);
     int childCount = node->getChildCount(node);
     if (childCount > 0) {
         _pp((pANTLR3_BASE_TREE)node->getChild(node, 0), indent + 2* INDENT_INC);
@@ -87,7 +88,8 @@ int main(int argc, char** argv) {
     const char *filename = (argc < 2 || argv[1] == NULL)?
                         "./input" : argv[1];
 
-    AST ast = parse(filename);
+    Parser p(filename);
+    AST ast = p.parse();
 
     pp(ast);
 }

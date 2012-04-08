@@ -6,7 +6,7 @@
 #include "parser/MicroJavaParser.h"
 #include <string>
 
-namespace MJ {
+namespace mj {
 
     typedef pANTLR3_BASE_TREE AST;
 
@@ -36,9 +36,6 @@ namespace MJ {
             AST                         ast;
 
     };
-
-
-    AST parse(std::string filename) throw(ParserException);
 
 }
 

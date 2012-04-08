@@ -1,24 +1,21 @@
 #ifndef TYPE_H
 #define TYPE_H
 
-#include "llvmjConfig.h"
 #include <iostream>
-#include <string>
+#include "symbol.h"
 
-namespace MJ {
+namespace mj {
 
-    class Type
+    class Type : public Symbol
     {
-        private:
-            const std::string _name;
         public:
             Type(const std::string name);
-            const std::string name() const { return _name; }
             virtual bool operator==(const Type &t) const;
             virtual bool compatible(const Type &t) const;
     };
 
     const Type NULL_TYPE("null");
+    const Type VOID_TYPE("void");
     const Type UNDEFINED_TYPE("MJ.undefined");
 
     class ReferenceType: public Type {

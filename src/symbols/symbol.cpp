@@ -1,22 +1,15 @@
 #include "symbol.h"
 
-using namespace MJ;
+using namespace mj;
+using std::string;
+using std::ostream;
 
-Symbol::Symbol(const std::string name, const Type type):
-    _name(name),
-    _type(type)
+Symbol::Symbol(const string name):
+    _name(name)
 {
 }
 
-Symbol::Symbol() :
-    _type(UNDEFINED_TYPE),
-    _name("")
-{
-}
-
-VariableSymbol::VariableSymbol(const std::string name, const Type type, const bool final):
-    Symbol(name, type),
-    _final(final)
-{
+ostream& operator<<(ostream &os, const Symbol& s) {
+    return os << s.name();
 }
 
