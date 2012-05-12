@@ -20,6 +20,8 @@ link_directories(/usr/lib
                 /usr/lib/llvm-2.9/lib 
                 /usr/lib/x86_64-linux-gnu 
                 "${PROJECT_BINARY_DIR}/src"
+                "${PROJECT_BINARY_DIR}/src/codegen"
+                "${PROJECT_BINARY_DIR}/src/symbols"
                 "${PROJECT_BINARY_DIR}/src/parser")
 
 find_library(LLVM_LIB

@@ -5,14 +5,13 @@
 
 using namespace mj;
 
-const ANTLR3_UINT32 special_tokens[] = {PROGRAM, DEF, IF, WHILE};
-const int SPECIAL_SIZE = sizeof(special_tokens) / sizeof(ANTLR3_UINT32);
+const uint32_t special_tokens[] = {PROGRAM, DEF, IF, WHILE};
+const size_t SPECIAL_SIZE = sizeof(special_tokens) / sizeof(size_t);
 
-void _pp_special(pANTLR3_BASE_TREE node, int indent);
+void _pp_special(AST node, int indent);
 
 bool isSpecial(AST node) {
-    pANTLR3_COMMON_TOKEN token = node->getToken(node);
-    ANTLR3_UINT32 type = token->getType(token);
+    uint32_t type = tokenType(node);
     for (int i = 0; i < SPECIAL_SIZE; i++) {
         if (special_tokens[i] == type) {
             return true;
@@ -29,24 +28,21 @@ void _pp(AST node, int indent) {
         return;
     }
 
-    pANTLR3_COMMON_TOKEN token = node->getToken(node);
+    bool _nilNode = nilNode(node);
 
-    int childCount = node->getChildCount(node);
-    if (node->isNilNode(node) == ANTLR3_FALSE
-            && childCount > 0) {
+    if (!_nilNode && childCount > 0) {
         printf(" (");
     } else {
         printf(" ");
     }
 
-    printf("%s", token->getText(token)->chars);
+    printf("%s", tokenText(node));
 
-    for(int i = 0; i < childCount; i++) {
-        _pp((AST)node->getChild(node, i), indent);
+    for(nodeiterator bi = begin(node); bi <= end(node); bi++) {
+        _pp(*bi, indent);
     }
 
-    if (node->isNilNode(node) == ANTLR3_FALSE
-            && childCount > 0) {
+    if (!_nilNode && childCount > 0) {
         printf(")");
     }
 

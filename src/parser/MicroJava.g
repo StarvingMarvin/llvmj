@@ -162,5 +162,5 @@ PRINTABLE_CHAR
 COMMENT
     : '//' ~('\n'|'\r')* '\r'? '\n' {SKIP();};
     
-WS	:	(' '|'\t'|'\r'|'\n')+ {SKIP();;};
+WS	:	(' '|'\t'|'\r'|'\n')+ {SKIP();};
 

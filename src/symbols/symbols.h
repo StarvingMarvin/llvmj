@@ -15,7 +15,7 @@ namespace mj {
 
     class Symbols {
         public:
-            Symbols();
+            Symbols(){}
 
         private:
             Scope *currentScope;

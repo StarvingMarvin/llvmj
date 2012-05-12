@@ -84,4 +84,29 @@ Parser::~Parser() {
     }
 }
 
+uint32_t mj::tokenType(AST ast) {
+    pANTLR3_COMMON_TOKEN token = ast->getToken(ast);
+    return (uint32_t)token->getType(token);
+}
+
+char* mj::tokenText(AST ast) {
+    pANTLR3_COMMON_TOKEN token = ast->getToken(ast);
+    return (char*) token->getText(token)->chars;
+}
+
+size_t mj::childCount(AST ast) {
+    return ast->getChildCount(ast);
+}
+
+bool mj::nilNode(AST ast) {
+    return ast->isNilNode(ast);
+}
+
+nodeiterator mj::begin(AST parent) {
+    return nodeiterator(parent);
+}
+
+nodeiterator mj::end(AST parent) {
+    return nodeiterator(parent, childCount(parent));
+}
 
