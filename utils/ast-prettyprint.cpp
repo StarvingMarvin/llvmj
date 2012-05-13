@@ -38,7 +38,7 @@ void _pp(AST node, int indent) {
 
     printf("%s", tokenText(node));
 
-    for(nodeiterator bi = begin(node); bi <= end(node); bi++) {
+    for(nodeiterator bi = begin(node); bi < end(node); bi++) {
         _pp(*bi, indent);
     }
 
