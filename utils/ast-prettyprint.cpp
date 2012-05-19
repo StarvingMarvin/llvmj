@@ -12,7 +12,7 @@ void _pp_special(AST node, int indent);
 
 bool isSpecial(AST node) {
     uint32_t type = tokenType(node);
-    for (int i = 0; i < SPECIAL_SIZE; i++) {
+    for (size_t i = 0; i < SPECIAL_SIZE; i++) {
         if (special_tokens[i] == type) {
             return true;
         }

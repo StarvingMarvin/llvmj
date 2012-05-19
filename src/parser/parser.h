@@ -91,6 +91,12 @@ namespace mj {
         return (T*)ast->u;
     }
 
+    template <class R>
+    class AstFunctor {
+        public: 
+            virtual R operator()(AST ast) = 0;
+    };
+
 }
 
 #endif //PARSER_H
