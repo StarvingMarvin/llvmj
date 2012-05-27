@@ -5,79 +5,77 @@
 
 using namespace mj;
 
+
+class PrintVisitor : public NodeVisitor {
+    public:
+        virtual void operator()(AstWalker *walker) {
+
+            bool nn = walker->nilNode();
+            size_t cc = walker->childCount();
+
+            if (!nn && cc > 0) {
+                printf(" (");
+            } else {
+                printf(" ");
+            }
+
+            printf("%s", walker->tokenText());
+
+            int indent = *(walker->getData<int>());
+            for(nodeiterator bi = walker->firstChild(); bi <walker->lastChild(); bi++) {
+                AST child = *bi;
+                setNodeData<int>(child, &indent);
+                walker->visit(child);
+            }
+
+            if (!nn && cc > 0) {
+                printf(")");
+            }
+
+        }
+};
+
+
+
+class PrintSpecialVisitor : public NodeVisitor {
+    public:
+        virtual void operator()(AstWalker *walker) {
+            int indent = *(walker->getData<int>());
+            _indent(indent);
+
+            printf("(%s", walker->tokenText());
+            nodeiterator bi = walker->firstChild();
+            int newIndent = indent + INDENT_INC;
+            int firstChildIndent = indent + 2 * INDENT_INC;
+            
+            if (bi != walker->lastChild()) {
+                AST child = *bi;
+                setNodeData<int>(child, &firstChildIndent);
+                walker->visit(child);
+                bi++;
+            }
+
+            for(; bi < walker->lastChild(); bi++) {
+                AST child = *bi;
+                _indent(newIndent);
+                setNodeData<int>(child, &newIndent);
+                walker->visit(child);
+            }
+
+            printf(")");
+        }
+
+    private:
+        void _indent(int ammount) {
+            printf("\n");
+            for (int i = 0; i < ammount; i++) {
+                printf(" ");
+            }
+        }
+};
+
 const uint32_t special_tokens[] = {PROGRAM, DEF, IF, WHILE};
 const size_t SPECIAL_SIZE = sizeof(special_tokens) / sizeof(size_t);
-
-void _pp_special(AST node, int indent);
-
-bool isSpecial(AST node) {
-    uint32_t type = tokenType(node);
-    for (size_t i = 0; i < SPECIAL_SIZE; i++) {
-        if (special_tokens[i] == type) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void _pp(AST node, int indent) {
-
-    if (isSpecial(node)) {
-        _pp_special(node, indent);
-        return;
-    }
-
-    bool _nilNode = nilNode(node);
-
-    if (!_nilNode && childCount > 0) {
-        printf(" (");
-    } else {
-        printf(" ");
-    }
-
-    printf("%s", tokenText(node));
-
-    for(nodeiterator bi = begin(node); bi < end(node); bi++) {
-        _pp(*bi, indent);
-    }
-
-    if (!_nilNode && childCount > 0) {
-        printf(")");
-    }
-
-}
-
-void _indent(int ammount) {
-    printf("\n");
-    for (int i = 0; i < ammount; i++) {
-        printf(" ");
-    }
-}
-
-void _pp_special(AST node, int indent) {
-    _indent(indent);
-
-    pANTLR3_STRING txt = node->getText(node);
-    printf("(%s", txt->chars);
-    int childCount = node->getChildCount(node);
-    if (childCount > 0) {
-        _pp((pANTLR3_BASE_TREE)node->getChild(node, 0), indent + 2* INDENT_INC);
-    }
-
-    int newIndent = indent + INDENT_INC;
-    for (int i = 1; i < childCount; i++) {
-        _indent(newIndent);
-        _pp((pANTLR3_BASE_TREE)node->getChild(node, i), newIndent);
-    }
-
-    printf(")");
-
-}
-
-void pp(AST root) {
-    _pp(root, 0);
-}
 
 int main(int argc, char** argv) {
 
@@ -87,6 +85,13 @@ int main(int argc, char** argv) {
     Parser p(filename);
     AST ast = p.parse();
 
-    pp(ast);
+    AstWalker walker(ast, new PrintVisitor());
+    NodeVisitor* special = new PrintSpecialVisitor();
+    for (size_t i = 0; i < SPECIAL_SIZE; i++) {
+        walker.addVisitor(special_tokens[i], special);
+    }
+    int indent = 0;
+    setNodeData<int>(ast, &indent);
+    walker.walkTree();
 }
 
