@@ -75,7 +75,7 @@ class PrintSpecialVisitor : public NodeVisitor {
 };
 
 const uint32_t special_tokens[] = {PROGRAM, DEF, IF, WHILE};
-const size_t SPECIAL_SIZE = sizeof(special_tokens) / sizeof(size_t);
+const size_t SPECIAL_SIZE = sizeof(special_tokens) / sizeof(uint32_t);
 
 int main(int argc, char** argv) {
 
