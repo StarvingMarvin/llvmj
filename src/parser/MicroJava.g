@@ -17,6 +17,8 @@ tokens {
     CALL;
     LIT_INT;
     LIT_CHAR;
+    BLOCK;
+    GET;
 
     CLASS   = 'class';
     NEW     = 'new';
@@ -48,6 +50,8 @@ tokens {
     GRE      = '>=';
     LST      = '<';
     LSE      = '<=';
+    DOT      = '.';
+    ARR_INDEX    = '[';
 }
 
 
@@ -61,33 +65,33 @@ program : CLASS IDENT (const_decl|var_decl|class_decl)* '{' method_decl* '}'
             -> ^(PROGRAM IDENT const_decl* class_decl* var_decl* method_decl*);
 
 const_decl
-    :   FINAL type IDENT '=' literal ';' -> ^(DEF ^(CONST type IDENT) literal);
+    :   FINAL type IDENT '=' literal ';' -> ^(DEF IDENT ^(CONST type) literal);
 
 literal : NUMBER -> ^(LIT_INT NUMBER)
         | CHAR -> ^(LIT_CHAR CHAR);
 
-var_decl: type IDENT ('[' ']' -> ^(DEF ^(ARR type IDENT))
-                            | -> ^(DEF ^(VAR type IDENT)))
-            (',' IDENT ('[' ']' -> ^(DEF ^(ARR type IDENT))
-                            | -> ^(DEF ^(VAR type IDENT))))* ';';
+var_decl: type IDENT ('[' ']' -> ^(DEF IDENT ^(ARR type))
+                            | -> ^(DEF IDENT ^(VAR type)))
+            (',' IDENT ('[' ']' -> ^(DEF IDENT ^(ARR type))
+                            | -> ^(DEF IDENT ^(VAR type))))* ';';
 
 
 class_decl
-    :   CLASS IDENT '{' var_decl* '}' -> ^(DEF ^(CLASS IDENT) var_decl*);
+    :   CLASS IDENT '{' var_decl* '}' -> ^(DEF IDENT ^(CLASS) var_decl*);
 
 method_type
     :   VOID | type;
 
 method_decl
     :   method_type IDENT '(' formal_params? ')' var_decl* '{' statement* '}'
-            -> ^(DEF ^(FN method_type IDENT formal_params?) var_decl* statement*);
+            -> ^(DEF IDENT ^(FN method_type formal_params?) var_decl* statement*);
 
 type    : IDENT ;
 
 formal_param
     :   type IDENT 
-            ('[' ']' -> ^(DEF ^(ARR type IDENT)) 
-            | -> ^(DEF ^(VAR type IDENT)));
+            ('[' ']' -> ^(DEF IDENT ^(ARR type)) 
+            | -> ^(DEF IDENT ^(VAR type)));
 
 formal_params
     :   formal_param (',' formal_param)* -> formal_param+;
@@ -99,12 +103,10 @@ statement
         | READ^ '('! designator ')'! ';'!
         | PRINT^ '('! expr (','! NUMBER)? ')'! ';'! 
         | des_stat
-        | '{' statement* '}' -> ^(statement)*
+        | '{' statement* '}' -> ^(BLOCK statement*)
         | if_stat;
 
-if_stat : IF '(' condition ')' ifStatement=statement 
-            (ELSE elseStatement=statement -> ^(IF condition $ifStatement $elseStatement)
-            | -> ^(IF condition $ifStatement));
+if_stat : IF^ '('! condition ')'! statement (ELSE! statement)?;
 
 while_stat
     :   WHILE^ '('! condition ')'! statement;
@@ -134,13 +136,15 @@ expr    :   term (addop^ term)*
 term    : factor (mulop^ factor)*;
 
 factor  : designator ('(' actual_params? ')' -> ^(CALL designator actual_params?) 
-                        | -> designator)
+                        | -> ^(GET designator))
         | literal
         | NEW type ('['expr']'-> ^(NEW ^(ARR type expr)) | -> ^(NEW ^(VAR type)))
         |   '('! expr ')'!;
 
 designator
-    :   IDENT ('.'^ IDENT | '['^ expr ']'!)*;
+    :   var=IDENT ((DOT field=IDENT -> ^(DOT $var $field) 
+                    | ARR_INDEX expr ']' -> ^(ARR_INDEX $var expr))+ 
+            | -> $var);
 
 
 addop   :   PLUS | MINUS;

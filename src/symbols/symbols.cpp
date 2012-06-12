@@ -33,3 +33,11 @@ auto_ptr<Scope> mj::makeGlobalScope() {
     return global;
 }
 
+void Symbols::define(Symbol *s) {
+    currentScope->define(s);
+}
+
+const Symbol* Symbols::resolve(string name) {
+    return currentScope->resolve(name);
+}
+

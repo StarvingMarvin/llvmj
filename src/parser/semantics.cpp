@@ -4,12 +4,42 @@
 using namespace mj;
 
 
-AssignVisitor::AssignVisitor(Symbols *symbolsTable):
+SetVisitor::SetVisitor(Symbols *symbolsTable):
     symbols(symbolsTable)
 {
 }
 
-void AssignVisitor::operator()(AstWalker *walker) {
+void SetVisitor::operator()(AstWalker *walker) {
+}
+
+GetVisitor::GetVisitor(Symbols *symbolsTable):
+    symbols(symbolsTable)
+{
+}
+
+void GetVisitor::operator()(AstWalker *walker) {
+}
+
+IntLiteralVisitor::IntLiteralVisitor(Symbols *symbolsTable):
+    symbols(symbolsTable)
+{
+}
+
+void IntLiteralVisitor::operator()(AstWalker *walker) {
+    const Symbol *s = symbols->resolve("int");
+    const Type *t = dynamic_cast<const Type*>(s);
+    walker->setData(const_cast<Type*>(t));
+}
+
+CharLiteralVisitor::CharLiteralVisitor(Symbols *symbolsTable):
+    symbols(symbolsTable)
+{
+}
+
+void CharLiteralVisitor::operator()(AstWalker *walker) {
+    const Symbol *s = symbols->resolve("char");
+    const Type *t = dynamic_cast<const Type*>(s);
+    walker->setData(const_cast<Type*>(t));
 }
 
 BoolOpVisitor::BoolOpVisitor(Symbols *symbolsTable):

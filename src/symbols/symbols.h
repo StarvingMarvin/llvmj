@@ -17,6 +17,9 @@ namespace mj {
         public:
             Symbols(){}
 
+            void define (Symbol *s);
+
+            const Symbol* resolve(const std::string name);
         private:
             Scope *currentScope;
     };

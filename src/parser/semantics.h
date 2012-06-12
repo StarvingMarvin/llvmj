@@ -7,9 +7,33 @@
 
 namespace mj {
 
-    class AssignVisitor : NodeVisitor {
+    class SetVisitor : NodeVisitor {
         public:
-            AssignVisitor(Symbols *symbolsTable);
+            SetVisitor(Symbols *symbolsTable);
+            virtual void operator()(AstWalker *walker);
+        private:
+            Symbols *symbols;
+    };
+
+    class GetVisitor : NodeVisitor {
+        public:
+            GetVisitor(Symbols *symbolsTable);
+            virtual void operator()(AstWalker *walker);
+        private:
+            Symbols *symbols;
+    };
+
+    class IntLiteralVisitor : NodeVisitor  {
+        public:
+            IntLiteralVisitor(Symbols *symbolsTable);
+            virtual void operator()(AstWalker *walker);
+        private:
+            Symbols *symbols;
+    };
+
+    class CharLiteralVisitor : NodeVisitor  {
+        public:
+            CharLiteralVisitor(Symbols *symbolsTable);
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;

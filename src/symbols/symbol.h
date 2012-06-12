@@ -15,7 +15,7 @@ namespace mj {
 
             Symbol(const std::string name);
 
-            const std::string name() const { return _name; }
+            virtual const std::string name() const { return _name; }
 
     };
 
