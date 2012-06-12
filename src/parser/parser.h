@@ -21,6 +21,7 @@ namespace mj {
             virtual void operator()(AstWalker *walker);
     };
 
+
     class nodeiterator : 
         public std::iterator<std::random_access_iterator_tag, AST, int, AST*, AST>
     {
@@ -81,6 +82,15 @@ namespace mj {
             std::vector<AST> stack;
     };
 
+    class VisitChildren : public NodeVisitor {
+        public: 
+            virtual void operator()(AstWalker *walker) {
+                for(nodeiterator bi = walker->firstChild(); bi < walker->lastChild(); bi++) {
+                    AST child = *bi;
+                    walker->visit(child);
+                }
+            }
+    };
 
     class ParserException {
         public:

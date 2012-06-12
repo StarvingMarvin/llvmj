@@ -22,7 +22,7 @@ class PrintVisitor : public NodeVisitor {
             printf("%s", walker->tokenText());
 
             int indent = *(walker->getData<int>());
-            for(nodeiterator bi = walker->firstChild(); bi <walker->lastChild(); bi++) {
+            for(nodeiterator bi = walker->firstChild(); bi < walker->lastChild(); bi++) {
                 AST child = *bi;
                 setNodeData<int>(child, &indent);
                 walker->visit(child);
