@@ -7,12 +7,19 @@
 
 namespace mj {
 
-    class SetVisitor : NodeVisitor {
+    class BinOpVisitor : NodeVisitor {
         public:
-            SetVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
+            BinOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
-        private:
+            virtual bool check(Type *l, Type *r) = 0;
+        protected:
             Symbols *symbols;
+    };
+
+    class SetVisitor : BinOpVisitor {
+        public:
+            SetVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
+            virtual bool check(Type *l, Type *r);
     };
 
     class GetVisitor : NodeVisitor {
@@ -39,28 +46,22 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class BoolOpVisitor : NodeVisitor {
+    class BoolOpVisitor : BinOpVisitor {
         public:
-            BoolOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            BoolOpVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
+            virtual bool check(Type *l, Type *r);
     };
 
-    class IntOpVisitor : NodeVisitor {
+    class IntOpVisitor : BinOpVisitor {
         public:
-            IntOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            IntOpVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
+            virtual bool check(Type *l, Type *r);
     };
 
-    class RelOpVisitor : NodeVisitor {
+    class RelOpVisitor : BinOpVisitor {
         public:
-            RelOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            RelOpVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
+            virtual bool check(Type *l, Type *r);
     };
 
     class DefVisitor : NodeVisitor {

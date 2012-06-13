@@ -3,9 +3,24 @@
 
 using namespace mj;
 
+Type* childType(AstWalker *walker, nodeiterator ni) {
+    walker->visit(*ni);
+    Type *t = getNodeData<Type>(*ni);
+    ni++;
+    return t;
+}
 
-void SetVisitor::operator()(AstWalker *walker) {
+void BinOpVisitor::operator()(AstWalker *walker) {
+    nodeiterator b = walker->firstChild();
+    Type *l = childType(walker, b);
+    Type *r = childType(walker, b);
+    if (!check(l, r)) {
+        //scream
+    }
+}
 
+bool SetVisitor::check(Type *l, Type *r) {
+    return l->compatible(*r);
 }
 
 void GetVisitor::operator()(AstWalker *walker) {
@@ -31,14 +46,18 @@ void CharLiteralVisitor::operator()(AstWalker *walker) {
     walker->setData(const_cast<Type*>(t));
 }
 
-void BoolOpVisitor::operator()(AstWalker *walker) {
-
+bool BoolOpVisitor::check(Type *l, Type *r) {
+   return true;
 }
 
-void IntOpVisitor::operator()(AstWalker *walker) {
+bool IntOpVisitor::check(Type *l, Type *r) {
+    const Symbol *s = symbols->resolve("int");
+    const Type *mjInt = dynamic_cast<const Type*>(s);
+    return *mjInt == *l && *mjInt == *r;
 }
 
-void RelOpVisitor::operator()(AstWalker *walker) {
+bool RelOpVisitor::check(Type *l, Type *r) {
+    return l->compatible(*r);
 }
 
 void DefVisitor::operator()(AstWalker *walker) {

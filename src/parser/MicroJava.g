@@ -136,7 +136,7 @@ expr    :   term (addop^ term)*
 term    : factor (mulop^ factor)*;
 
 factor  : designator ('(' actual_params? ')' -> ^(CALL designator actual_params?) 
-                        | -> ^(GET designator))
+                        | -> designator)
         | literal
         | NEW type ('['expr']'-> ^(NEW ^(ARR type expr)) | -> ^(NEW ^(VAR type)))
         |   '('! expr ')'!;
@@ -144,7 +144,7 @@ factor  : designator ('(' actual_params? ')' -> ^(CALL designator actual_params?
 designator
     :   var=IDENT ((DOT field=IDENT -> ^(DOT $var $field) 
                     | ARR_INDEX expr ']' -> ^(ARR_INDEX $var expr))+ 
-            | -> $var);
+            | -> ^(GET $var));
 
 
 addop   :   PLUS | MINUS;
