@@ -9,7 +9,7 @@ namespace mj {
 
     class SetVisitor : NodeVisitor {
         public:
-            SetVisitor(Symbols *symbolsTable);
+            SetVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -17,7 +17,7 @@ namespace mj {
 
     class GetVisitor : NodeVisitor {
         public:
-            GetVisitor(Symbols *symbolsTable);
+            GetVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -25,7 +25,7 @@ namespace mj {
 
     class IntLiteralVisitor : NodeVisitor  {
         public:
-            IntLiteralVisitor(Symbols *symbolsTable);
+            IntLiteralVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -33,7 +33,7 @@ namespace mj {
 
     class CharLiteralVisitor : NodeVisitor  {
         public:
-            CharLiteralVisitor(Symbols *symbolsTable);
+            CharLiteralVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -41,7 +41,7 @@ namespace mj {
 
     class BoolOpVisitor : NodeVisitor {
         public:
-            BoolOpVisitor(Symbols *symbolsTable);
+            BoolOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -49,7 +49,15 @@ namespace mj {
 
     class IntOpVisitor : NodeVisitor {
         public:
-            IntOpVisitor(Symbols *symbolsTable);
+            IntOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
+            virtual void operator()(AstWalker *walker);
+        private:
+            Symbols *symbols;
+    };
+
+    class RelOpVisitor : NodeVisitor {
+        public:
+            RelOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -57,7 +65,7 @@ namespace mj {
 
     class DefVisitor : NodeVisitor {
         public:
-            DefVisitor(Symbols *symbolsTable);
+            DefVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -65,7 +73,7 @@ namespace mj {
 
     class FuncVisitor : NodeVisitor {
         public:
-            FuncVisitor(Symbols *symbolsTable);
+            FuncVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -73,7 +81,7 @@ namespace mj {
 
     class ClassVisitor : NodeVisitor {
         public:
-            ClassVisitor(Symbols *symbolsTable);
+            ClassVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -81,7 +89,7 @@ namespace mj {
 
     class VarVisitor : NodeVisitor {
         public:
-            VarVisitor(Symbols *symbolsTable);
+            VarVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -89,7 +97,7 @@ namespace mj {
 
     class PrintVisitor : NodeVisitor {
         public:
-            PrintVisitor(Symbols *symbolsTable);
+            PrintVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -97,7 +105,7 @@ namespace mj {
 
     class ReadVisitor : NodeVisitor {
         public:
-            ReadVisitor(Symbols *symbolsTable);
+            ReadVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -105,7 +113,7 @@ namespace mj {
 
     class LoopVisitor : NodeVisitor {
         public:
-            LoopVisitor(Symbols *symbolsTable);
+            LoopVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -113,7 +121,7 @@ namespace mj {
 
     class CallVisitor : NodeVisitor {
         public:
-            CallVisitor(Symbols *symbolsTable);
+            CallVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -121,7 +129,7 @@ namespace mj {
 
     class DotVisitor : NodeVisitor {
         public:
-            DotVisitor(Symbols *symbolsTable);
+            DotVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -129,7 +137,7 @@ namespace mj {
 
     class IndexVisitor : NodeVisitor {
         public:
-            IndexVisitor(Symbols *symbolsTable);
+            IndexVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -137,7 +145,7 @@ namespace mj {
 
     class NewVisitor : NodeVisitor {
         public:
-            NewVisitor(Symbols *symbolsTable);
+            NewVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
