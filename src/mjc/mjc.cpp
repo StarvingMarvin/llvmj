@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "llvmjConfig.h"
-#include "symbols/symbols.h"
+#include "semantics/semantics.h"
 #include "parser/parser.h"
 #include "codegen/mjmodule.h"
 

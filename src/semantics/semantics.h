@@ -2,8 +2,8 @@
 #ifndef _SEMANTICS_H_
 #define _SEMANTICS_H_
 
-#include "parser.h"
-#include "symbols/symbols.h"
+#include "parser/parser.h"
+#include "symbols.h"
 
 namespace mj {
 

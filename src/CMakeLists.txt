@@ -9,7 +9,7 @@ link_directories(/usr/lib
                 "${PROJECT_BINARY_DIR}/src/parser")
 
 add_subdirectory(parser)
-add_subdirectory(symbols)
+add_subdirectory(semantics)
 add_subdirectory(codegen)
 add_subdirectory(mjc)
 

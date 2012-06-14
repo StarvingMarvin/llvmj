@@ -12,7 +12,7 @@
 #include <llvm/Assembly/PrintModulePass.h>
 
 #include "parser/parser.h"
-#include "symbols/symbols.h"
+#include "semantics/semantics.h"
 
 
 class MjModule
