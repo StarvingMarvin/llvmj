@@ -3,6 +3,8 @@
 
 using namespace mj;
 
+
+
 Type* childType(AstWalker *walker, nodeiterator ni) {
     walker->visit(*ni);
     Type *t = getNodeData<Type>(*ni);
@@ -23,7 +25,7 @@ bool SetVisitor::check(Type *l, Type *r) {
     return l->compatible(*r);
 }
 
-void GetVisitor::operator()(AstWalker *walker) {
+void VarDesVisitor::operator()(AstWalker *walker) {
     nodeiterator b = walker->firstChild();
     char * ident = tokenText(*b);
     const Symbol *s = symbols->resolve(ident);
@@ -35,14 +37,12 @@ void GetVisitor::operator()(AstWalker *walker) {
 }
 
 void IntLiteralVisitor::operator()(AstWalker *walker) {
-    const Symbol *s = symbols->resolve("int");
-    const Type *t = dynamic_cast<const Type*>(s);
+    const Type *t = symbols->resolveType("int");
     walker->setData(const_cast<Type*>(t));
 }
 
 void CharLiteralVisitor::operator()(AstWalker *walker) {
-    const Symbol *s = symbols->resolve("char");
-    const Type *t = dynamic_cast<const Type*>(s);
+    const Type *t = symbols->resolveType("char");
     walker->setData(const_cast<Type*>(t));
 }
 
@@ -51,9 +51,8 @@ bool BoolOpVisitor::check(Type *l, Type *r) {
 }
 
 bool IntOpVisitor::check(Type *l, Type *r) {
-    const Symbol *s = symbols->resolve("int");
-    const Type *mjInt = dynamic_cast<const Type*>(s);
-    return *mjInt == *l && *mjInt == *r;
+    const Type mjInt = *symbols->resolveType("int");
+    return mjInt == *l && mjInt == *r;
 }
 
 bool RelOpVisitor::check(Type *l, Type *r) {
@@ -73,24 +72,64 @@ void VarVisitor::operator()(AstWalker *walker) {
 }
 
 void PrintVisitor::operator()(AstWalker *walker) {
+    const Type mjInt = *symbols->resolveType("int");
+    const Type mjChar = *symbols->resolveType("char");
+    nodeiterator ni = walker->firstChild();
+    Type t = *childType(walker, ni);
+    if ((t!=mjInt) && (t!=mjChar)) {
+        // screem
+    }
+    if (ni != walker->lastChild()) {
+        t = *childType(walker, ni);
+        if (t!=mjInt) {
+            //screem
+        }
+    }
 }
 
 void ReadVisitor::operator()(AstWalker *walker) {
+    const Type mjInt = *symbols->resolveType("int");
+    const Type mjChar = *symbols->resolveType("char");
+    nodeiterator ni = walker->firstChild();
+    Type t = *childType(walker, ni);
+    if ((t!=mjInt) && (t!=mjChar)) {
+        // screem
+    }
 }
 
 void LoopVisitor::operator()(AstWalker *walker) {
 }
 
 void CallVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    char* name = tokenText(*ni);
+    const Symbol *methodSymbol = symbols->resolve(name);
+    const Method *method = dynamic_cast<const Method*>(methodSymbol);
+    if (method == NULL) {
+        //
+    }
+    // check arguments
+    Type *t = new Type(method->returnType());
+    walker->setData(t);
 }
 
-void DotVisitor::operator()(AstWalker *walker) {
+void FieldDesVisitor::operator()(AstWalker *walker) {
 }
 
-void IndexVisitor::operator()(AstWalker *walker) {
+void ArrDesVisitor::operator()(AstWalker *walker) {
 }
 
 void NewVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    char* name = tokenText(*ni);
+    const Symbol *classSymbol = symbols->resolve(name);
+    const Class *clazz = dynamic_cast<const Class*>(classSymbol);
+    if (clazz == NULL) {
+        //
+    }
+    // check arguments
+    walker->setData(const_cast<Class*>(clazz));
+
 }
 
 Symbols* mj::checkSemantics(AST ast) {

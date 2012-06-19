@@ -22,9 +22,9 @@ namespace mj {
             virtual bool check(Type *l, Type *r);
     };
 
-    class GetVisitor : NodeVisitor {
+    class VarDesVisitor : NodeVisitor {
         public:
-            GetVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
+            VarDesVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -128,17 +128,17 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class DotVisitor : NodeVisitor {
+    class FieldDesVisitor : NodeVisitor {
         public:
-            DotVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
+            FieldDesVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
     };
 
-    class IndexVisitor : NodeVisitor {
+    class ArrDesVisitor : NodeVisitor {
         public:
-            IndexVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
+            ArrDesVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;

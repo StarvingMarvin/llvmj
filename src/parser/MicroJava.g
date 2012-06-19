@@ -18,7 +18,9 @@ tokens {
     LIT_INT;
     LIT_CHAR;
     BLOCK;
-    GET;
+    VAR_DES;
+    FIELD_DES;
+    ARR_DES;
 
     CLASS   = 'class';
     NEW     = 'new';
@@ -142,9 +144,9 @@ factor  : designator ('(' actual_params? ')' -> ^(CALL designator actual_params?
         |   '('! expr ')'!;
 
 designator
-    :   var=IDENT ((DOT field=IDENT -> ^(DOT $var $field) 
-                    | ARR_INDEX expr ']' -> ^(ARR_INDEX $var expr))+ 
-            | -> ^(GET $var));
+    :   var=IDENT ((DOT field=IDENT -> ^(FIELD_DES $var $field) 
+                    | ARR_INDEX expr ']' -> ^(ARR_DES $var expr))+ 
+            | -> ^(VAR_DES $var));
 
 
 addop   :   PLUS | MINUS;

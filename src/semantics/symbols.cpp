@@ -30,6 +30,10 @@ bool Type::operator==(const Type &t) const {
     return name() == t.name();
 }
 
+bool Type::operator!=(const Type &t) const {
+    return !(*this == t);
+}
+
 bool Type::compatible(const Type &t) const {
     return *this == t;
 }
@@ -70,7 +74,7 @@ void Scope::define(Symbol *s) {
     symbolTable[name] = s;
 }
 
-const Symbol * Scope::resolve(const string name) {
+const Symbol* Scope::resolve(const string name) {
     const Symbol *res = symbolTable[name];
     if (res == NULL) {
         if (_parent != NULL) {
@@ -156,5 +160,13 @@ void Symbols::define(Symbol *s) {
 
 const Symbol* Symbols::resolve(string name) {
     return currentScope->resolve(name);
+}
+
+const Type* Symbols::resolveType(const string name) {
+    return dynamic_cast<const Type*>(resolve(name));
+}
+
+const Variable* Symbols::resolveVariable(const string name) {
+    return dynamic_cast<const Variable*>(resolve(name));
 }
 

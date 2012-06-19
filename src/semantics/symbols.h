@@ -23,32 +23,12 @@ namespace mj {
 
     };
 
-    class Scope
-    {
-        public:
-            Scope(Scope *parent);
-
-            Scope *parent() const { return _parent; }
-
-            virtual void define (Symbol *s);
-
-            virtual const Symbol * resolve(const std::string name);
-
-        protected:
-            std::map<const std::string, const Symbol*> symbolTable;
-
-        private:
-            Scope(Scope & s){}
-            void operator=(Scope& s){}
-            Scope *_parent;
-
-    };
-
     class Type : public Symbol
     {
         public:
             Type(const std::string name);
             virtual bool operator==(const Type &t) const;
+            virtual bool operator!=(const Type &t) const;
             virtual bool compatible(const Type &t) const;
     };
 
@@ -62,20 +42,41 @@ namespace mj {
             bool compatible(const Type &t) const;
     };
 
-    class ArrayType: public ReferenceType {
-        private:
-            const Type &_valueType;
-        public:
-            ArrayType(const Type &valueType);
-            const Type & valuetType() const { return _valueType; }
-    };
-
     class Variable : public Symbol {
         public:
             Variable(const std::string name, const Type &type);
             const Type &type() const { return _type; }
         private:
             const Type &_type;
+    };
+
+    class Scope
+    {
+        public:
+            Scope(Scope *parent);
+
+            Scope *parent() const { return _parent; }
+
+            virtual void define (Symbol *s);
+
+            virtual const Symbol* resolve(const std::string name);
+
+        protected:
+            std::map<const std::string, const Symbol*> symbolTable;
+
+        private:
+            Scope(Scope & s){}
+            void operator=(Scope& s){}
+            Scope *_parent;
+
+    };
+
+    class ArrayType: public ReferenceType {
+        private:
+            const Type &_valueType;
+        public:
+            ArrayType(const Type &valueType);
+            const Type & valuetType() const { return _valueType; }
     };
 
     class MethodScope: public Scope {
@@ -90,8 +91,9 @@ namespace mj {
         public:
             Method(const std::string name, 
                     const Type returnType);
+            const Type returnType() const {return _returnType;}
         private:
-            Type _returnType;
+            const Type _returnType;
             std::vector<Variable*> _arguments;
             MethodScope *methodScope;
     };
@@ -119,6 +121,8 @@ namespace mj {
             void define (Symbol *s);
 
             const Symbol* resolve(const std::string name);
+            const Type* resolveType(const std::string name);
+            const Variable* resolveVariable(const std::string name);
         private:
             Scope *currentScope;
     };
