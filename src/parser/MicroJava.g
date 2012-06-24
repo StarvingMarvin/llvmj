@@ -67,33 +67,32 @@ program : CLASS IDENT (const_decl|var_decl|class_decl)* '{' method_decl* '}'
             -> ^(PROGRAM IDENT const_decl* class_decl* var_decl* method_decl*);
 
 const_decl
-    :   FINAL type IDENT '=' literal ';' -> ^(DEF IDENT ^(CONST type) literal);
+    :   FINAL type IDENT '=' literal ';' -> ^(DEF ^(CONST type IDENT) literal);
 
 literal : NUMBER -> ^(LIT_INT NUMBER)
         | CHAR -> ^(LIT_CHAR CHAR);
 
-var_decl: type IDENT ('[' ']' -> ^(DEF IDENT ^(ARR type))
-                            | -> ^(DEF IDENT ^(VAR type)))
-            (',' IDENT ('[' ']' -> ^(DEF IDENT ^(ARR type))
-                            | -> ^(DEF IDENT ^(VAR type))))* ';';
-
+var_decl: type IDENT ('[' ']' -> ^(DEF ^(ARR type IDENT ))
+                            | -> ^(DEF ^(VAR type IDENT )))
+            (',' IDENT ('[' ']' -> ^(DEF ^(ARR type IDENT))
+                            | -> ^(DEF ^(VAR type IDENT))))* ';';
 
 class_decl
-    :   CLASS IDENT '{' var_decl* '}' -> ^(DEF IDENT ^(CLASS) var_decl*);
+    :   CLASS IDENT '{' var_decl* '}' -> ^(DEF ^(CLASS IDENT) var_decl*);
 
 method_type
     :   VOID | type;
 
 method_decl
     :   method_type IDENT '(' formal_params? ')' var_decl* '{' statement* '}'
-            -> ^(DEF IDENT ^(FN method_type formal_params?) var_decl* statement*);
+            -> ^(DEF ^(FN method_type IDENT formal_params?) var_decl* statement*);
 
 type    : IDENT ;
 
 formal_param
     :   type IDENT 
-            ('[' ']' -> ^(DEF IDENT ^(ARR type)) 
-            | -> ^(DEF IDENT ^(VAR type)));
+            ('[' ']' -> ^(DEF ^(ARR type IDENT)) 
+            | -> ^(DEF ^(VAR type IDENT)));
 
 formal_params
     :   formal_param (',' formal_param)* -> formal_param+;

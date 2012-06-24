@@ -71,6 +71,12 @@ namespace mj {
 
     };
 
+    class ScopeSymbol : public Symbol {
+        public:
+            ScopeSymbol(const std::string name): Symbol(name){};
+            virtual Scope* scope()=0;
+    };
+
     class ArrayType: public ReferenceType {
         private:
             const Type &_valueType;
@@ -86,12 +92,13 @@ namespace mj {
             virtual Symbol *resolve(const std::string name);
     };
 
-    class Method : public Symbol {
+    class Method : public ScopeSymbol {
         friend class MethodScope;
         public:
             Method(const std::string name, 
                     const Type returnType);
             const Type returnType() const {return _returnType;}
+            virtual Scope* scope() {return methodScope;}
         private:
             const Type _returnType;
             std::vector<Variable*> _arguments;
@@ -105,10 +112,11 @@ namespace mj {
             virtual const Symbol *resolve(const std::string name);
     };
 
-    class Class : public Type {
+    class Class : public Type, ScopeSymbol {
         friend class ClassScope;
         public:
             Class(std::string name);
+            virtual Scope* scope() {return classScope;}
         private:
             std::vector<Variable> _fields;
             ClassScope *classScope;

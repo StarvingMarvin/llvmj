@@ -72,9 +72,9 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class FuncVisitor : NodeVisitor {
+    class MethodVisitor : NodeVisitor {
         public:
-            FuncVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
+            MethodVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
@@ -91,6 +91,14 @@ namespace mj {
     class VarVisitor : NodeVisitor {
         public:
             VarVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
+            virtual void operator()(AstWalker *walker);
+        private:
+            Symbols *symbols;
+    };
+
+    class ArrVisitor : NodeVisitor {
+        public:
+            ArrVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;

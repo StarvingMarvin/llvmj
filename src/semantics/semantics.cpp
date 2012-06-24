@@ -4,18 +4,18 @@
 using namespace mj;
 
 
-
-Type* childType(AstWalker *walker, nodeiterator ni) {
+template<class T>
+T* visitChild(AstWalker *walker, nodeiterator ni) {
     walker->visit(*ni);
-    Type *t = getNodeData<Type>(*ni);
+    T *t = getNodeData<T>(*ni);
     ni++;
     return t;
 }
 
 void BinOpVisitor::operator()(AstWalker *walker) {
     nodeiterator b = walker->firstChild();
-    Type *l = childType(walker, b);
-    Type *r = childType(walker, b);
+    Type *l = visitChild<Type>(walker, b);
+    Type *r = visitChild<Type>(walker, b);
     if (!check(l, r)) {
         //scream
     }
@@ -60,27 +60,58 @@ bool RelOpVisitor::check(Type *l, Type *r) {
 }
 
 void DefVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    Symbol *s = visitChild<Symbol>(walker, ni);
+    symbols->define(s);
 }
 
-void FuncVisitor::operator()(AstWalker *walker) {
+void MethodVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    char *typeName = tokenText(*ni);
+    const Type t = *symbols->resolveType(typeName);
+    ni++;
+    char *methodName = tokenText(*ni);
+    Method *m = new Method(methodName, t);
+    walker->setData(m);
 }
 
 void ClassVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    char *className = tokenText(*ni);
+    Class *c = new Class(className);
+    walker->setData(c);
 }
 
 void VarVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    char *typeName = tokenText(*ni);
+    Type t = *symbols->resolveType(typeName);
+    ni++;
+    char *varName = tokenText(*ni);
+    Variable *v = new Variable(varName, t);
+    walker->setData(v);
+}
+
+void ArrVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    char *typeName = tokenText(*ni);
+    const Type t = *symbols->resolveType(typeName);
+    ni++;
+    char *varName = tokenText(*ni);
+    Variable *v = new Variable(varName, ArrayType(t));
+    walker->setData(v);
 }
 
 void PrintVisitor::operator()(AstWalker *walker) {
     const Type mjInt = *symbols->resolveType("int");
     const Type mjChar = *symbols->resolveType("char");
     nodeiterator ni = walker->firstChild();
-    Type t = *childType(walker, ni);
+    Type t = *visitChild<Type>(walker, ni);
     if ((t!=mjInt) && (t!=mjChar)) {
         // screem
     }
     if (ni != walker->lastChild()) {
-        t = *childType(walker, ni);
+        t = *visitChild<Type>(walker, ni);
         if (t!=mjInt) {
             //screem
         }
@@ -91,7 +122,7 @@ void ReadVisitor::operator()(AstWalker *walker) {
     const Type mjInt = *symbols->resolveType("int");
     const Type mjChar = *symbols->resolveType("char");
     nodeiterator ni = walker->firstChild();
-    Type t = *childType(walker, ni);
+    Type t = *visitChild<Type>(walker, ni);
     if ((t!=mjInt) && (t!=mjChar)) {
         // screem
     }

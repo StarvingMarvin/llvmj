@@ -92,7 +92,7 @@ Variable::Variable(const string name, const Type &type):
 
 Method::Method(const string name, 
         const Type returnType):
-    Symbol(name),
+    ScopeSymbol(name),
     _returnType(returnType)
 {
 }
@@ -109,7 +109,7 @@ Symbol *MethodScope::resolve(const std::string name) {
 }
 
 Class::Class(string name):
-    Type(name)
+    Type(name), ScopeSymbol(name)
 {
 }
 
