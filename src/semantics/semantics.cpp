@@ -164,10 +164,44 @@ void NewVisitor::operator()(AstWalker *walker) {
 }
 
 Symbols* mj::checkSemantics(AST ast) {
-    AstWalker walker(ast);
+    AstWalker walker(ast, new VisitChildren());
 
     Symbols *symbolsTable = new Symbols();
+    walker.addVisitor(SET, new SetVisitor(symbolsTable));
+    walker.addVisitor(VAR_DES, new VarDesVisitor(symbolsTable));
+    walker.addVisitor(FIELD_DES, new FieldDesVisitor(symbolsTable));
+    walker.addVisitor(ARR_DES, new ArrDesVisitor(symbolsTable));
+    walker.addVisitor(LIT_INT, new IntLiteralVisitor(symbolsTable));
+    walker.addVisitor(LIT_CHAR, new SetVisitor(symbolsTable));
+    walker.addVisitor(CALL, new CallVisitor(symbolsTable));
 
+    IntOpVisitor *iov = new IntOpVisitor(symbolsTable);
+    walker.addVisitor(PLUS, iov);
+    walker.addVisitor(MINUS, iov);
+    walker.addVisitor(MUL, iov);
+    walker.addVisitor(DEC, iov);
+    walker.addVisitor(MOD, iov);
+    
+    walker.addVisitor(DEF, new DefVisitor(symbolsTable));
+    walker.addVisitor(VAR, new VarVisitor(symbolsTable));
+    walker.addVisitor(ARR, new ArrVisitor(symbolsTable));
+    walker.addVisitor(FN, new MethodVisitor(symbolsTable));
+    walker.addVisitor(CLASS, new ClassVisitor(symbolsTable));
+
+    //walker.addVisitor(INC, new SetVisitor(symbolsTable));
+    //walker.addVisitor(DEC, new SetVisitor(symbolsTable));
+   
+    BoolOpVisitor *bov = new BoolOpVisitor(symbolsTable);
+    walker.addVisitor(OR, bov);
+    walker.addVisitor(AND, bov);
+    
+    RelOpVisitor *rov = new RelOpVisitor(symbolsTable);
+    walker.addVisitor(EQL, rov);
+    walker.addVisitor(NEQ, rov);
+    walker.addVisitor(GRT, rov);
+    walker.addVisitor(GRE, rov);
+    walker.addVisitor(LST, rov);
+    walker.addVisitor(LSE, rov);
 
     return symbolsTable;
 }

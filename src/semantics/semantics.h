@@ -7,7 +7,7 @@
 
 namespace mj {
 
-    class BinOpVisitor : NodeVisitor {
+    class BinOpVisitor : public NodeVisitor {
         public:
             BinOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -16,13 +16,13 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class SetVisitor : BinOpVisitor {
+    class SetVisitor : public BinOpVisitor {
         public:
             SetVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
             virtual bool check(Type *l, Type *r);
     };
 
-    class VarDesVisitor : NodeVisitor {
+    class VarDesVisitor : public NodeVisitor {
         public:
             VarDesVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -30,7 +30,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class IntLiteralVisitor : NodeVisitor  {
+    class IntLiteralVisitor : public NodeVisitor  {
         public:
             IntLiteralVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -38,7 +38,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class CharLiteralVisitor : NodeVisitor  {
+    class CharLiteralVisitor : public NodeVisitor  {
         public:
             CharLiteralVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -46,25 +46,25 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class BoolOpVisitor : BinOpVisitor {
+    class BoolOpVisitor : public BinOpVisitor {
         public:
             BoolOpVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
             virtual bool check(Type *l, Type *r);
     };
 
-    class IntOpVisitor : BinOpVisitor {
+    class IntOpVisitor : public BinOpVisitor {
         public:
             IntOpVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
             virtual bool check(Type *l, Type *r);
     };
 
-    class RelOpVisitor : BinOpVisitor {
+    class RelOpVisitor : public BinOpVisitor {
         public:
             RelOpVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
             virtual bool check(Type *l, Type *r);
     };
 
-    class DefVisitor : NodeVisitor {
+    class DefVisitor : public NodeVisitor {
         public:
             DefVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -72,7 +72,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class MethodVisitor : NodeVisitor {
+    class MethodVisitor : public NodeVisitor {
         public:
             MethodVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -80,7 +80,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class ClassVisitor : NodeVisitor {
+    class ClassVisitor : public NodeVisitor {
         public:
             ClassVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -88,7 +88,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class VarVisitor : NodeVisitor {
+    class VarVisitor : public NodeVisitor {
         public:
             VarVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -96,7 +96,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class ArrVisitor : NodeVisitor {
+    class ArrVisitor : public NodeVisitor {
         public:
             ArrVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -104,7 +104,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class PrintVisitor : NodeVisitor {
+    class PrintVisitor : public NodeVisitor {
         public:
             PrintVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -112,7 +112,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class ReadVisitor : NodeVisitor {
+    class ReadVisitor : public NodeVisitor {
         public:
             ReadVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -120,7 +120,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class LoopVisitor : NodeVisitor {
+    class LoopVisitor : public NodeVisitor {
         public:
             LoopVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -128,7 +128,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class CallVisitor : NodeVisitor {
+    class CallVisitor : public NodeVisitor {
         public:
             CallVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -136,7 +136,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class FieldDesVisitor : NodeVisitor {
+    class FieldDesVisitor : public NodeVisitor {
         public:
             FieldDesVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -144,7 +144,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class ArrDesVisitor : NodeVisitor {
+    class ArrDesVisitor : public NodeVisitor {
         public:
             ArrDesVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
@@ -152,7 +152,7 @@ namespace mj {
             Symbols *symbols;
     };
 
-    class NewVisitor : NodeVisitor {
+    class NewVisitor : public NodeVisitor {
         public:
             NewVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
