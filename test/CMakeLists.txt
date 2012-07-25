@@ -12,7 +12,7 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test.mj
 
 include_directories ("${PROJECT_SOURCE_DIR}/src")
 add_executable(test-symbol symbols.cpp)
-target_link_libraries(test-symbol ${LLVM_LIB} Symbols)
+target_link_libraries(test-symbol ${LLVM_LIB} MjSemantics)
 
 enable_testing()
 
