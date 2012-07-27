@@ -145,9 +145,36 @@ void CallVisitor::operator()(AstWalker *walker) {
 }
 
 void FieldDesVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    char* name = tokenText(*ni);
+    const Symbol *classSymbol = symbols->resolve(name);
+    const Class *clazz = dynamic_cast<const Class*>(classSymbol);
+    if (clazz == NULL) {
+        //
+    }
+    char* fieldName = tokenText(*ni);
+    const Symbol *fieldSymbol = clazz->scope()->resolve(fieldName);
+    const Variable *field = dynamic_cast<const Variable*>(fieldSymbol);
+    if (field == NULL) {
+        //
+    }
+
+    const Type *fieldType = &field->type();
+
+    walker->setData(const_cast<Type*>(fieldType));
+
 }
 
 void ArrDesVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    char* name = tokenText(*ni);
+    const Symbol *arrSymbol = symbols->resolve(name);
+    const ArrayType *arr = dynamic_cast<const ArrayType*>(arrSymbol);
+    if (arr == NULL) {
+        //
+    }
+
+    walker->setData(const_cast<Type*>(&arr->valueType()));
 }
 
 void NewVisitor::operator()(AstWalker *walker) {

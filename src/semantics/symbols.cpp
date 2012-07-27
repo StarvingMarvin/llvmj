@@ -106,6 +106,7 @@ void MethodScope::define(Symbol *s) {
 }
 
 Symbol *MethodScope::resolve(const std::string name) {
+    return NULL;
 }
 
 Class::Class(string name):

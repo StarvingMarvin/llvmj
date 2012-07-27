@@ -74,7 +74,7 @@ namespace mj {
     class ScopeSymbol : public Symbol {
         public:
             ScopeSymbol(const std::string name): Symbol(name){};
-            virtual Scope* scope()=0;
+            virtual Scope* scope()const=0;
     };
 
     class ArrayType: public ReferenceType {
@@ -82,7 +82,7 @@ namespace mj {
             const Type &_valueType;
         public:
             ArrayType(const Type &valueType);
-            const Type & valuetType() const { return _valueType; }
+            const Type & valueType() const { return _valueType; }
     };
 
     class MethodScope: public Scope {
@@ -98,7 +98,7 @@ namespace mj {
             Method(const std::string name, 
                     const Type returnType);
             const Type returnType() const {return _returnType;}
-            virtual Scope* scope() {return methodScope;}
+            virtual Scope* scope() const {return methodScope;}
         private:
             const Type _returnType;
             std::vector<Variable*> _arguments;
@@ -116,7 +116,7 @@ namespace mj {
         friend class ClassScope;
         public:
             Class(std::string name);
-            virtual Scope* scope() {return classScope;}
+            virtual Scope* scope() const {return classScope;}
         private:
             std::vector<Variable> _fields;
             ClassScope *classScope;
