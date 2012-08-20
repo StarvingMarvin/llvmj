@@ -12,6 +12,12 @@ T* visitChild(AstWalker *walker, nodeiterator ni) {
     return t;
 }
 
+void visitChildren(AstWalker *walker, nodeiterator ni) {
+    for(; ni < walker->lastChild(); ni++) {
+        walker->visit(*ni);
+    }
+}
+
 void BinOpVisitor::operator()(AstWalker *walker) {
     nodeiterator b = walker->firstChild();
     Type *l = visitChild<Type>(walker, b);
@@ -79,6 +85,11 @@ void ClassVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char *className = tokenText(*ni);
     Class *c = new Class(className);
+
+    symbols->enterScope(c->scope());
+    visitChildren(walker, ni);
+    symbols->leaveScope();
+
     walker->setData(c);
 }
 
@@ -211,6 +222,7 @@ Symbols* mj::checkSemantics(AST ast) {
     
     walker.addVisitor(DEF, new DefVisitor(symbolsTable));
     walker.addVisitor(VAR, new VarVisitor(symbolsTable));
+    walker.addVisitor(CONST, new VarVisitor(symbolsTable));
     walker.addVisitor(ARR, new ArrVisitor(symbolsTable));
     walker.addVisitor(FN, new MethodVisitor(symbolsTable));
     walker.addVisitor(CLASS, new ClassVisitor(symbolsTable));
@@ -229,6 +241,8 @@ Symbols* mj::checkSemantics(AST ast) {
     walker.addVisitor(GRE, rov);
     walker.addVisitor(LST, rov);
     walker.addVisitor(LSE, rov);
+
+    walker.walkTree();
 
     return symbolsTable;
 }

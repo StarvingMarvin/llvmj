@@ -110,7 +110,9 @@ Symbol *MethodScope::resolve(const std::string name) {
 }
 
 Class::Class(string name):
-    Type(name), ScopeSymbol(name)
+    Type(name),
+    ScopeSymbol(name),
+    classScope()
 {
 }
 
@@ -123,12 +125,12 @@ void ClassScope::define(Symbol *s) {
     Scope::define(s);
 }
 
-const Symbol *ClassScope::resolve(const string name) {
+const Symbol *ClassScope::resolveField(const string name) {
     // don't look in parent scopes
     return symbolTable[name];
 }
 
-auto_ptr<Scope> mj::makeGlobalScope() {
+Scope *mj::makeGlobalScope() {
     Type *mjInt = new Type("int");
     Type *mjChar = new Type("char");
     Type *mjVoid = new Type("void");
@@ -143,7 +145,7 @@ auto_ptr<Scope> mj::makeGlobalScope() {
 
     Method *mjChr = new Method("chr", *mjChar);
 
-    auto_ptr<Scope> global(new Scope(NULL));
+    Scope *global = new Scope(NULL);
     global->define(mjInt);
     global->define(mjChar);
     global->define(mjVoid);
@@ -155,12 +157,18 @@ auto_ptr<Scope> mj::makeGlobalScope() {
     return global;
 }
 
+Symbols::Symbols():
+    scopes(std::stack<Scope*>())
+{
+    scopes.push(makeGlobalScope());
+}
+
 void Symbols::define(Symbol *s) {
-    currentScope->define(s);
+    currentScope()->define(s);
 }
 
 const Symbol* Symbols::resolve(string name) {
-    return currentScope->resolve(name);
+    return currentScope()->resolve(name);
 }
 
 const Type* Symbols::resolveType(const string name) {

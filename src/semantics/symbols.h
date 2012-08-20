@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <stack>
 #include <map>
 #include <cstdlib>
 #include <memory>
@@ -109,7 +110,8 @@ namespace mj {
         public:
             ClassScope(Scope *parent);
             virtual void define(Symbol *s);
-            virtual const Symbol *resolve(const std::string name);
+            /*virtual const Symbol *resolve(const std::string name);*/
+            const Symbol *resolveField(const std::string name);
     };
 
     class Class : public Type, ScopeSymbol {
@@ -124,18 +126,23 @@ namespace mj {
 
     class Symbols {
         public:
-            Symbols(){}
+            Symbols();
 
             void define (Symbol *s);
 
             const Symbol* resolve(const std::string name);
             const Type* resolveType(const std::string name);
             const Variable* resolveVariable(const std::string name);
+
+            void enterScope(Scope* s) {scopes.push(s);}
+            void leaveScope() {scopes.pop();}
+
         private:
-            Scope *currentScope;
+            Scope *currentScope() {return scopes.top();}
+            std::stack<Scope*> scopes;
     };
 
-    std::auto_ptr<Scope> makeGlobalScope();
+    Scope *makeGlobalScope();
 
 }
 

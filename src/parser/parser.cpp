@@ -1,6 +1,7 @@
 
 #include "parser.h"
 #include <cassert>
+#include <iostream>
 
 using namespace mj;
 using std::string;
@@ -137,6 +138,7 @@ NodeVisitor* AstWalker::getVisitor(uint32_t tokenType) {
 
 void AstWalker::visit(AST ast) {
     stack.push_back(ast);
+    std::cout<< "Visiting " << tokenText() << std::endl;
     uint32_t tt = tokenType();
     NodeVisitor* visitor = getVisitor(tt);
     visitor->operator()(this);

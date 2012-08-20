@@ -78,14 +78,14 @@ var_decl: type IDENT ('[' ']' -> ^(DEF ^(ARR type IDENT ))
                             | -> ^(DEF ^(VAR type IDENT))))* ';';
 
 class_decl
-    :   CLASS IDENT '{' var_decl* '}' -> ^(DEF ^(CLASS IDENT) var_decl*);
+    :   CLASS IDENT '{' var_decl* '}' -> ^(DEF ^(CLASS IDENT var_decl*));
 
 method_type
     :   VOID | type;
 
 method_decl
     :   method_type IDENT '(' formal_params? ')' var_decl* '{' statement* '}'
-            -> ^(DEF ^(FN method_type IDENT formal_params?) var_decl* statement*);
+            -> ^(DEF ^(FN method_type IDENT ^(BLOCK formal_params?) var_decl* statement*));
 
 type    : IDENT ;
 

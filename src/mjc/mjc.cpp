@@ -10,8 +10,8 @@
 using namespace mj;
 using std::auto_ptr;
 
-auto_ptr<Scope> collectSymbols(AST ast);
-MjModule generateCode(AST ast, auto_ptr<Scope> global);
+auto_ptr<Symbols> collectSymbols(AST ast);
+MjModule generateCode(AST ast, auto_ptr<Symbols> global);
 
 int main(int argc, char** argv) {
 
@@ -19,21 +19,20 @@ int main(int argc, char** argv) {
                         "./input" : argv[1];
     Parser p(filename);
     AST ast = p.parse();
-    auto_ptr<Scope> global = collectSymbols(ast);
-    MjModule module = generateCode(ast, global);
+    auto_ptr<Symbols> symbols = collectSymbols(ast);
+    MjModule module = generateCode(ast, symbols);
 
     return 0;
 }
 
-auto_ptr<Scope> collectSymbols(AST ast) {
-    auto_ptr<Scope> global = makeGlobalScope();
+auto_ptr<Symbols> collectSymbols(AST ast) {
+    auto_ptr<Symbols> symbols(new Symbols());
 
 
-
-    return global;
+    return symbols;
 }
 
-MjModule generateCode(AST ast, auto_ptr<Scope> global) {
+MjModule generateCode(AST ast, auto_ptr<Symbols> symbols) {
     return MjModule("");
 }
 
