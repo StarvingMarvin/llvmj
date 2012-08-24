@@ -91,9 +91,11 @@ Variable::Variable(const string name, const Type &type):
 }
 
 Method::Method(const string name, 
-        const Type returnType):
+        const Type returnType,
+        Scope *parentScope):
     ScopeSymbol(name),
-    _returnType(returnType)
+    _returnType(returnType),
+    methodScope(new MethodScope(parentScope))
 {
 }
 
@@ -109,10 +111,10 @@ Symbol *MethodScope::resolve(const std::string name) {
     return NULL;
 }
 
-Class::Class(string name):
+Class::Class(string name, Scope *parentScope):
     Type(name),
     ScopeSymbol(name),
-    classScope()
+    classScope(new ClassScope(parentScope))
 {
 }
 
@@ -135,17 +137,18 @@ Scope *mj::makeGlobalScope() {
     Type *mjChar = new Type("char");
     Type *mjVoid = new Type("void");
 
+    Scope *global = new Scope(NULL);
+
     vector<Variable> ordArgs;
     //ordArgs.push_back(Variable("c", *mjChar));
     
-    Method *mjOrd = new Method("ord", *mjInt);
+    Method *mjOrd = new Method("ord", *mjInt, global);
 
     vector<Variable> chrArgs;
     //chrArgs.push_back(Variable("i", *mjInt));
 
-    Method *mjChr = new Method("chr", *mjChar);
+    Method *mjChr = new Method("chr", *mjChar, global);
 
-    Scope *global = new Scope(NULL);
     global->define(mjInt);
     global->define(mjChar);
     global->define(mjVoid);
@@ -165,6 +168,14 @@ Symbols::Symbols():
 
 void Symbols::define(Symbol *s) {
     currentScope()->define(s);
+}
+
+Class* Symbols::defineClass(const std::string name) {
+    return new Class(name, currentScope());
+}
+
+Method* Symbols::defineMethod(const std::string name, const Type returnType) {
+    return new Method(name, returnType, currentScope());
 }
 
 const Symbol* Symbols::resolve(string name) {

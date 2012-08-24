@@ -97,7 +97,8 @@ namespace mj {
         friend class MethodScope;
         public:
             Method(const std::string name, 
-                    const Type returnType);
+                    const Type returnType,
+                    Scope * parentScope);
             const Type returnType() const {return _returnType;}
             virtual Scope* scope() const {return methodScope;}
         private:
@@ -117,7 +118,7 @@ namespace mj {
     class Class : public Type, ScopeSymbol {
         friend class ClassScope;
         public:
-            Class(std::string name);
+            Class(std::string name, Scope *parentScope);
             virtual Scope* scope() const {return classScope;}
         private:
             std::vector<Variable> _fields;
@@ -129,6 +130,8 @@ namespace mj {
             Symbols();
 
             void define (Symbol *s);
+            Class* defineClass(const std::string name);
+            Method* defineMethod(const std::string name, const Type returnType);
 
             const Symbol* resolve(const std::string name);
             const Type* resolveType(const std::string name);
