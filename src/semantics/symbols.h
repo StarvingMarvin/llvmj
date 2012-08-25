@@ -109,10 +109,12 @@ namespace mj {
 
     class ClassScope : public Scope {
         public:
-            ClassScope(Scope *parent);
+            ClassScope(Scope *parent, Symbol * c);
             virtual void define(Symbol *s);
-            /*virtual const Symbol *resolve(const std::string name);*/
+            virtual const Symbol *resolve(const std::string name);
             const Symbol *resolveField(const std::string name);
+        private:
+            Symbol *_c;
     };
 
     class Class : public Type, ScopeSymbol {

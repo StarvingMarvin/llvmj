@@ -113,18 +113,26 @@ Symbol *MethodScope::resolve(const std::string name) {
 
 Class::Class(string name, Scope *parentScope):
     Type(name),
-    ScopeSymbol(name),
-    classScope(new ClassScope(parentScope))
+    ScopeSymbol(name)
 {
+    classScope = new ClassScope(parentScope, dynamic_cast<Type*>(this));
 }
 
-ClassScope::ClassScope(Scope *parent):
-    Scope(parent)
+ClassScope::ClassScope(Scope *parent, Symbol *c):
+    Scope(parent),
+    _c(c)
 {
 }
 
 void ClassScope::define(Symbol *s) {
     Scope::define(s);
+}
+
+const Symbol *ClassScope::resolve(const string name) {
+    if (_c->name() == name) {
+        return _c;
+    }
+    return Scope::resolve(name);
 }
 
 const Symbol *ClassScope::resolveField(const string name) {

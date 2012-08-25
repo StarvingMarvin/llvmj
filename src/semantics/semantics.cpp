@@ -96,11 +96,13 @@ void ClassVisitor::operator()(AstWalker *walker) {
 void VarVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char *typeName = tokenText(*ni);
-    Type t = *symbols->resolveType(typeName);
-    ni++;
-    char *varName = tokenText(*ni);
-    Variable *v = new Variable(varName, t);
-    walker->setData(v);
+    const Type *t = symbols->resolveType(typeName);
+    if (t != NULL) {
+        ni++;
+        char *varName = tokenText(*ni);
+        Variable *v = new Variable(varName, *t);
+        walker->setData(v);
+    }
 }
 
 void ArrVisitor::operator()(AstWalker *walker) {
