@@ -77,16 +77,25 @@ void MethodVisitor::operator()(AstWalker *walker) {
     const Type t = *symbols->resolveType(typeName);
     ni++;
     char *methodName = tokenText(*ni);
-    Method *m = symbols->defineMethod(methodName, t);
+
+    MethodArguments *arguments = symbols->enterMethodArgumentsScope();
+    ni++;
+    visitChild<void>(walker, ni);
+    symbols->leaveScope();
+
+    Method *m = symbols->enterMethodScope(methodName, t, arguments);
+    ni++;
+    visitChildren(walker, ni);
+    symbols->leaveScope();
+
     walker->setData(m);
 }
 
 void ClassVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char *className = tokenText(*ni);
-    Class *c = symbols->defineClass(className);
 
-    symbols->enterScope(c->scope());
+    Class *c = symbols->enterClassScope(className);
     visitChildren(walker, ni);
     symbols->leaveScope();
 

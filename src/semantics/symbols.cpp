@@ -90,6 +90,16 @@ Variable::Variable(const string name, const Type &type):
 {
 }
 
+MethodArguments::MethodArguments(Scope *parentScope): 
+    Scope(parentScope), 
+    arguments() 
+{
+}
+
+bool MethodArguments::matchArguments(vector<Type*> argumentTypes) {
+    return true;
+}
+
 Method::Method(const string name, 
         const Type returnType,
         Scope *parentScope):
@@ -178,11 +188,19 @@ void Symbols::define(Symbol *s) {
     currentScope()->define(s);
 }
 
-Class* Symbols::defineClass(const std::string name) {
-    return new Class(name, currentScope());
+Class* Symbols::enterClassScope(const std::string name) {
+    Class *c = new Class(name, currentScope());
+    enterScope(c->scope());
+    return c;
 }
 
-Method* Symbols::defineMethod(const std::string name, const Type returnType) {
+MethodArguments* Symbols::enterMethodArgumentsScope() {
+    MethodArguments *ma = new MethodArguments(currentScope());
+    enterScope(ma);
+    return ma;
+}
+
+Method* Symbols::enterMethodScope(const std::string name, const Type returnType, MethodArguments * arguments) {
     return new Method(name, returnType, currentScope());
 }
 

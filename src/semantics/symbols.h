@@ -86,6 +86,15 @@ namespace mj {
             const Type & valueType() const { return _valueType; }
     };
 
+    class MethodArguments: public Scope {
+        public:
+            MethodArguments(Scope *parentScope);
+            void define(Symbol *s) { Scope::define(s);  arguments.push_back(s); }
+            bool matchArguments(std::vector<Type*> argumentTypes);
+        private:
+            std::vector<Symbol*> arguments;
+    };
+
     class MethodScope: public Scope {
         public:
             MethodScope(Scope *parent);
@@ -132,14 +141,15 @@ namespace mj {
             Symbols();
 
             void define (Symbol *s);
-            Class* defineClass(const std::string name);
-            Method* defineMethod(const std::string name, const Type returnType);
 
             const Symbol* resolve(const std::string name);
             const Type* resolveType(const std::string name);
             const Variable* resolveVariable(const std::string name);
 
             void enterScope(Scope* s) {scopes.push(s);}
+            Class* enterClassScope(const std::string name);
+            Method* enterMethodScope(const std::string name, const Type returnType, MethodArguments* arguments);
+            MethodArguments* enterMethodArgumentsScope();
             void leaveScope() {scopes.pop();}
 
         private:
