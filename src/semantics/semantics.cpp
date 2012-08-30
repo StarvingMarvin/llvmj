@@ -120,7 +120,14 @@ void ArrVisitor::operator()(AstWalker *walker) {
     const Type t = *symbols->resolveType(typeName);
     ni++;
     char *varName = tokenText(*ni);
-    Variable *v = new Variable(varName, ArrayType(t));
+
+    const ArrayType *at = dynamic_cast<const ArrayType*>(symbols->resolve(ArrayType(t).name()));
+
+    if (! at) {
+        at = new const ArrayType(t);
+        symbols->define(const_cast<ArrayType*>(at));
+    }
+    Variable *v = new Variable(varName, *at);
     walker->setData(v);
 }
 
@@ -191,10 +198,12 @@ void ArrDesVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char* name = tokenText(*ni);
     const Symbol *arrSymbol = symbols->resolve(name);
-    const ArrayType *arr = dynamic_cast<const ArrayType*>(arrSymbol);
-    if (arr == NULL) {
+    if (arrSymbol == NULL) {
         //
     }
+
+    const Variable *arrVar = dynamic_cast<const Variable*>(arrSymbol);
+    const ArrayType* arr = dynamic_cast<const ArrayType*>(&arrVar->type());
 
     walker->setData(const_cast<Type*>(&arr->valueType()));
 }

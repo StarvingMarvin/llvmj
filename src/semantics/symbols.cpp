@@ -84,7 +84,7 @@ const Symbol* Scope::resolve(const string name) {
     return res;
 }
 
-Variable::Variable(const string name, const Type &type):
+Variable::Variable(const string name, const Type& type):
     Symbol(name),
     _type(type)
 {
@@ -112,13 +112,6 @@ Method::Method(const string name,
 MethodScope::MethodScope (Scope *parent):
     Scope(parent)
 {
-}
-
-void MethodScope::define(Symbol *s) {
-}
-
-Symbol *MethodScope::resolve(const std::string name) {
-    return NULL;
 }
 
 Class::Class(string name, Scope *parentScope):
@@ -201,7 +194,9 @@ MethodArguments* Symbols::enterMethodArgumentsScope() {
 }
 
 Method* Symbols::enterMethodScope(const std::string name, const Type returnType, MethodArguments * arguments) {
-    return new Method(name, returnType, currentScope());
+    Method* m = new Method(name, returnType, arguments);
+    enterScope(m->scope());
+    return m;
 }
 
 const Symbol* Symbols::resolve(string name) {

@@ -45,10 +45,10 @@ namespace mj {
 
     class Variable : public Symbol {
         public:
-            Variable(const std::string name, const Type &type);
-            const Type &type() const { return _type; }
+            Variable(const std::string name, const Type& type);
+            const Type& type() const { return _type; }
         private:
-            const Type &_type;
+            const Type& _type;
     };
 
     class Scope
@@ -83,13 +83,13 @@ namespace mj {
             const Type &_valueType;
         public:
             ArrayType(const Type &valueType);
-            const Type & valueType() const { return _valueType; }
+            const Type& valueType() const { return _valueType; }
     };
 
     class MethodArguments: public Scope {
         public:
             MethodArguments(Scope *parentScope);
-            void define(Symbol *s) { Scope::define(s);  arguments.push_back(s); }
+            virtual void define(Symbol *s) { Scope::define(s);  arguments.push_back(s); }
             bool matchArguments(std::vector<Type*> argumentTypes);
         private:
             std::vector<Symbol*> arguments;
@@ -98,8 +98,8 @@ namespace mj {
     class MethodScope: public Scope {
         public:
             MethodScope(Scope *parent);
-            virtual void define(Symbol *s);
-            virtual Symbol *resolve(const std::string name);
+            /* virtual void define(Symbol *s);
+            virtual Symbol *resolve(const std::string name); */
     };
 
     class Method : public ScopeSymbol {
