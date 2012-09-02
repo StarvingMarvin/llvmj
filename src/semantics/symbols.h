@@ -76,7 +76,7 @@ namespace mj {
         public:
             ScopeSymbol(const std::string name): Symbol(name){};
             virtual Scope* scope()const=0;
-    };
+    };  
 
     class ArrayType: public ReferenceType {
         private:
@@ -85,12 +85,13 @@ namespace mj {
             ArrayType(const Type &valueType);
             const Type& valueType() const { return _valueType; }
     };
-
+    
     class MethodArguments: public Scope {
         public:
             MethodArguments(Scope *parentScope);
             virtual void define(Symbol *s) { Scope::define(s);  arguments.push_back(s); }
             bool matchArguments(std::vector<Type*> argumentTypes);
+            std::string typeSignature();
         private:
             std::vector<Symbol*> arguments;
     };
@@ -100,6 +101,11 @@ namespace mj {
             MethodScope(Scope *parent);
             /* virtual void define(Symbol *s);
             virtual Symbol *resolve(const std::string name); */
+    };
+
+    class MethodType: public Type {
+        public:
+            MethodType(MethodArguments *arguments, Type returnType);
     };
 
     class Method : public ScopeSymbol {

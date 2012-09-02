@@ -100,6 +100,18 @@ bool MethodArguments::matchArguments(vector<Type*> argumentTypes) {
     return true;
 }
 
+string MethodArguments::typeSignature() {
+    string sig = "(";
+    string sep = "";
+    for (vector<Symbol*>::iterator it = arguments.begin(); it != arguments.end(); ++it) {
+        sig += sep;
+        sig += (*it)->name();
+        sep = ",";
+    }
+    sig += ")";
+    return sig;
+}
+
 Method::Method(const string name, 
         const Type returnType,
         Scope *parentScope):
@@ -111,6 +123,11 @@ Method::Method(const string name,
 
 MethodScope::MethodScope (Scope *parent):
     Scope(parent)
+{
+}
+
+MethodType::MethodType(MethodArguments *arguments, Type returnType):
+    Type(arguments->typeSignature() + "->" + returnType.name())
 {
 }
 
