@@ -66,7 +66,7 @@ Scope::Scope(Scope *parent):
 {
 }
 
-void Scope::define(Symbol *s) {
+void Scope::define(const Symbol *s) {
     const string name = s->name();
     if (symbolTable[name] != NULL) {
         throw "Symbol already defined!";
@@ -113,11 +113,10 @@ string MethodArguments::typeSignature() {
 }
 
 Method::Method(const string name, 
-        const Type returnType,
-        Scope *parentScope):
+        const MethodType &type):
     ScopeSymbol(name),
-    _returnType(returnType),
-    methodScope(new MethodScope(parentScope))
+    _type(type),
+    methodScope(new MethodScope(type.arguments()))
 {
 }
 
@@ -126,8 +125,10 @@ MethodScope::MethodScope (Scope *parent):
 {
 }
 
-MethodType::MethodType(MethodArguments *arguments, Type returnType):
-    Type(arguments->typeSignature() + "->" + returnType.name())
+MethodType::MethodType(MethodArguments *arguments, const Type &returnType):
+    Type(arguments->typeSignature() + "->" + returnType.name()),
+    _type(returnType),
+    _arguments(arguments)
 {
 }
 
@@ -161,27 +162,36 @@ const Symbol *ClassScope::resolveField(const string name) {
 }
 
 Scope *mj::makeGlobalScope() {
-    Type *mjInt = new Type("int");
-    Type *mjChar = new Type("char");
-    Type *mjVoid = new Type("void");
+    const Type *mjInt = new Type("int");
+    const Type *mjChar = new Type("char");
+    const Type *mjVoid = new Type("void");
 
     Scope *global = new Scope(NULL);
 
-    vector<Variable> ordArgs;
-    //ordArgs.push_back(Variable("c", *mjChar));
+    // ord method
+    MethodArguments *ordArgs = new MethodArguments(global);
+    ordArgs->define(new Variable("c", *mjChar));
+
+    const MethodType *ordType = new MethodType(ordArgs, *mjInt);
     
-    Method *mjOrd = new Method("ord", *mjInt, global);
+    Method *mjOrd = new Method("ord", *ordType);
 
-    vector<Variable> chrArgs;
-    //chrArgs.push_back(Variable("i", *mjInt));
 
-    Method *mjChr = new Method("chr", *mjChar, global);
+    // chr method
+    MethodArguments *chrArgs = new MethodArguments(global);
+    chrArgs->define(new Variable("i", *mjInt));
+
+    const MethodType *chrType = new MethodType(chrArgs, *mjChar);
+
+    Method *mjChr = new Method("chr", *chrType);
 
     global->define(mjInt);
     global->define(mjChar);
     global->define(mjVoid);
     //global->define(&NULL_TYPE);
+    global->define(ordType);
     global->define(mjOrd);
+    global->define(chrType);
     global->define(mjChr);
     //global->define(mjLen);
 
@@ -198,8 +208,8 @@ void Symbols::define(Symbol *s) {
     currentScope()->define(s);
 }
 
-Class* Symbols::enterClassScope(const std::string name) {
-    Class *c = new Class(name, currentScope());
+const Class* Symbols::enterClassScope(const std::string name) {
+    const Class *c = new Class(name, currentScope());
     enterScope(c->scope());
     return c;
 }
@@ -210,8 +220,10 @@ MethodArguments* Symbols::enterMethodArgumentsScope() {
     return ma;
 }
 
-Method* Symbols::enterMethodScope(const std::string name, const Type returnType, MethodArguments * arguments) {
-    Method* m = new Method(name, returnType, arguments);
+const Method* Symbols::enterMethodScope(const std::string name, const Type &returnType, MethodArguments * arguments) {
+    const MethodType *mtype = new MethodType(arguments, returnType);
+    currentScope()->define(mtype);
+    const Method* m = new Method(name, *mtype);
     enterScope(m->scope());
     return m;
 }

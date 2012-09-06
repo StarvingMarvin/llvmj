@@ -58,7 +58,7 @@ namespace mj {
 
             Scope *parent() const { return _parent; }
 
-            virtual void define (Symbol *s);
+            virtual void define (const Symbol *s);
 
             virtual const Symbol* resolve(const std::string name);
 
@@ -105,20 +105,23 @@ namespace mj {
 
     class MethodType: public Type {
         public:
-            MethodType(MethodArguments *arguments, Type returnType);
+            MethodType(MethodArguments *arguments, const Type &returnType);
+            const Type &returnType() const { return _type; }
+            MethodArguments* arguments() const { return _arguments; }
+        private:
+            const Type &_type;
+            MethodArguments *_arguments;
     };
 
     class Method : public ScopeSymbol {
         friend class MethodScope;
         public:
             Method(const std::string name, 
-                    const Type returnType,
-                    Scope * parentScope);
-            const Type returnType() const {return _returnType;}
+                    const MethodType &returnType);
+            const MethodType &type() const {return _type;}
             virtual Scope* scope() const {return methodScope;}
         private:
-            const Type _returnType;
-            std::vector<Variable*> _arguments;
+            const MethodType &_type;
             MethodScope *methodScope;
     };
 
@@ -138,7 +141,6 @@ namespace mj {
             Class(std::string name, Scope *parentScope);
             virtual Scope* scope() const {return classScope;}
         private:
-            std::vector<Variable> _fields;
             ClassScope *classScope;
     };
 
@@ -153,8 +155,8 @@ namespace mj {
             const Variable* resolveVariable(const std::string name);
 
             void enterScope(Scope* s) {scopes.push(s);}
-            Class* enterClassScope(const std::string name);
-            Method* enterMethodScope(const std::string name, const Type returnType, MethodArguments* arguments);
+            const Class* enterClassScope(const std::string name);
+            const Method* enterMethodScope(const std::string name, const Type &returnType, MethodArguments* arguments);
             MethodArguments* enterMethodArgumentsScope();
             void leaveScope() {scopes.pop();}
 

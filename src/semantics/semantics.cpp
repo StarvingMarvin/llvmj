@@ -83,23 +83,23 @@ void MethodVisitor::operator()(AstWalker *walker) {
     visitChild<void>(walker, ni);
     symbols->leaveScope();
 
-    Method *m = symbols->enterMethodScope(methodName, t, arguments);
+    const Method *m = symbols->enterMethodScope(methodName, t, arguments);
     ni++;
     visitChildren(walker, ni);
     symbols->leaveScope();
 
-    walker->setData(m);
+    walker->setData(const_cast<Method*>(m));
 }
 
 void ClassVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char *className = tokenText(*ni);
 
-    Class *c = symbols->enterClassScope(className);
+    const Class *c = symbols->enterClassScope(className);
     visitChildren(walker, ni);
     symbols->leaveScope();
 
-    walker->setData(c);
+    walker->setData(const_cast<Class*>(c));
 }
 
 void VarVisitor::operator()(AstWalker *walker) {
@@ -162,15 +162,9 @@ void LoopVisitor::operator()(AstWalker *walker) {
 
 void CallVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
-    char* name = tokenText(*ni);
-    const Symbol *methodSymbol = symbols->resolve(name);
-    const Method *method = dynamic_cast<const Method*>(methodSymbol);
-    if (method == NULL) {
-        //
-    }
-    // check arguments
-    Type *t = new Type(method->returnType());
-    walker->setData(t);
+
+    MethodType *mt = visitChild<MethodType>(walker, ni);
+    walker->setData(const_cast<Type*>(&mt->returnType()));
 }
 
 void FieldDesVisitor::operator()(AstWalker *walker) {
