@@ -170,13 +170,15 @@ void CallVisitor::operator()(AstWalker *walker) {
 void FieldDesVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char* name = tokenText(*ni);
-    const Symbol *classSymbol = symbols->resolve(name);
-    const Class *clazz = dynamic_cast<const Class*>(classSymbol);
-    if (clazz == NULL) {
+    ni++;
+    const Symbol *varSymbol = symbols->resolve(name);
+    const Variable *var = dynamic_cast<const Variable*>(varSymbol);
+    if (var == NULL) {
         //
     }
+    const Class &clazz = dynamic_cast<const Class&>(var->type());
     char* fieldName = tokenText(*ni);
-    const Symbol *fieldSymbol = clazz->scope()->resolve(fieldName);
+    const Symbol *fieldSymbol = clazz.scope()->resolve(fieldName);
     const Variable *field = dynamic_cast<const Variable*>(fieldSymbol);
     if (field == NULL) {
         //

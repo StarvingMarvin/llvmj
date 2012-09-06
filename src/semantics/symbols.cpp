@@ -115,7 +115,7 @@ string MethodArguments::typeSignature() {
 Method::Method(const string name, 
         const MethodType &type):
     ScopeSymbol(name),
-    _type(type),
+    Variable(name, type),
     methodScope(new MethodScope(type.arguments()))
 {
 }
@@ -190,9 +190,9 @@ Scope *mj::makeGlobalScope() {
     global->define(mjVoid);
     //global->define(&NULL_TYPE);
     global->define(ordType);
-    global->define(mjOrd);
+    global->define(dynamic_cast<const ScopeSymbol*>(mjOrd));
     global->define(chrType);
-    global->define(mjChr);
+    global->define(dynamic_cast<const ScopeSymbol*>(mjChr));
     //global->define(mjLen);
 
     return global;
@@ -222,7 +222,9 @@ MethodArguments* Symbols::enterMethodArgumentsScope() {
 
 const Method* Symbols::enterMethodScope(const std::string name, const Type &returnType, MethodArguments * arguments) {
     const MethodType *mtype = new MethodType(arguments, returnType);
-    currentScope()->define(mtype);
+    if (! currentScope()->resolve(mtype->name())) {
+        currentScope()->define(mtype);
+    }
     const Method* m = new Method(name, *mtype);
     enterScope(m->scope());
     return m;

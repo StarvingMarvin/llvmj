@@ -113,15 +113,15 @@ namespace mj {
             MethodArguments *_arguments;
     };
 
-    class Method : public ScopeSymbol {
+    class Method : public ScopeSymbol, public Variable {
         friend class MethodScope;
         public:
             Method(const std::string name, 
                     const MethodType &returnType);
-            const MethodType &type() const {return _type;}
+            //const MethodType &type() const {return _type;}
             virtual Scope* scope() const {return methodScope;}
         private:
-            const MethodType &_type;
+            //const MethodType &_type;
             MethodScope *methodScope;
     };
 
