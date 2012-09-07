@@ -226,7 +226,7 @@ Symbols* mj::checkSemantics(AST ast) {
     walker.addVisitor(FIELD_DES, new FieldDesVisitor(symbolsTable));
     walker.addVisitor(ARR_DES, new ArrDesVisitor(symbolsTable));
     walker.addVisitor(LIT_INT, new IntLiteralVisitor(symbolsTable));
-    walker.addVisitor(LIT_CHAR, new SetVisitor(symbolsTable));
+    walker.addVisitor(LIT_CHAR, new CharLiteralVisitor(symbolsTable));
     walker.addVisitor(CALL, new CallVisitor(symbolsTable));
 
     IntOpVisitor *iov = new IntOpVisitor(symbolsTable);
