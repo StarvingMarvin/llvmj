@@ -13,6 +13,8 @@ tokens {
     VAR;
     CONST;
     ARR;
+    NEW;
+    NEW_ARR;
 
     CALL;
     LIT_INT;
@@ -139,7 +141,7 @@ term    : factor (mulop^ factor)*;
 factor  : designator ('(' actual_params? ')' -> ^(CALL designator actual_params?) 
                         | -> designator)
         | literal
-        | NEW type ('['expr']'-> ^(NEW ^(ARR type expr)) | -> ^(NEW ^(VAR type)))
+        | NEW type ('['expr']'-> ^(NEW_ARR type expr) | -> ^(NEW type))
         |   '('! expr ')'!;
 
 designator

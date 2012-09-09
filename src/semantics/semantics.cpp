@@ -1,18 +1,19 @@
 
 #include "semantics.h"
+#include <iostream>
 
 using namespace mj;
-
+using std::cout;
 
 template<class T>
-T* visitChild(AstWalker *walker, nodeiterator ni) {
+T* visitChild(AstWalker *walker, nodeiterator &ni) {
     walker->visit(*ni);
     T *t = getNodeData<T>(*ni);
     ni++;
     return t;
 }
 
-void visitChildren(AstWalker *walker, nodeiterator ni) {
+void visitChildren(AstWalker *walker, nodeiterator &ni) {
     for(; ni < walker->lastChild(); ni++) {
         walker->visit(*ni);
     }
@@ -34,10 +35,14 @@ bool SetVisitor::check(Type *l, Type *r) {
 void VarDesVisitor::operator()(AstWalker *walker) {
     nodeiterator b = walker->firstChild();
     char * ident = tokenText(*b);
+    cout << "Var name: " << ident << std::endl;
+
     const Symbol *s = symbols->resolve(ident);
     const Variable *v = dynamic_cast<const Variable*>(s);
     if (v != NULL) {
         const Type &t = v->type();
+        cout << "Var type: " << t.name() << std::endl;
+
         walker->setData(const_cast<Type*>(&t));
     }
 }
@@ -65,9 +70,21 @@ bool RelOpVisitor::check(Type *l, Type *r) {
     return l->compatible(*r);
 }
 
+void UnOpVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    const Type mjInt = *symbols->resolveType("int");
+    Type *l = visitChild<Type>(walker, ni);
+
+    if (mjInt != *l) {
+
+    }
+}
+
 void DefVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     Symbol *s = visitChild<Symbol>(walker, ni);
+    cout << "Defining: " << s->name() << std::endl;
+
     symbols->define(s);
 }
 
@@ -84,7 +101,6 @@ void MethodVisitor::operator()(AstWalker *walker) {
     symbols->leaveScope();
 
     const Method *m = symbols->enterMethodScope(methodName, t, arguments);
-    ni++;
     visitChildren(walker, ni);
     symbols->leaveScope();
 
@@ -117,7 +133,7 @@ void VarVisitor::operator()(AstWalker *walker) {
 void ArrVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char *typeName = tokenText(*ni);
-    const Type t = *symbols->resolveType(typeName);
+    const Type &t = *symbols->resolveType(typeName);
     ni++;
     char *varName = tokenText(*ni);
 
@@ -157,14 +173,19 @@ void ReadVisitor::operator()(AstWalker *walker) {
     }
 }
 
-void LoopVisitor::operator()(AstWalker *walker) {
-}
-
 void CallVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
 
     MethodType *mt = visitChild<MethodType>(walker, ni);
     walker->setData(const_cast<Type*>(&mt->returnType()));
+    std::vector<const Type*> argumentTypes;
+
+    while(ni < walker->lastChild()) {
+        argumentTypes.push_back(visitChild<const Type>(walker, ni));
+    }
+
+    mt->arguments()->matchArguments(argumentTypes);
+
 }
 
 void FieldDesVisitor::operator()(AstWalker *walker) {
@@ -193,15 +214,19 @@ void FieldDesVisitor::operator()(AstWalker *walker) {
 void ArrDesVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char* name = tokenText(*ni);
+    cout << "Array " << name << std::endl;
     const Symbol *arrSymbol = symbols->resolve(name);
     if (arrSymbol == NULL) {
         //
     }
 
     const Variable *arrVar = dynamic_cast<const Variable*>(arrSymbol);
-    const ArrayType* arr = dynamic_cast<const ArrayType*>(&arrVar->type());
+    const ArrayType &arr = dynamic_cast<const ArrayType&>(arrVar->type());
 
-    walker->setData(const_cast<Type*>(&arr->valueType()));
+    cout << "Array type " << arr.name() << std::endl;
+    cout << "Elem type " << arr.valueType().name() << std::endl;
+
+    walker->setData(const_cast<Type*>(&arr.valueType()));
 }
 
 void NewVisitor::operator()(AstWalker *walker) {
@@ -212,15 +237,26 @@ void NewVisitor::operator()(AstWalker *walker) {
     if (clazz == NULL) {
         //
     }
-    // check arguments
     walker->setData(const_cast<Class*>(clazz));
 
+}
+
+void NewArrVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    char* name = tokenText(*ni);
+    const Symbol *typeSymbol = symbols->resolve(name);
+    const Type *t = dynamic_cast<const Type*>(typeSymbol);
+    if (t == NULL) {
+        //
+    }
+    walker->setData(new ArrayType(*t));
 }
 
 Symbols* mj::checkSemantics(AST ast) {
     AstWalker walker(ast, new VisitChildren());
 
     Symbols *symbolsTable = new Symbols();
+
     walker.addVisitor(SET, new SetVisitor(symbolsTable));
     walker.addVisitor(VAR_DES, new VarDesVisitor(symbolsTable));
     walker.addVisitor(FIELD_DES, new FieldDesVisitor(symbolsTable));
@@ -235,21 +271,20 @@ Symbols* mj::checkSemantics(AST ast) {
     walker.addVisitor(MUL, iov);
     walker.addVisitor(DEC, iov);
     walker.addVisitor(MOD, iov);
-    
+
     walker.addVisitor(DEF, new DefVisitor(symbolsTable));
     walker.addVisitor(VAR, new VarVisitor(symbolsTable));
     walker.addVisitor(CONST, new VarVisitor(symbolsTable));
     walker.addVisitor(ARR, new ArrVisitor(symbolsTable));
     walker.addVisitor(FN, new MethodVisitor(symbolsTable));
     walker.addVisitor(CLASS, new ClassVisitor(symbolsTable));
+    walker.addVisitor(NEW, new NewVisitor(symbolsTable));
+    walker.addVisitor(NEW_ARR, new NewArrVisitor(symbolsTable));
 
-    //walker.addVisitor(INC, new SetVisitor(symbolsTable));
-    //walker.addVisitor(DEC, new SetVisitor(symbolsTable));
-   
     BoolOpVisitor *bov = new BoolOpVisitor(symbolsTable);
     walker.addVisitor(OR, bov);
     walker.addVisitor(AND, bov);
-    
+
     RelOpVisitor *rov = new RelOpVisitor(symbolsTable);
     walker.addVisitor(EQL, rov);
     walker.addVisitor(NEQ, rov);
@@ -258,7 +293,13 @@ Symbols* mj::checkSemantics(AST ast) {
     walker.addVisitor(LST, rov);
     walker.addVisitor(LSE, rov);
 
+    UnOpVisitor *uov = new UnOpVisitor(symbolsTable);
+    walker.addVisitor(INC, uov);
+    walker.addVisitor(DEC, uov);
+
+    symbolsTable->enterNewScope();
     walker.walkTree();
+    symbolsTable->leaveScope();
 
     return symbolsTable;
 }

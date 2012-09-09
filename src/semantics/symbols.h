@@ -33,7 +33,7 @@ namespace mj {
             virtual bool compatible(const Type &t) const;
     };
 
-    const Type NULL_TYPE("null");
+    const Type NULL_TYPE("mj.null");
     const Type VOID_TYPE("void");
     const Type UNDEFINED_TYPE("MJ.undefined");
 
@@ -85,12 +85,18 @@ namespace mj {
             ArrayType(const Type &valueType);
             const Type& valueType() const { return _valueType; }
     };
+
+    class AnyArrayType: public Type {
+        public:
+            AnyArrayType(): Type("mj.array") {}
+            virtual bool compatibile(const Type& t) const { return dynamic_cast<const ArrayType*>(&t) != NULL; }
+    };
     
     class MethodArguments: public Scope {
         public:
             MethodArguments(Scope *parentScope);
             virtual void define(Symbol *s) { Scope::define(s);  arguments.push_back(s); }
-            bool matchArguments(std::vector<Type*> argumentTypes);
+            bool matchArguments(std::vector<const Type*> argumentTypes);
             std::string typeSignature();
         private:
             std::vector<Symbol*> arguments;
@@ -155,6 +161,7 @@ namespace mj {
             const Variable* resolveVariable(const std::string name);
 
             void enterScope(Scope* s) {scopes.push(s);}
+            Scope* enterNewScope();
             const Class* enterClassScope(const std::string name);
             const Method* enterMethodScope(const std::string name, const Type &returnType, MethodArguments* arguments);
             MethodArguments* enterMethodArgumentsScope();

@@ -96,7 +96,7 @@ MethodArguments::MethodArguments(Scope *parentScope):
 {
 }
 
-bool MethodArguments::matchArguments(vector<Type*> argumentTypes) {
+bool MethodArguments::matchArguments(vector<const Type*> argumentTypes) {
     return true;
 }
 
@@ -165,6 +165,9 @@ Scope *mj::makeGlobalScope() {
     const Type *mjInt = new Type("int");
     const Type *mjChar = new Type("char");
     const Type *mjVoid = new Type("void");
+    const Type *mjArr = new AnyArrayType();
+    const Variable *mjEol = new Variable("eol", *mjChar);
+    const Variable *mjNull = new Variable("null", NULL_TYPE);
 
     Scope *global = new Scope(NULL);
 
@@ -185,15 +188,27 @@ Scope *mj::makeGlobalScope() {
 
     Method *mjChr = new Method("chr", *chrType);
 
+
+    // len method
+    MethodArguments *lenArgs = new MethodArguments(global);
+    lenArgs->define(new Variable("arr", *mjArr));
+
+    const MethodType *lenType = new MethodType(lenArgs, *mjInt);
+
+    Method *mjLen = new Method("len", *lenType);
+
     global->define(mjInt);
     global->define(mjChar);
     global->define(mjVoid);
-    //global->define(&NULL_TYPE);
+    global->define(mjEol);
+    global->define(&NULL_TYPE);
+    global->define(mjNull);
     global->define(ordType);
     global->define(dynamic_cast<const ScopeSymbol*>(mjOrd));
     global->define(chrType);
     global->define(dynamic_cast<const ScopeSymbol*>(mjChr));
-    //global->define(mjLen);
+    global->define(lenType);
+    global->define(dynamic_cast<const ScopeSymbol*>(mjLen));
 
     return global;
 }
@@ -206,6 +221,12 @@ Symbols::Symbols():
 
 void Symbols::define(Symbol *s) {
     currentScope()->define(s);
+}
+
+Scope* Symbols::enterNewScope() { 
+    Scope *s = new Scope(currentScope());
+    scopes.push(s);
+    return s;
 }
 
 const Class* Symbols::enterClassScope(const std::string name) {

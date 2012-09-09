@@ -64,6 +64,14 @@ namespace mj {
             virtual bool check(Type *l, Type *r);
     };
 
+    class UnOpVisitor : public NodeVisitor {
+        public:
+            UnOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
+            virtual void operator()(AstWalker *walker);
+        protected:
+            Symbols *symbols;
+    };
+
     class DefVisitor : public NodeVisitor {
         public:
             DefVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
@@ -155,6 +163,14 @@ namespace mj {
     class NewVisitor : public NodeVisitor {
         public:
             NewVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
+            virtual void operator()(AstWalker *walker);
+        private:
+            Symbols *symbols;
+    };
+
+    class NewArrVisitor : public NodeVisitor {
+        public:
+            NewArrVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
             virtual void operator()(AstWalker *walker);
         private:
             Symbols *symbols;
