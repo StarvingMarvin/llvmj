@@ -1,6 +1,5 @@
 
 #include <cstdlib>
-#include <memory>
 
 #include "llvmjConfig.h"
 #include "semantics/semantics.h"
@@ -8,10 +7,9 @@
 #include "codegen/mjmodule.h"
 
 using namespace mj;
-using std::auto_ptr;
 
-auto_ptr<Symbols> collectSymbols(AST ast);
-MjModule generateCode(AST ast, auto_ptr<Symbols> global);
+Symbols* collectSymbols(AST ast);
+MjModule generateCode(AST ast, Symbols* global);
 
 int main(int argc, char** argv) {
 
@@ -19,20 +17,13 @@ int main(int argc, char** argv) {
                         "./input" : argv[1];
     Parser p(filename);
     AST ast = p.parse();
-    auto_ptr<Symbols> symbols = collectSymbols(ast);
+    Symbols* symbols = checkSemantics(ast);
     MjModule module = generateCode(ast, symbols);
 
     return 0;
 }
 
-auto_ptr<Symbols> collectSymbols(AST ast) {
-    auto_ptr<Symbols> symbols(new Symbols());
-
-
-    return symbols;
-}
-
-MjModule generateCode(AST ast, auto_ptr<Symbols> symbols) {
+MjModule generateCode(AST ast, Symbols* symbols) {
     return MjModule("");
 }
 
