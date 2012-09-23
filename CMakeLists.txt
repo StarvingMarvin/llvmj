@@ -11,16 +11,13 @@ set(CMAKE_CXX_FLAGS "-Wall")
 include_directories("${PROJECT_BINARY_DIR}" 
                     "${PROJECT_BINARY_DIR}/src"  
                     src 
-                    /usr/lib/llvm-2.9/include 
-                    /usr/lib/llvm/include 
                     /usr/lib/llvm-3.0/include 
-                    /usr/lib/llvm-3.1/include 
-                    /usr/lib/llvm-2.8/include)
+                    /usr/lib/llvm/include 
+                    /usr/lib/llvm-3.1/include)
 
 link_directories(/usr/lib 
-                /usr/lib/llvm 
-                /usr/lib/llvm-2.9/lib 
                 /usr/lib/llvm-3.0/lib 
+                /usr/lib/llvm 
                 /usr/lib/llvm-3.1/lib 
                 /usr/lib/x86_64-linux-gnu 
                 "${PROJECT_BINARY_DIR}/src"
@@ -29,8 +26,8 @@ link_directories(/usr/lib
                 "${PROJECT_BINARY_DIR}/src/parser")
 
 find_library(LLVM_LIB
-    NAMES LLVM-2.9 LLVM LLVM-3.0 LLVM-3.1 LLVM-2.8 libLLVM-2.9 libLLVM libLLVM-2.8
-    PATHS /usr/lib/llvm /usr/lib /usr/lib/llvm-2.9/lib /usr/lib/llvm-3.0/lib /usr/lib/x86_64-linux-gnu)
+    NAMES LLVM LLVM-3.0 LLVM-3.1 libLLVM 
+    PATHS /usr/lib/llvm /usr/lib /usr/lib/llvm-3.0/lib /usr/lib/x86_64-linux-gnu)
 
 find_library(ANTLR_LIB
     NAMES libantlr3c antlr3c libantlr3 antlr3
