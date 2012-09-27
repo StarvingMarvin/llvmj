@@ -7,6 +7,17 @@
 
 namespace mj {
 
+    class SemanticError {
+        public:
+            SemanticError(){}
+
+        private:
+            int line;
+            char* token;
+            char* filename;
+            char* message;
+    };
+
     class BinOpVisitor : public NodeVisitor {
         public:
             BinOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
