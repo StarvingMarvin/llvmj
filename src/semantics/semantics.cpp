@@ -269,7 +269,7 @@ Symbols* mj::checkSemantics(AST ast) {
     walker.addVisitor(PLUS, iov);
     walker.addVisitor(MINUS, iov);
     walker.addVisitor(MUL, iov);
-    walker.addVisitor(DEC, iov);
+    walker.addVisitor(DIV, iov);
     walker.addVisitor(MOD, iov);
 
     walker.addVisitor(DEF, new DefVisitor(symbolsTable));
@@ -296,6 +296,9 @@ Symbols* mj::checkSemantics(AST ast) {
     UnOpVisitor *uov = new UnOpVisitor(symbolsTable);
     walker.addVisitor(INC, uov);
     walker.addVisitor(DEC, uov);
+
+    walker.addVisitor(PRINT, new PrintVisitor(symbolsTable));
+    walker.addVisitor(READ, new ReadVisitor(symbolsTable));
 
     symbolsTable->enterNewScope();
     walker.walkTree();
