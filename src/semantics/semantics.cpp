@@ -24,7 +24,7 @@ void BinOpVisitor::operator()(AstWalker *walker) {
     Type *l = visitChild<Type>(walker, b);
     Type *r = visitChild<Type>(walker, b);
     if (!check(l, r)) {
-        //scream
+        std::cerr << "ERROR! Types " << *l << " and " << *r << " not compatible!" << std::endl;
     }
 }
 
@@ -35,15 +35,17 @@ bool SetVisitor::check(Type *l, Type *r) {
 void VarDesVisitor::operator()(AstWalker *walker) {
     nodeiterator b = walker->firstChild();
     char * ident = tokenText(*b);
-    cout << "Var name: " << ident << std::endl;
+    //cout << "Var name: " << ident << std::endl;
 
     const Symbol *s = symbols->resolve(ident);
     const Variable *v = dynamic_cast<const Variable*>(s);
     if (v != NULL) {
         const Type &t = v->type();
-        cout << "Var type: " << t.name() << std::endl;
+        //cout << "Var type: " << t.name() << std::endl;
 
         walker->setData(const_cast<Type*>(&t));
+    } else {
+        std::cerr << "ERROR! Var expected, got " << ident << std::endl;
     }
 }
 
@@ -76,14 +78,14 @@ void UnOpVisitor::operator()(AstWalker *walker) {
     Type *l = visitChild<Type>(walker, ni);
 
     if (mjInt != *l) {
-
+        std::cerr << "ERROR! int expected, got " << *l << std::endl;
     }
 }
 
 void DefVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     Symbol *s = visitChild<Symbol>(walker, ni);
-    cout << "Defining: " << s->name() << std::endl;
+    //cout << "Defining: " << s->name() << std::endl;
 
     symbols->define(s);
 }
@@ -91,9 +93,11 @@ void DefVisitor::operator()(AstWalker *walker) {
 void MethodVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char *typeName = tokenText(*ni);
+    cout << "Method return type: " << typeName << std::endl;
     const Type t = *symbols->resolveType(typeName);
     ni++;
     char *methodName = tokenText(*ni);
+    cout << "Method name: " << methodName << std::endl;
 
     MethodArguments *arguments = symbols->enterMethodArgumentsScope();
     ni++;
@@ -103,6 +107,7 @@ void MethodVisitor::operator()(AstWalker *walker) {
     const Method *m = symbols->enterMethodScope(methodName, t, arguments);
     visitChildren(walker, ni);
     symbols->leaveScope();
+    cout << "Method type: " << m->type() << std::endl;
 
     walker->setData(const_cast<Method*>(m));
 }
@@ -127,6 +132,8 @@ void VarVisitor::operator()(AstWalker *walker) {
         char *varName = tokenText(*ni);
         Variable *v = new Variable(varName, *t);
         walker->setData(v);
+    } else {
+        std::cerr << "ERROR! type expected, got NULL!" << std::endl;
     }
 }
 
@@ -151,14 +158,16 @@ void PrintVisitor::operator()(AstWalker *walker) {
     const Type mjInt = *symbols->resolveType("int");
     const Type mjChar = *symbols->resolveType("char");
     nodeiterator ni = walker->firstChild();
-    Type t = *visitChild<Type>(walker, ni);
-    if ((t!=mjInt) && (t!=mjChar)) {
-        // screem
+    Type *t = visitChild<Type>(walker, ni);
+    if ((*t!=mjInt) && (*t!=mjChar)) {
+        std::cerr << "ERROR! int or char expected, got " << t << std::endl;
     }
-    if (ni != walker->lastChild()) {
-        t = *visitChild<Type>(walker, ni);
-        if (t!=mjInt) {
-            //screem
+    if (ni < walker->lastChild()) {
+        t = visitChild<Type>(walker, ni);
+        if (t == NULL) {
+            std::cerr << "WTF!!!" << std::endl;
+        } else if (*t!=mjInt) {
+            std::cerr << "ERROR! int expected, got " << t << std::endl;
         }
     }
 }
@@ -169,7 +178,7 @@ void ReadVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     Type t = *visitChild<Type>(walker, ni);
     if ((t!=mjInt) && (t!=mjChar)) {
-        // screem
+        std::cerr << "ERROR! int or char expected, got " << t << std::endl;
     }
 }
 
@@ -214,7 +223,7 @@ void FieldDesVisitor::operator()(AstWalker *walker) {
 void ArrDesVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char* name = tokenText(*ni);
-    cout << "Array " << name << std::endl;
+    //cout << "Array " << name << std::endl;
     const Symbol *arrSymbol = symbols->resolve(name);
     if (arrSymbol == NULL) {
         //
@@ -223,8 +232,8 @@ void ArrDesVisitor::operator()(AstWalker *walker) {
     const Variable *arrVar = dynamic_cast<const Variable*>(arrSymbol);
     const ArrayType &arr = dynamic_cast<const ArrayType&>(arrVar->type());
 
-    cout << "Array type " << arr.name() << std::endl;
-    cout << "Elem type " << arr.valueType().name() << std::endl;
+    //cout << "Array type " << arr.name() << std::endl;
+    //cout << "Elem type " << arr.valueType().name() << std::endl;
 
     walker->setData(const_cast<Type*>(&arr.valueType()));
 }
@@ -235,7 +244,7 @@ void NewVisitor::operator()(AstWalker *walker) {
     const Symbol *classSymbol = symbols->resolve(name);
     const Class *clazz = dynamic_cast<const Class*>(classSymbol);
     if (clazz == NULL) {
-        //
+        std::cerr << "ERROR! Class is NULL!" << std::endl;
     }
     walker->setData(const_cast<Class*>(clazz));
 
@@ -247,7 +256,7 @@ void NewArrVisitor::operator()(AstWalker *walker) {
     const Symbol *typeSymbol = symbols->resolve(name);
     const Type *t = dynamic_cast<const Type*>(typeSymbol);
     if (t == NULL) {
-        //
+        std::cerr << "ERROR! Type is NULL!" << std::endl;
     }
     walker->setData(new ArrayType(*t));
 }

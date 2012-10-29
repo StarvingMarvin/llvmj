@@ -35,7 +35,7 @@ namespace mj {
 
     const Type NULL_TYPE("mj.null");
     const Type VOID_TYPE("void");
-    const Type UNDEFINED_TYPE("MJ.undefined");
+    const Type UNDEFINED_TYPE("mj.undefined");
 
     class ReferenceType: public Type {
         public:
@@ -141,7 +141,7 @@ namespace mj {
             Symbol *_c;
     };
 
-    class Class : public Type, ScopeSymbol {
+    class Class : public ReferenceType, ScopeSymbol {
         friend class ClassScope;
         public:
             Class(std::string name, Scope *parentScope);

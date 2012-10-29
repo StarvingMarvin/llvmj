@@ -133,7 +133,7 @@ MethodType::MethodType(MethodArguments *arguments, const Type &returnType):
 }
 
 Class::Class(string name, Scope *parentScope):
-    Type(name),
+    ReferenceType(name),
     ScopeSymbol(name)
 {
     classScope = new ClassScope(parentScope, dynamic_cast<Type*>(this));

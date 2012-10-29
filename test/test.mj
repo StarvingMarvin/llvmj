@@ -157,7 +157,7 @@ class Example
 
     void main() {
         init();
-        write(inputNumberStr);
+        write(inputNumbersStr);
         list = readList();
         write(sortedListStr);
         writeList(list);
