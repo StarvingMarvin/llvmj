@@ -35,13 +35,16 @@ bool SetVisitor::check(Type *l, Type *r) {
 void VarDesVisitor::operator()(AstWalker *walker) {
     nodeiterator b = walker->firstChild();
     char * ident = tokenText(*b);
-    //cout << "Var name: " << ident << std::endl;
-
+#ifdef DEBUG
+    cout << "Var name: " << ident << std::endl;
+#endif
     const Symbol *s = symbols->resolve(ident);
     const Variable *v = dynamic_cast<const Variable*>(s);
     if (v != NULL) {
         const Type &t = v->type();
-        //cout << "Var type: " << t.name() << std::endl;
+#ifdef DEBUG
+        cout << "Var type: " << t.name() << std::endl;
+#endif
 
         walker->setData(const_cast<Type*>(&t));
     } else {
@@ -93,11 +96,15 @@ void DefVisitor::operator()(AstWalker *walker) {
 void MethodVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char *typeName = tokenText(*ni);
+#ifdef DEBUG
     cout << "Method return type: " << typeName << std::endl;
+#endif
     const Type t = *symbols->resolveType(typeName);
     ni++;
     char *methodName = tokenText(*ni);
+#ifdef DEBUG
     cout << "Method name: " << methodName << std::endl;
+#endif
 
     MethodArguments *arguments = symbols->enterMethodArgumentsScope();
     ni++;
@@ -107,7 +114,9 @@ void MethodVisitor::operator()(AstWalker *walker) {
     const Method *m = symbols->enterMethodScope(methodName, t, arguments);
     visitChildren(walker, ni);
     symbols->leaveScope();
+#ifdef DEBUG
     cout << "Method type: " << m->type() << std::endl;
+#endif
 
     walker->setData(const_cast<Method*>(m));
 }
@@ -162,14 +171,6 @@ void PrintVisitor::operator()(AstWalker *walker) {
     if ((*t!=mjInt) && (*t!=mjChar)) {
         std::cerr << "ERROR! int or char expected, got " << t << std::endl;
     }
-    if (ni < walker->lastChild()) {
-        t = visitChild<Type>(walker, ni);
-        if (t == NULL) {
-            std::cerr << "WTF!!!" << std::endl;
-        } else if (*t!=mjInt) {
-            std::cerr << "ERROR! int expected, got " << t << std::endl;
-        }
-    }
 }
 
 void ReadVisitor::operator()(AstWalker *walker) {
@@ -186,6 +187,9 @@ void CallVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
 
     MethodType *mt = visitChild<MethodType>(walker, ni);
+#ifdef DEBUG
+    cout << "Return type: " << mt->returnType() << std::endl;
+#endif
     walker->setData(const_cast<Type*>(&mt->returnType()));
     std::vector<const Type*> argumentTypes;
 

@@ -1,3 +1,11 @@
 
 #define __STDC_LIMIT_MACROS
 #define __STDC_CONSTANT_MACROS
+
+#define _Debug 1
+
+#if _@CMAKE_BUILD_TYPE@ == _Debug
+#define DEBUG
+#endif
+
+#undef _Debug

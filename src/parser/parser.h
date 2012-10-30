@@ -2,6 +2,8 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "llvmjConfig.h"
+
 #include "parser/MicroJavaLexer.h"
 #include "parser/MicroJavaParser.h"
 #include <string>
