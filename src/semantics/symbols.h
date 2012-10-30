@@ -8,6 +8,7 @@
 #include <map>
 #include <cstdlib>
 #include <memory>
+#include <iostream>
 
 namespace mj {
 
@@ -63,6 +64,7 @@ namespace mj {
             virtual const Symbol* resolve(const std::string name);
 
         protected:
+            friend std::ostream& operator<<(std::ostream& os, const Scope& s);
             std::map<const std::string, const Symbol*> symbolTable;
 
         private:
@@ -167,16 +169,22 @@ namespace mj {
             MethodArguments* enterMethodArgumentsScope();
             void leaveScope() {scopes.pop();}
 
+            friend std::ostream& operator<<(std::ostream& os, const Symbols& s);
+
         private:
-            Scope *currentScope() {return scopes.top();}
+            Scope *currentScope() const {return scopes.top();}
             std::stack<Scope*> scopes;
     };
 
     Scope *makeGlobalScope();
 
+    std::ostream& operator<<(std::ostream &os, const mj::Type& s);
+    std::ostream& operator<<(std::ostream &os, const mj::Variable& s);
+    std::ostream& operator<<(std::ostream &os, const mj::ScopeSymbol& s);
+    std::ostream& operator<<(std::ostream &os, const mj::Symbol& s);
+
 }
 
-std::ostream& operator<<(std::ostream &os, const mj::Symbol& s);
 
 #endif //_SYMBOLS_H_
 

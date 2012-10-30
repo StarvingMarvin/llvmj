@@ -13,4 +13,6 @@ int main (int argc, char** argv) {
     AST ast = p.parse();
 
     Symbols *symbolTable = checkSemantics(ast);
+    std::cout << *symbolTable;
+    std::cout << std::endl;
 }

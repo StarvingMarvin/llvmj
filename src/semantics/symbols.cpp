@@ -7,16 +7,50 @@ using std::ostream;
 using std::vector;
 using std::map;
 using std::auto_ptr;
+using std::cerr;
+using std::endl;
 
 Symbol::Symbol(const string name):
     _name(name)
 {
 }
 
-ostream& operator<<(ostream &os, const Symbol& s) {
-    return os << s.name();
-}
+namespace mj {
+    ostream& operator<<(ostream &os, const Type& t) {
+        return os << t.name();
+    }
 
+    ostream& operator<<(ostream &os, const Variable& v) {
+        return os << v.name() << " : " << v.type();
+    }
+
+    ostream& operator<<(ostream &os, const ScopeSymbol &s) {
+        return os << s << *(s.scope());
+    }
+
+    ostream& operator<<(ostream &os, const Symbol& s) {
+        s.name();
+        return os << ":" << s.name();
+    }
+
+    ostream& operator<<(ostream &os, const Symbols& s) {
+        return os << *s.currentScope();
+    }
+
+    ostream& operator<<(ostream& os, const Scope& s) {
+        os << "{\n";
+        map<const string, const Symbol*>::const_iterator i = s.symbolTable.begin();
+        for (; i != s.symbolTable.end(); i++) {
+            if (i->second) {
+                os << "\t" << *(i->second) << endl;
+            } else {
+                cerr << "Lost symbol for: " << i->first << endl;
+            }
+        }
+        os << "}\n";
+        return os;
+    }
+}
 //
 // Basic types
 //
