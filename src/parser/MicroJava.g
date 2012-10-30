@@ -104,10 +104,14 @@ statement
         | BREAK ';'!
         | RETURN^ expr? ';'!
         | READ^ '('! designator ')'! ';'!
-        | PRINT^ '('! expr (','! NUMBER)? ')'! ';'! 
+        | print_stat
         | des_stat
         | '{' statement* '}' -> ^(BLOCK statement*)
         | if_stat;
+
+print_stat
+    :   PRINT '(' expr (',' NUMBER -> ^(PRINT expr ^(LIT_INT NUMBER))
+                        | -> ^(PRINT expr)) ')' ';';
 
 if_stat : IF^ '('! condition ')'! statement (ELSE! statement)?;
 
