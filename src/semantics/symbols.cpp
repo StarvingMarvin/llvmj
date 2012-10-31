@@ -125,8 +125,12 @@ ostream& Variable::print(ostream &os) const {
 }
 
 ostream& ScopeSymbol::print(ostream &os) const {
-    Symbol::print(os);
+    printSignature(os);
     return os << *(this->scope());
+}
+
+ostream& ScopeSymbol::printSignature(ostream &os) const {
+    return Symbol::print(os);
 }
 
 MethodArguments::MethodArguments(Scope *parentScope): 
@@ -159,6 +163,10 @@ Method::Method(const string name,
 {
 }
 
+ostream& Method::printSignature(ostream &os) const {
+    return Variable::print(os);
+}
+
 MethodScope::MethodScope (Scope *parent):
     Scope(parent)
 {
@@ -176,6 +184,10 @@ Class::Class(string name, Scope *parentScope):
     ScopeSymbol(name)
 {
     classScope = new ClassScope(parentScope, dynamic_cast<Type*>(this));
+}
+
+ostream& Class::printSignature(ostream &os) const {
+    return Type::print(os);
 }
 
 ClassScope::ClassScope(Scope *parent, Symbol *c):

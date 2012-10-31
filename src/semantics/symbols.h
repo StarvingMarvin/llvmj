@@ -88,6 +88,7 @@ namespace mj {
             ScopeSymbol(const std::string name): Symbol(name){};
             virtual Scope* scope()const=0;
             virtual std::ostream& print(std::ostream& os) const;
+            virtual std::ostream& printSignature(std::ostream& os) const;
     };  
 
     class ArrayType: public ReferenceType {
@@ -137,7 +138,7 @@ namespace mj {
             Method(const std::string name, 
                     const MethodType &returnType);
             virtual Scope* scope() const {return methodScope;}
-            //virtual std::ostream& print(std::ostream& os)const;
+            virtual std::ostream& printSignature(std::ostream& os) const;
         private:
             MethodScope *methodScope;
     };
@@ -157,7 +158,7 @@ namespace mj {
         public:
             Class(std::string name, Scope *parentScope);
             virtual Scope* scope() const {return classScope;}
-            //virtual std::ostream& print(std::ostream& os)const;
+            virtual std::ostream& printSignature(std::ostream& os) const;
         private:
             ClassScope *classScope;
     };
