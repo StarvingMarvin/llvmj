@@ -2,6 +2,8 @@
 #ifndef _SYMBOLS_H_
 #define _SYMBOLS_H_
 
+#include "llvmjConfig.h"
+
 #include <string>
 #include <vector>
 #include <stack>
@@ -21,7 +23,9 @@ namespace mj {
 
             Symbol(const std::string name);
 
-            virtual const std::string name() const { return _name; }
+            const std::string name() const { return _name; }
+
+            virtual std::ostream& print(std::ostream& os)const;
 
     };
 
@@ -32,6 +36,7 @@ namespace mj {
             virtual bool operator==(const Type &t) const;
             virtual bool operator!=(const Type &t) const;
             virtual bool compatible(const Type &t) const;
+            virtual std::ostream& print(std::ostream& os)const;
     };
 
     const Type NULL_TYPE("mj.null");
@@ -48,9 +53,12 @@ namespace mj {
         public:
             Variable(const std::string name, const Type& type);
             const Type& type() const { return _type; }
+            virtual std::ostream& print(std::ostream& os)const;
         private:
             const Type& _type;
     };
+
+    typedef std::map<const std::string, const Symbol*> SymbolTable;
 
     class Scope
     {
@@ -63,9 +71,10 @@ namespace mj {
 
             virtual const Symbol* resolve(const std::string name);
 
-        protected:
             friend std::ostream& operator<<(std::ostream& os, const Scope& s);
-            std::map<const std::string, const Symbol*> symbolTable;
+
+        protected:
+            SymbolTable symbolTable;
 
         private:
             Scope(Scope & s){}
@@ -78,6 +87,7 @@ namespace mj {
         public:
             ScopeSymbol(const std::string name): Symbol(name){};
             virtual Scope* scope()const=0;
+            virtual std::ostream& print(std::ostream& os) const;
     };  
 
     class ArrayType: public ReferenceType {
@@ -126,10 +136,9 @@ namespace mj {
         public:
             Method(const std::string name, 
                     const MethodType &returnType);
-            //const MethodType &type() const {return _type;}
             virtual Scope* scope() const {return methodScope;}
+            //virtual std::ostream& print(std::ostream& os)const;
         private:
-            //const MethodType &_type;
             MethodScope *methodScope;
     };
 
@@ -148,6 +157,7 @@ namespace mj {
         public:
             Class(std::string name, Scope *parentScope);
             virtual Scope* scope() const {return classScope;}
+            //virtual std::ostream& print(std::ostream& os)const;
         private:
             ClassScope *classScope;
     };
@@ -167,7 +177,7 @@ namespace mj {
             const Class* enterClassScope(const std::string name);
             const Method* enterMethodScope(const std::string name, const Type &returnType, MethodArguments* arguments);
             MethodArguments* enterMethodArgumentsScope();
-            void leaveScope() {scopes.pop();}
+            void leaveScope();
 
             friend std::ostream& operator<<(std::ostream& os, const Symbols& s);
 
@@ -178,9 +188,6 @@ namespace mj {
 
     Scope *makeGlobalScope();
 
-    std::ostream& operator<<(std::ostream &os, const mj::Type& s);
-    std::ostream& operator<<(std::ostream &os, const mj::Variable& s);
-    std::ostream& operator<<(std::ostream &os, const mj::ScopeSymbol& s);
     std::ostream& operator<<(std::ostream &os, const mj::Symbol& s);
 
 }

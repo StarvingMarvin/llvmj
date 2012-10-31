@@ -88,8 +88,9 @@ void UnOpVisitor::operator()(AstWalker *walker) {
 void DefVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     Symbol *s = visitChild<Symbol>(walker, ni);
-    //cout << "Defining: " << s->name() << std::endl;
-
+#ifdef DEBUG
+    cout << "Defining: " << *s << std::endl;
+#endif
     symbols->define(s);
 }
 

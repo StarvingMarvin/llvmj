@@ -15,22 +15,14 @@ Symbol::Symbol(const string name):
 {
 }
 
+ostream& Symbol::print(ostream &os) const {
+    return os << ":" << name();
+}
+
 namespace mj {
-    ostream& operator<<(ostream &os, const Type& t) {
-        return os << t.name();
-    }
-
-    ostream& operator<<(ostream &os, const Variable& v) {
-        return os << v.name() << " : " << v.type();
-    }
-
-    ostream& operator<<(ostream &os, const ScopeSymbol &s) {
-        return os << s << *(s.scope());
-    }
 
     ostream& operator<<(ostream &os, const Symbol& s) {
-        s.name();
-        return os << ":" << s.name();
+        return s.print(os);
     }
 
     ostream& operator<<(ostream &os, const Symbols& s) {
@@ -39,13 +31,9 @@ namespace mj {
 
     ostream& operator<<(ostream& os, const Scope& s) {
         os << "{\n";
-        map<const string, const Symbol*>::const_iterator i = s.symbolTable.begin();
+        SymbolTable::const_iterator i = s.symbolTable.begin();
         for (; i != s.symbolTable.end(); i++) {
-            if (i->second) {
-                os << "\t" << *(i->second) << endl;
-            } else {
-                cerr << "Lost symbol for: " << i->first << endl;
-            }
+            os << "\t" << *(i->second) << endl;
         }
         os << "}\n";
         return os;
@@ -70,6 +58,11 @@ bool Type::operator!=(const Type &t) const {
 
 bool Type::compatible(const Type &t) const {
     return *this == t;
+}
+
+
+ostream& Type::print(ostream &os) const {
+    return os << name();
 }
 
 
@@ -109,19 +102,31 @@ void Scope::define(const Symbol *s) {
 }
 
 const Symbol* Scope::resolve(const string name) {
-    const Symbol *res = symbolTable[name];
-    if (res == NULL) {
-        if (_parent != NULL) {
-            res = _parent->resolve(name);
-        }
+    SymbolTable::const_iterator it = symbolTable.find(name);
+    if( it != symbolTable.end() ) {
+        return it->second;
     }
-    return res;
+
+    if (_parent != NULL) {
+        return _parent->resolve(name);
+    }
+
+    return NULL;
 }
 
 Variable::Variable(const string name, const Type& type):
     Symbol(name),
     _type(type)
 {
+}
+
+ostream& Variable::print(ostream &os) const {
+    return os << name() << " : " << type();
+}
+
+ostream& ScopeSymbol::print(ostream &os) const {
+    Symbol::print(os);
+    return os << *(this->scope());
 }
 
 MethodArguments::MethodArguments(Scope *parentScope): 
@@ -283,6 +288,13 @@ const Method* Symbols::enterMethodScope(const std::string name, const Type &retu
     const Method* m = new Method(name, *mtype);
     enterScope(m->scope());
     return m;
+}
+
+void Symbols::leaveScope() {
+#ifdef DEBUG
+    std::cout << "Leaving scope: " << *scopes.top();
+#endif
+    scopes.pop();
 }
 
 const Symbol* Symbols::resolve(string name) {
