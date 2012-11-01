@@ -43,7 +43,7 @@ namespace mj {
     const Type VOID_TYPE("void");
     const Type UNDEFINED_TYPE("mj.undefined");
 
-    class ReferenceType: public Type {
+        class ReferenceType: public Type {
         public:
             ReferenceType(const std::string name);
             bool compatible(const Type &t) const;
@@ -108,7 +108,7 @@ namespace mj {
     class MethodArguments: public Scope {
         public:
             MethodArguments(Scope *parentScope);
-            virtual void define(Symbol *s);
+            virtual void define(const Symbol *s);
             bool matchArguments(std::vector<const Type*> argumentTypes);
             std::string typeSignature();
         private:
@@ -146,7 +146,6 @@ namespace mj {
     class ClassScope : public Scope {
         public:
             ClassScope(Scope *parent, Symbol * c);
-            virtual void define(Symbol *s);
             virtual const Symbol *resolve(const std::string name);
             const Symbol *resolveField(const std::string name);
         private:

@@ -144,7 +144,7 @@ bool MethodArguments::matchArguments(vector<const Type*> argumentTypes) {
     if (size != argumentTypes.size()) {
         return false;
     }
-    for (int i = 0; i < size; i++) {
+    for (unsigned int i = 0; i < size; i++) {
         if (! arguments[i]->compatible(*argumentTypes[i])) {
             return false;
         }
@@ -164,8 +164,8 @@ string MethodArguments::typeSignature() {
     return sig;
 }
 
-void MethodArguments::define(Symbol *s) {
-    Variable *v = dynamic_cast<Variable*>(s);
+void MethodArguments::define(const Symbol *s) {
+    const Variable *v = dynamic_cast<const Variable*>(s);
     if (v == NULL) {
         cerr << "ERROR! Expecting variable, got" << *s;
         throw "Illegal symbol";
@@ -213,10 +213,6 @@ ClassScope::ClassScope(Scope *parent, Symbol *c):
     Scope(parent),
     _c(c)
 {
-}
-
-void ClassScope::define(Symbol *s) {
-    Scope::define(s);
 }
 
 const Symbol *ClassScope::resolve(const string name) {
