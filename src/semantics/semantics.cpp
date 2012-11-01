@@ -198,7 +198,9 @@ void CallVisitor::operator()(AstWalker *walker) {
         argumentTypes.push_back(visitChild<const Type>(walker, ni));
     }
 
-    mt->arguments()->matchArguments(argumentTypes);
+    if (!mt->arguments()->matchArguments(argumentTypes)) {
+        std::cerr << "ERROR! Invalid argument types" << std::endl;
+    }
 
 }
 

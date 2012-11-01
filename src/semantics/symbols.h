@@ -108,11 +108,11 @@ namespace mj {
     class MethodArguments: public Scope {
         public:
             MethodArguments(Scope *parentScope);
-            virtual void define(Symbol *s) { Scope::define(s);  arguments.push_back(s); }
+            virtual void define(Symbol *s);
             bool matchArguments(std::vector<const Type*> argumentTypes);
             std::string typeSignature();
         private:
-            std::vector<Symbol*> arguments;
+            std::vector<const Type*> arguments;
     };
 
     class MethodScope: public Scope {

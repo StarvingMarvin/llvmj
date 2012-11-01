@@ -140,19 +140,38 @@ MethodArguments::MethodArguments(Scope *parentScope):
 }
 
 bool MethodArguments::matchArguments(vector<const Type*> argumentTypes) {
+    std::vector<const Type*>::size_type size = arguments.size();
+    if (size != argumentTypes.size()) {
+        return false;
+    }
+    for (int i = 0; i < size; i++) {
+        if (! arguments[i]->compatible(*argumentTypes[i])) {
+            return false;
+        }
+    }
     return true;
 }
 
 string MethodArguments::typeSignature() {
     string sig = "(";
     string sep = "";
-    for (vector<Symbol*>::iterator it = arguments.begin(); it != arguments.end(); ++it) {
+    for (vector<const Type*>::iterator it = arguments.begin(); it != arguments.end(); ++it) {
         sig += sep;
         sig += (*it)->name();
         sep = ",";
     }
     sig += ")";
     return sig;
+}
+
+void MethodArguments::define(Symbol *s) {
+    Variable *v = dynamic_cast<Variable*>(s);
+    if (v == NULL) {
+        cerr << "ERROR! Expecting variable, got" << *s;
+        throw "Illegal symbol";
+    }
+    Scope::define(v);  
+    arguments.push_back(&v->type());
 }
 
 Method::Method(const string name, 
