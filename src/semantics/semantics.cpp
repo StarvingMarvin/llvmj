@@ -112,25 +112,25 @@ void MethodVisitor::operator()(AstWalker *walker) {
     visitChild<void>(walker, ni);
     symbols->leaveScope();
 
-    const Method *m = symbols->enterMethodScope(methodName, t, arguments);
+    Method *m = symbols->enterMethodScope(methodName, t, arguments);
     visitChildren(walker, ni);
     symbols->leaveScope();
 #ifdef DEBUG
     cout << "Method type: " << m->type() << std::endl;
 #endif
 
-    walker->setData(const_cast<Method*>(m));
+    walker->setData(m);
 }
 
 void ClassVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char *className = tokenText(*ni);
 
-    const Class *c = symbols->enterClassScope(className);
+    Class *c = symbols->enterClassScope(className);
     visitChildren(walker, ni);
     symbols->leaveScope();
 
-    walker->setData(const_cast<Class*>(c));
+    walker->setData(c);
 }
 
 void VarVisitor::operator()(AstWalker *walker) {
@@ -266,6 +266,15 @@ void NewArrVisitor::operator()(AstWalker *walker) {
     walker->setData(new ArrayType(*t));
 }
 
+void ProgramVisitor::operator()(AstWalker *walker) {
+    nodeiterator ni = walker->firstChild();
+    char* name = tokenText(*ni);
+    Program *p = symbols->enterProgramScope(name);
+    visitChildren(walker, ni);
+    symbols->leaveScope();
+    symbols->define(p);
+}
+
 Symbols* mj::checkSemantics(AST ast) {
     AstWalker walker(ast, new VisitChildren());
 
@@ -314,9 +323,7 @@ Symbols* mj::checkSemantics(AST ast) {
     walker.addVisitor(PRINT, new PrintVisitor(symbolsTable));
     walker.addVisitor(READ, new ReadVisitor(symbolsTable));
 
-    symbolsTable->enterNewScope();
     walker.walkTree();
-    symbolsTable->leaveScope();
 
     return symbolsTable;
 }

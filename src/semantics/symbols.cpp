@@ -212,6 +212,13 @@ const Symbol *ClassScope::resolveField(const string name) {
     return symbolTable[name];
 }
 
+Program::Program(std::string name, Scope *parentScope): 
+    ScopeSymbol(name),
+    _scope(new Scope(parentScope))
+{
+}
+
+
 Scope *mj::makeGlobalScope() {
     const Type *mjInt = new Type("int");
     const Type *mjChar = new Type("char");
@@ -274,14 +281,14 @@ void Symbols::define(Symbol *s) {
     currentScope()->define(s);
 }
 
-Scope* Symbols::enterNewScope() { 
-    Scope *s = new Scope(currentScope());
-    scopes.push(s);
-    return s;
-}
+//Scope* Symbols::enterNewScope() { 
+//    Scope *s = new Scope(currentScope());
+//    scopes.push(s);
+//    return s;
+//}
 
-const Class* Symbols::enterClassScope(const std::string name) {
-    const Class *c = new Class(name, currentScope());
+Class* Symbols::enterClassScope(const std::string name) {
+    Class *c = new Class(name, currentScope());
     enterScope(c->scope());
     return c;
 }
@@ -292,14 +299,20 @@ MethodArguments* Symbols::enterMethodArgumentsScope() {
     return ma;
 }
 
-const Method* Symbols::enterMethodScope(const std::string name, const Type &returnType, MethodArguments * arguments) {
+Method* Symbols::enterMethodScope(const std::string name, const Type &returnType, MethodArguments * arguments) {
     const MethodType *mtype = new MethodType(arguments, returnType);
     if (! currentScope()->resolve(mtype->name())) {
         currentScope()->define(mtype);
     }
-    const Method* m = new Method(name, *mtype);
+    Method* m = new Method(name, *mtype);
     enterScope(m->scope());
     return m;
+}
+
+Program* Symbols::enterProgramScope(const std::string name) {
+    Program* p = new Program(name, currentScope());
+    enterScope(p->scope());
+    return p;
 }
 
 void Symbols::leaveScope() {

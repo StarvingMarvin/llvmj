@@ -187,6 +187,14 @@ namespace mj {
             Symbols *symbols;
     };
 
+    class ProgramVisitor : public NodeVisitor {
+        public:
+            ProgramVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
+            virtual void operator()(AstWalker *walker);
+        private:
+            Symbols *symbols;
+    };
+
     Symbols *checkSemantics(AST ast);
 
 }

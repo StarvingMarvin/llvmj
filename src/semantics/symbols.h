@@ -163,6 +163,14 @@ namespace mj {
             ClassScope *classScope;
     };
 
+    class Program : public ScopeSymbol {
+        public:
+            Program(std::string name, Scope *parentScope);
+            virtual Scope* scope() const {return _scope;}
+        private:
+            Scope *_scope;
+    };
+
     class Symbols {
         public:
             Symbols();
@@ -174,9 +182,10 @@ namespace mj {
             const Variable* resolveVariable(const std::string name);
 
             void enterScope(Scope* s) {scopes.push(s);}
-            Scope* enterNewScope();
-            const Class* enterClassScope(const std::string name);
-            const Method* enterMethodScope(const std::string name, const Type &returnType, MethodArguments* arguments);
+            //Scope* enterNewScope();
+            Class* enterClassScope(const std::string name);
+            Program* enterProgramScope(const std::string name);
+            Method* enterMethodScope(const std::string name, const Type &returnType, MethodArguments* arguments);
             MethodArguments* enterMethodArgumentsScope();
             void leaveScope();
 
