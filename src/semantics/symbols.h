@@ -43,7 +43,7 @@ namespace mj {
     const Type VOID_TYPE("void");
     const Type UNDEFINED_TYPE("mj.undefined");
 
-        class ReferenceType: public Type {
+    class ReferenceType: public Type {
         public:
             ReferenceType(const std::string name);
             bool compatible(const Type &t) const;
@@ -99,10 +99,10 @@ namespace mj {
             const Type& valueType() const { return _valueType; }
     };
 
-    class AnyArrayType: public Type {
+    class AnyArrayType: public ReferenceType {
         public:
-            AnyArrayType(): Type("mj.array") {}
-            virtual bool compatibile(const Type& t) const { return dynamic_cast<const ArrayType*>(&t) != NULL; }
+            AnyArrayType(): ReferenceType("mj.array") {}
+            virtual bool compatibile(const Type& t) const { return ReferenceType::compatible(t) || dynamic_cast<const ArrayType*>(&t) != NULL; }
     };
     
     class MethodArguments: public Scope {
