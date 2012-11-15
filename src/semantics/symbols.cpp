@@ -330,8 +330,14 @@ MethodArguments* Symbols::enterMethodArgumentsScope() {
 
 Method* Symbols::enterMethodScope(const std::string name, const Type &returnType, MethodArguments * arguments) {
     const MethodType *mtype = new MethodType(arguments, returnType);
-    if (! currentScope()->resolve(mtype->name())) {
+    const Symbol *existingType = currentScope()->resolve(mtype->name());
+    if (!existingType) {
         currentScope()->define(mtype);
+#ifdef DEBUG
+        std::cout << "new method type: " << *mtype << std::endl;
+    } else {
+        std::cout << "existing method type: " << *existingType << std::endl;
+#endif
     }
     Method* m = new Method(name, *mtype);
     enterScope(m->scope());
