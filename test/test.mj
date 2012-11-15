@@ -155,10 +155,13 @@ class Example
         print(eol);
     }
 
-    void main() {
+    void main() 
+        int listSize;
+    {
         init();
         write(inputNumbersStr);
         list = readList();
+        listSize = size(list);
         write(sortedListStr);
         writeList(list);
     }
