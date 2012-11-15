@@ -46,7 +46,7 @@ namespace mj {
     class ReferenceType: public Type {
         public:
             ReferenceType(const std::string name);
-            bool compatible(const Type &t) const;
+            virtual bool compatible(const Type &t) const;
     };
 
     class Variable : public Symbol {
@@ -102,8 +102,13 @@ namespace mj {
     class AnyArrayType: public ReferenceType {
         public:
             AnyArrayType(): ReferenceType("mj.array") {}
-            virtual bool compatibile(const Type& t) const { return ReferenceType::compatible(t) || dynamic_cast<const ArrayType*>(&t) != NULL; }
+            virtual bool compatible(const Type& t) const { 
+                return ReferenceType::compatible(t) 
+                    || dynamic_cast<const ArrayType*>(&t) != NULL;
+            }
     };
+
+    typedef std::vector<const Type*> ArgumentTypes;
     
     class MethodArguments: public Scope {
         public:

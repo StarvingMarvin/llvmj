@@ -199,7 +199,12 @@ void CallVisitor::operator()(AstWalker *walker) {
     }
 
     if (!mt->arguments()->matchArguments(argumentTypes)) {
-        std::cerr << "ERROR! Invalid argument types" << std::endl;
+        std::cerr << "ERROR! Invalid argument types: [";
+        for (std::vector<const Type*>::iterator it = argumentTypes.begin();
+                it != argumentTypes.end(); it++) {
+            std::cerr << *(*it) << ", ";
+        }
+        std::cerr << "]" <<std::endl;
     }
 
 }
