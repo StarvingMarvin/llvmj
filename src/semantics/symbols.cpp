@@ -30,11 +30,14 @@ namespace mj {
     }
 
     ostream& operator<<(ostream& os, const Scope& s) {
-        os << "{\n";
+        unsigned int depth = s.depth();
+        os << " {\n";
         SymbolTable::const_iterator i = s.symbolTable.begin();
         for (; i != s.symbolTable.end(); i++) {
-            os << "\t" << *(i->second) << endl;
+            for (unsigned int d = 0; d <= depth; d++) os << "\t";
+            os << *(i->second) << endl;
         }
+        for (unsigned int i = 0; i < depth; i++) os << "\t";
         os << "}\n";
         return os;
     }
@@ -114,6 +117,16 @@ const Symbol* Scope::resolve(const string name) {
     return NULL;
 }
 
+unsigned int Scope::depth() const {
+    unsigned int d = 0;
+    Scope *cur = _parent;
+    while (cur != NULL) {
+        cur = cur->_parent;
+        d++;
+    }
+    return d;
+}
+
 Variable::Variable(const string name, const Type& type):
     Symbol(name),
     _type(type)
@@ -139,8 +152,8 @@ MethodArguments::MethodArguments(Scope *parentScope):
 {
 }
 
-bool MethodArguments::matchArguments(vector<const Type*> argumentTypes) {
-    std::vector<const Type*>::size_type size = arguments.size();
+bool MethodArguments::matchArguments(ArgumentTypes argumentTypes) {
+    ArgumentTypes::size_type size = arguments.size();
     if (size != argumentTypes.size()) {
         return false;
     }
@@ -155,7 +168,8 @@ bool MethodArguments::matchArguments(vector<const Type*> argumentTypes) {
 string MethodArguments::typeSignature() {
     string sig = "(";
     string sep = "";
-    for (vector<const Type*>::iterator it = arguments.begin(); it != arguments.end(); ++it) {
+    for (ArgumentTypes::iterator it = arguments.begin(); 
+            it != arguments.end(); ++it) {
         sig += sep;
         sig += (*it)->name();
         sep = ",";

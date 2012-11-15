@@ -30,11 +30,26 @@ void testTypes() {
 }
 
 void testMethod() {
+    const Type *mjInt = new Type("int");
+    const Type *mjChar = new Type("char");
 
+    Scope *global = new Scope(NULL);
+
+    // ord method
+    MethodArguments *ordArgs = new MethodArguments(global);
+    ordArgs->define(new Variable("c", *mjChar));
+
+    const MethodType *ordType = new MethodType(ordArgs, *mjInt);
+    assert(ordType->returnType() == *mjInt);
+    
+    Method *mjOrd = new Method("ord", *ordType);
+
+    //assert(mjOrd->type());
 }
 
 int main (int argc, char** argv) {
     testTypes();
+    testMethod();
     std::cout << "All tests passed" << std::endl;
 }
 

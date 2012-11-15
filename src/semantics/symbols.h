@@ -40,8 +40,8 @@ namespace mj {
     };
 
     const Type NULL_TYPE("mj.null");
-    const Type VOID_TYPE("void");
-    const Type UNDEFINED_TYPE("mj.undefined");
+    //const Type VOID_TYPE("void");
+    //const Type UNDEFINED_TYPE("mj.undefined");
 
     class ReferenceType: public Type {
         public:
@@ -74,6 +74,7 @@ namespace mj {
             friend std::ostream& operator<<(std::ostream& os, const Scope& s);
 
         protected:
+            virtual unsigned int depth() const;
             SymbolTable symbolTable;
 
         private:
@@ -114,15 +115,17 @@ namespace mj {
         public:
             MethodArguments(Scope *parentScope);
             virtual void define(const Symbol *s);
-            bool matchArguments(std::vector<const Type*> argumentTypes);
+            bool matchArguments(ArgumentTypes argumentTypes);
             std::string typeSignature();
         private:
-            std::vector<const Type*> arguments;
+            ArgumentTypes arguments;
     };
 
     class MethodScope: public Scope {
         public:
             MethodScope(Scope *parent);
+        protected:
+            virtual unsigned int depth() const { return Scope::depth() - 1; }
             /* virtual void define(Symbol *s);
             virtual Symbol *resolve(const std::string name); */
     };
@@ -141,7 +144,7 @@ namespace mj {
         friend class MethodScope;
         public:
             Method(const std::string name, 
-                    const MethodType &returnType);
+                    const MethodType &methodType);
             virtual Scope* scope() const {return methodScope;}
             virtual std::ostream& printSignature(std::ostream& os) const;
         private:

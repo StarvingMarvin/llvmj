@@ -188,11 +188,7 @@ void CallVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
 
     MethodType *mt = visitChild<MethodType>(walker, ni);
-#ifdef DEBUG
-    cout << "Return type: " << mt->returnType() << std::endl;
-#endif
-    walker->setData(const_cast<Type*>(&mt->returnType()));
-    std::vector<const Type*> argumentTypes;
+    ArgumentTypes argumentTypes;
 
     while(ni < walker->lastChild()) {
         argumentTypes.push_back(visitChild<const Type>(walker, ni));
@@ -200,13 +196,18 @@ void CallVisitor::operator()(AstWalker *walker) {
 
     if (!mt->arguments()->matchArguments(argumentTypes)) {
         std::cerr << "ERROR! Invalid argument types: [";
-        for (std::vector<const Type*>::iterator it = argumentTypes.begin();
+        for (ArgumentTypes::iterator it = argumentTypes.begin();
                 it != argumentTypes.end(); it++) {
             std::cerr << *(*it) << ", ";
         }
         std::cerr << "]" <<std::endl;
     }
 
+#ifdef DEBUG
+    cout << "Method type: " << *mt << std::endl;
+    cout << "Return type: " << mt->returnType() << std::endl;
+#endif
+    walker->setData(const_cast<Type*>(&mt->returnType()));
 }
 
 void FieldDesVisitor::operator()(AstWalker *walker) {
@@ -329,6 +330,8 @@ Symbols* mj::checkSemantics(AST ast) {
 
     walker.addVisitor(PRINT, new PrintVisitor(symbolsTable));
     walker.addVisitor(READ, new ReadVisitor(symbolsTable));
+
+    walker.addVisitor(PROGRAM, new ProgramVisitor(symbolsTable));
 
     walker.walkTree();
 
