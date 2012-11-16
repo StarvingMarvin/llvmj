@@ -139,6 +139,11 @@ class Example
                 cur = cur.tail;
             }
             insertAfter(cur, v);
+            i = i +1;
+        }
+
+        if (i != size(head)) {
+            print(-1);
         }
 
         return head;
