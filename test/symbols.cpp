@@ -1,6 +1,7 @@
 
 #include "semantics/symbols.h"
 #include <iostream>
+#include <string>
 #include <cassert>
 
 using namespace mj;
@@ -42,7 +43,32 @@ void testMethod() {
     const MethodType *ordType = new MethodType(ordArgs, *mjInt);
     assert(ordType->returnType() == *mjInt);
     
-    Method *mjOrd = new Method("ord", *ordType);
+    const Method *mjOrd = new Method("ord", *ordType);
+
+    // toUpper method
+    MethodArguments *upperArgs = new MethodArguments(global);
+    upperArgs->define(new Variable("c", *mjChar));
+
+    const MethodType *upperType = new MethodType(upperArgs, *mjChar);
+    assert(upperType->returnType() == *mjChar);
+    
+    const Method *upper = new Method("toUpper", *upperType);
+
+
+    global->define(mjInt);
+    global->define(mjChar);
+    global->define(ordType);
+    global->define(dynamic_cast<const Variable*>(mjOrd));
+    global->define(upperType);
+    global->define(dynamic_cast<const Variable*>(upper));
+
+    const Symbol *ots = global->resolve(ordType->name());
+    assert(std::string("(char)->int") == ots->name());
+    assert(dynamic_cast<const MethodType*>(ots)->returnType() == *mjInt);
+
+    const Symbol *uts = global->resolve(upperType->name());
+    assert(std::string("(char)->char") == uts->name());
+    assert(dynamic_cast<const MethodType*>(uts)->returnType() == *mjChar);
 
     //assert(mjOrd->type());
 }

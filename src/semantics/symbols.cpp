@@ -99,7 +99,7 @@ Scope::Scope(Scope *parent):
 void Scope::define(const Symbol *s) {
     const string name = s->name();
     if (symbolTable[name] != NULL) {
-        throw "Symbol already defined!";
+        throw "Symbol '" + name + "' already defined!";
     }
     symbolTable[name] = s;
 }
