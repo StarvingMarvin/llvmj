@@ -98,12 +98,13 @@ void MethodVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
     char *typeName = tokenText(*ni);
 #ifdef DEBUG
-    cout << "Method return type: " << typeName << std::endl;
+    cout << "Method return type name: " << typeName << std::endl;
 #endif
-    const Type t = *symbols->resolveType(typeName);
+    const Type returnType = *symbols->resolveType(typeName);
     ni++;
     char *methodName = tokenText(*ni);
 #ifdef DEBUG
+    cout << "Method return type: " << returnType << std::endl;
     cout << "Method name: " << methodName << std::endl;
 #endif
 
@@ -112,7 +113,7 @@ void MethodVisitor::operator()(AstWalker *walker) {
     visitChild<void>(walker, ni);
     symbols->leaveScope();
 
-    Method *m = symbols->enterMethodScope(methodName, t, arguments);
+    Method *m = symbols->enterMethodScope(methodName, returnType, arguments);
     visitChildren(walker, ni);
     symbols->leaveScope();
 #ifdef DEBUG

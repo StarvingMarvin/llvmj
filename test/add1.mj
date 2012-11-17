@@ -1,0 +1,13 @@
+class Add1
+{
+    int add1(int x) {
+        return x + 1;
+    }
+
+    void main()
+        int i;
+    {
+        i = add1(5);
+    }
+}
+

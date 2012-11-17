@@ -10,6 +10,7 @@ include_directories ("${PROJECT_SOURCE_DIR}/src")
 add_executable(test-parser parser.cpp)
 target_link_libraries(test-parser ${ANTLR_LIB} Parser)
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test.mj 
+        ${CMAKE_CURRENT_SOURCE_DIR}/add1.mj 
     DESTINATION ${BIN})
 
 add_executable(test-symbol symbols.cpp)
