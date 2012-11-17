@@ -206,7 +206,10 @@ void CallVisitor::operator()(AstWalker *walker) {
 
 #ifdef DEBUG
     cout << "Method type: " << *mt << std::endl;
+    MethodType mt2(*mt);
+    cout << "Method type: " << mt2 << std::endl;
     cout << "Return type: " << mt->returnType() << std::endl;
+    cout << "Return type: " << mt2.returnType() << std::endl;
 #endif
     walker->setData(const_cast<Type*>(&mt->returnType()));
 }
