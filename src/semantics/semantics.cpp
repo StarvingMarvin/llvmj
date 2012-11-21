@@ -100,7 +100,7 @@ void MethodVisitor::operator()(AstWalker *walker) {
 #ifdef DEBUG
     cout << "Method return type name: " << typeName << std::endl;
 #endif
-    const Type returnType = *symbols->resolveType(typeName);
+    const Type &returnType = *symbols->resolveType(typeName);
     ni++;
     char *methodName = tokenText(*ni);
 #ifdef DEBUG
@@ -188,7 +188,7 @@ void ReadVisitor::operator()(AstWalker *walker) {
 void CallVisitor::operator()(AstWalker *walker) {
     nodeiterator ni = walker->firstChild();
 
-    MethodType *mt = visitChild<MethodType>(walker, ni);
+    const MethodType *mt = visitChild<const MethodType>(walker, ni);
     ArgumentTypes argumentTypes;
 
     while(ni < walker->lastChild()) {
@@ -196,20 +196,17 @@ void CallVisitor::operator()(AstWalker *walker) {
     }
 
     if (!mt->arguments()->matchArguments(argumentTypes)) {
-        std::cerr << "ERROR! Invalid argument types: [";
+        std::cerr << "ERROR! Invalid argument types: (";
         for (ArgumentTypes::iterator it = argumentTypes.begin();
                 it != argumentTypes.end(); it++) {
             std::cerr << *(*it) << ", ";
         }
-        std::cerr << "]" <<std::endl;
+        std::cerr << "). Expected " << mt->arguments()->typeSignature() <<std::endl;
     }
 
 #ifdef DEBUG
     cout << "Method type: " << *mt << std::endl;
-    MethodType mt2(*mt);
-    cout << "Method type: " << mt2 << std::endl;
     cout << "Return type: " << mt->returnType() << std::endl;
-    cout << "Return type: " << mt2.returnType() << std::endl;
 #endif
     walker->setData(const_cast<Type*>(&mt->returnType()));
 }

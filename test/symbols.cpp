@@ -66,11 +66,17 @@ void testMethod() {
     assert(std::string("(char)->int") == ots->name());
     assert(dynamic_cast<const MethodType*>(ots)->returnType() == *mjInt);
 
+
     const Symbol *uts = global->resolve(upperType->name());
     assert(std::string("(char)->char") == uts->name());
     assert(dynamic_cast<const MethodType*>(uts)->returnType() == *mjChar);
 
-    //assert(mjOrd->type());
+    const Symbol *upperSym = global->resolve("toUpper");
+    const Variable *upperVar = dynamic_cast<const Variable*>(upperSym);
+    const Type &upperVarType = upperVar->type();
+    const MethodType &upperVarMethodType = dynamic_cast<const MethodType&>(upperVarType);
+    assert(upperVarMethodType.returnType() == *mjChar);
+
 }
 
 int main (int argc, char** argv) {
