@@ -1,0 +1,25 @@
+class Chars
+{
+    char toUpper(char c)
+        int o;
+        int a, z, A;
+    {
+        a = ord('a');
+        z = ord('z');
+        A = ord('A');
+        o = ord(c);
+        if (o >= a && o <= z) {
+            return chr(o - a + A);
+        } else {
+            return c;
+        }
+    }
+
+    void main() {
+        print(toUpper('a'));
+        print(toUpper('z'));
+        print(toUpper('l'));
+        print(toUpper('D'));
+        print(toUpper('!'));
+    }
+}

@@ -14,11 +14,6 @@ ADD_CUSTOM_COMMAND(COMMAND ${ANTLR}
 
 SET_SOURCE_FILES_PROPERTIES(${ANTLR_OUTPUT} PROPERTIES GENERATED true)
 
-#ADD_CUSTOM_COMMAND(COMMAND ${ANTLR}
-                    #ARGS -o ${DST} -l ${DST} ${SRC}/MicroJavaTree.g
-                    #DEPENDS ${SRC}/MicroJavaTree.g ${DST}/MicroJava.tokens
-                    #OUTPUT ${DST}/MicroJavaTree.h ${DST}/MicroJavaTree.c)
-
 ADD_LIBRARY(Parser parser.cpp ${PARS_DST}/MicroJavaLexer.c ${PARS_DST}/MicroJavaParser.c)
 
 
