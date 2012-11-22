@@ -321,23 +321,23 @@ void Symbols::leaveScope() {
     scopes.pop();
 }
 
-const Symbol* Symbols::resolve(string name) {
+const Symbol* Symbols::resolve(const string name) const {
     return currentScope()->resolve(name);
 }
 
-const Type* Symbols::resolveType(const string name) {
+const Type* Symbols::resolveType(const string name) const {
     return dynamic_cast<const Type*>(resolve(name));
 }
 
-const Variable* Symbols::resolveVariable(const string name) {
+const Variable* Symbols::resolveVariable(const string name) const {
     return dynamic_cast<const Variable*>(resolve(name));
 }
 
-const Method* Symbols::resolveMethod(const string name) {
+const Method* Symbols::resolveMethod(const string name) const {
     return dynamic_cast<const Method*>(resolve(name));
 }
 
-const Class* Symbols::resolveClass(const string name) {
+const Class* Symbols::resolveClass(const string name) const {
     return dynamic_cast<const Class*>(resolve(name));
 }
 

@@ -191,11 +191,11 @@ namespace mj {
         public:
             Symbols();
 
-            const Symbol* resolve(const std::string name);
-            const Type* resolveType(const std::string name);
-            const Variable* resolveVariable(const std::string name);
-            const Method* resolveMethod(const std::string name);
-            const Class* resolveClass(const std::string name);
+            const Symbol* resolve(const std::string name) const;
+            const Type* resolveType(const std::string name) const;
+            const Variable* resolveVariable(const std::string name) const;
+            const Method* resolveMethod(const std::string name) const;
+            const Class* resolveClass(const std::string name) const;
 
             void defineVariable(const std::string name, const Type &t);
             void defineArray(const std::string name, const Type &t);
