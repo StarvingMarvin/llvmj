@@ -142,8 +142,8 @@ void AstWalker::visit(AST ast) {
     std::cout<< "Visiting " << tokenText() << std::endl;
 #endif
     uint32_t tt = tokenType();
-    NodeVisitor* visitor = getVisitor(tt);
-    visitor->operator()(*this);
+    NodeVisitor& visitor = *getVisitor(tt);
+    visitor(*this);
     stack.pop_back();
 }
 
