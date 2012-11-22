@@ -20,8 +20,10 @@ namespace mj {
 
     class SemanticNodeVisitor : public NodeVisitor {
         public:
+            static bool dirty;
             SemanticNodeVisitor(Symbols &symbolsTable): symbols(symbolsTable){}
         protected:
+            void setDirty() const { SemanticNodeVisitor::dirty = true; }
             Symbols &symbols;
     };
 

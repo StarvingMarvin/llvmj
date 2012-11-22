@@ -5,6 +5,8 @@
 using namespace mj;
 using std::cout;
 
+bool SemanticNodeVisitor::dirty = false;
+
 const Type& visitChild(AstWalker &walker, nodeiterator &ni) {
     walker.visit(*ni);
     const Type *t = getNodeData<const Type>(*ni);
@@ -29,6 +31,7 @@ void CheckCompatibleVisitor::operator()(AstWalker &walker) const {
     
     if (!l.compatible(r)) {
         std::cerr << "ERROR! Types " << l << " and " << r << " not compatible!" << std::endl;
+        setDirty();
     }
 }
 
@@ -36,11 +39,13 @@ void VarDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * ident = tokenText(*b);
     const Variable *v = symbols.resolveVariable(ident);
-    if (v != NULL) {
-        setType(walker, v->type());
-    } else {
+    if (v == NULL) {
         std::cerr << "ERROR! Var expected, got " << ident << std::endl;
+        setDirty();
+        return;
     }
+
+    setType(walker, v->type());
 }
 
 void IntLiteralVisitor::operator()(AstWalker &walker) const {
@@ -58,12 +63,15 @@ void IntOpVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     const Type &l = visitChild(walker, b);
     const Type &r = visitChild(walker, b);
-    if (mjInt == l && mjInt == r) {
-        setType(walker, mjInt);
-    } else {
-        std::cerr << "ERROR! Both arguments should be int, instead got " 
-            << l << " and " << r << std::endl;
+    
+    if (mjInt != l || mjInt != r) {
+        std::cerr << "ERROR! Both arguments should be int, instead got '" 
+            << l << "' and '" << r << "'" << std::endl;
+        setDirty();
+        return;
     }
+
+    setType(walker, mjInt);
 }
 
 void UnOpVisitor::operator()(AstWalker &walker) const {
@@ -73,21 +81,26 @@ void UnOpVisitor::operator()(AstWalker &walker) const {
 
     if (mjInt != l) {
         std::cerr << "ERROR! int expected, got " << l << std::endl;
-    } else {
-        setType(walker, mjInt);
-    }
+        setDirty();
+        return;
+    } 
+
+    setType(walker, mjInt);
 }
 
 void MethodVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     char *typeName = tokenText(*ni);
-    const Type &returnType = *symbols.resolveType(typeName);
+    const Type *returnType = symbols.resolveType(typeName);
+
+    if (returnType == NULL) {
+        std::cerr << "ERROR! Unknown type: " << typeName << "!" << std::endl;
+        setDirty();
+        return;
+    }
+
     ni++;
     char *methodName = tokenText(*ni);
-#ifdef DEBUG
-    cout << "Method return type: " << returnType << std::endl;
-    cout << "Method name: " << methodName << std::endl;
-#endif
 
     MethodArguments &arguments = symbols.enterMethodArgumentsScope();
     ni++;
@@ -95,7 +108,7 @@ void MethodVisitor::operator()(AstWalker &walker) const {
     symbols.leaveScope();
 
     ni++;
-    symbols.enterMethodScope(methodName, returnType, arguments);
+    symbols.enterMethodScope(methodName, *returnType, arguments);
     visitChildren(walker, ni);
     symbols.leaveScope();
 }
@@ -113,13 +126,15 @@ void VarVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     char *typeName = tokenText(*ni);
     const Type *t = symbols.resolveType(typeName);
-    if (t != NULL) {
-        ni++;
-        char *varName = tokenText(*ni);
-        symbols.defineVariable(varName, *t);
-    } else {
-        std::cerr << "ERROR! type expected, got " << typeName << "!" << std::endl;
+    if (t == NULL) {
+        std::cerr << "ERROR! Unknown type: " << typeName << "!" << std::endl;
+        setDirty();
+        return;
     }
+
+    ni++;
+    char *varName = tokenText(*ni);
+    symbols.defineVariable(varName, *t);
 }
 
 void ArrVisitor::operator()(AstWalker &walker) const {
@@ -130,10 +145,12 @@ void ArrVisitor::operator()(AstWalker &walker) const {
     char *varName = tokenText(*ni);
 
     if (t == NULL) {
-        std::cerr << "ERROR! type expected, got " << typeName << "!" << std::endl;
-    } else {
-        symbols.defineArray(varName, *t);
+        std::cerr << "ERROR! Unknown type: " << typeName << "!" << std::endl;
+        setDirty();
+        return;
     }
+
+    symbols.defineArray(varName, *t);
 }
 
 void PrintVisitor::operator()(AstWalker &walker) const {
@@ -143,6 +160,7 @@ void PrintVisitor::operator()(AstWalker &walker) const {
     const Type &t = visitChild(walker, ni);
     if ((t!=mjInt) && (t!=mjChar)) {
         std::cerr << "ERROR! int or char expected, got " << t << std::endl;
+        setDirty();
     }
 }
 
@@ -153,6 +171,7 @@ void ReadVisitor::operator()(AstWalker &walker) const {
     const Type &t = visitChild(walker, ni);
     if ((t!=mjInt) && (t!=mjChar)) {
         std::cerr << "ERROR! int or char expected, got " << t << std::endl;
+        setDirty();
     }
 }
 
@@ -174,11 +193,12 @@ void CallVisitor::operator()(AstWalker &walker) const {
             std::cerr << *(*it) << ", ";
         }
         std::cerr << "). Expected " << mt->arguments().typeSignature() <<std::endl;
+        setDirty();
+        return;
     }
 
 #ifdef DEBUG
     cout << "Method type: " << *mt << std::endl;
-    cout << "Return type: " << mt->returnType() << std::endl;
 #endif
     setType(walker, mt->returnType());
 }
@@ -189,14 +209,19 @@ void FieldDesVisitor::operator()(AstWalker &walker) const {
     ni++;
     const Variable *var = symbols.resolveVariable(name);
     if (var == NULL) {
-        //
+        std::cerr << "ERROR! Unknown variable: " << name << "!" << std::endl;
+        setDirty();
+        return;
     }
     const Class &clazz = dynamic_cast<const Class&>(var->type());
     char* fieldName = tokenText(*ni);
     const Symbol *fieldSymbol = clazz.scope().resolve(fieldName);
     const Variable *field = dynamic_cast<const Variable*>(fieldSymbol);
     if (field == NULL) {
-        //
+        std::cerr << "ERROR! Unknown field: " << fieldName << " in class " 
+            << name << "!" << std::endl;
+        setDirty();
+        return;
     }
 
     setType(walker, field->type());
@@ -208,7 +233,9 @@ void ArrDesVisitor::operator()(AstWalker &walker) const {
 
     const Variable *arrVar = symbols.resolveVariable(name);
     if (arrVar == NULL) {
-        //
+        std::cerr << "ERROR! Unknown variable: " << name << "!" << std::endl;
+        setDirty();
+        return;
     }
 
     const ArrayType &arr = dynamic_cast<const ArrayType&>(arrVar->type());
@@ -220,7 +247,9 @@ void NewVisitor::operator()(AstWalker &walker) const {
     char* name = tokenText(*ni);
     const Class *clazz = symbols.resolveClass(name);
     if (clazz == NULL) {
-        std::cerr << "ERROR! Expected class name, got " << name << "!" << std::endl;
+        std::cerr << "ERROR! Unknown class: " << name << "!" << std::endl;
+        setDirty();
+        return;
     }
     setType(walker, *clazz);
 }
@@ -230,8 +259,11 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
     char* name = tokenText(*ni);
     const Type *t = symbols.resolveType(name);
     if (t == NULL) {
-        std::cerr << "ERROR! Type is NULL!" << std::endl;
+        std::cerr << "ERROR! Unknown type: " << name << "!" << std::endl;
+        setDirty();
+        return;
     }
+
     walker.setData(new ArrayType(*t));
 }
 
@@ -244,14 +276,16 @@ void ProgramVisitor::operator()(AstWalker &walker) const {
     // check main
     const Method *mainFunc = symbols.resolveMethod("main");
     if (mainFunc == NULL) {
-        //
-    }
+        std::cerr << "ERROR! Method 'main' must be defined!" << std::endl;
+        setDirty();
+    } else {
 
-    const MethodType &mt = mainFunc->methodType();
-
-    if(!mt.arguments().matchArguments(ArgumentTypes())
-            && mt.returnType() != VOID_TYPE) {
-        //
+        const MethodType &mt = mainFunc->methodType();
+        if(!mt.arguments().matchArguments(ArgumentTypes())
+                && mt.returnType() != VOID_TYPE) {
+            std::cerr << "ERROR! Method 'main' doesn't accept any parameters!" << std::endl;
+            setDirty();
+        }
     }
 
     symbols.leaveScope();
@@ -303,4 +337,8 @@ void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
     walker.addVisitor(PROGRAM, ProgramVisitor(symbolsTable));
 
     walker.walkTree();
+
+    if (SemanticNodeVisitor::dirty) {
+        throw "Semantic check failed!";
+    }
 }
