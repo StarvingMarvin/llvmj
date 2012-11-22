@@ -115,25 +115,25 @@ nodeiterator mj::end(AST parent) {
     return nodeiterator(parent, childCount(parent));
 }
 
-void NodeVisitor::operator()(AstWalker &walker) {}
+void NodeVisitor::operator()(AstWalker &walker) const {}
 
-AstWalker::AstWalker(AST ast, NodeVisitor* defaultVisitor):
+AstWalker::AstWalker(AST ast, const NodeVisitor &defaultVisitor):
     _defaultVisitor(defaultVisitor),
     stack()
 {
     stack.push_back(ast);
 }
 
-void AstWalker::addVisitor(uint32_t tokenType, NodeVisitor* visitor) {
-    visitors[tokenType]=visitor;
+void AstWalker::addVisitor(uint32_t tokenType, const NodeVisitor &visitor) {
+    visitors[tokenType]=const_cast<NodeVisitor*>(&visitor);
 }
 
-NodeVisitor* AstWalker::getVisitor(uint32_t tokenType) {
-    NodeVisitor* visitor = visitors[tokenType];
+const NodeVisitor& AstWalker::getVisitor(uint32_t tokenType) {
+    const NodeVisitor* visitor = visitors[tokenType];
     if (!visitor) {
-        visitor = _defaultVisitor;
+        return _defaultVisitor;
     }
-    return visitor;
+    return *visitor;
 }
 
 void AstWalker::visit(AST ast) {
@@ -142,7 +142,7 @@ void AstWalker::visit(AST ast) {
     std::cout<< "Visiting " << tokenText() << std::endl;
 #endif
     uint32_t tt = tokenType();
-    NodeVisitor& visitor = *getVisitor(tt);
+    const NodeVisitor& visitor = getVisitor(tt);
     visitor(*this);
     stack.pop_back();
 }

@@ -8,7 +8,7 @@ using namespace mj;
 
 class PrintVisitor : public NodeVisitor {
     public:
-        virtual void operator()(AstWalker *walker) {
+        virtual void operator()(AstWalker *walker) const {
 
             bool nn = walker->nilNode();
             size_t cc = walker->childCount();
@@ -39,7 +39,7 @@ class PrintVisitor : public NodeVisitor {
 
 class PrintSpecialVisitor : public NodeVisitor {
     public:
-        virtual void operator()(AstWalker *walker) {
+        virtual void operator()(AstWalker *walker) const {
             int indent = *(walker->getData<int>());
             _indent(indent);
 
@@ -66,7 +66,7 @@ class PrintSpecialVisitor : public NodeVisitor {
         }
 
     private:
-        void _indent(int ammount) {
+        void _indent(int ammount) const {
             printf("\n");
             for (int i = 0; i < ammount; i++) {
                 printf(" ");
@@ -85,8 +85,8 @@ int main(int argc, char** argv) {
     Parser p(filename);
     AST ast = p.parse();
 
-    AstWalker walker(ast, new PrintVisitor());
-    NodeVisitor* special = new PrintSpecialVisitor();
+    AstWalker walker(ast, PrintVisitor());
+    NodeVisitor special = PrintSpecialVisitor();
     for (size_t i = 0; i < SPECIAL_SIZE; i++) {
         walker.addVisitor(special_tokens[i], special);
     }

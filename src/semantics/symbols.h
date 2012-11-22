@@ -14,7 +14,12 @@
 
 namespace mj {
 
-    class Symbol
+    class Printable {
+        public:
+            virtual std::ostream& print(std::ostream &os) const=0;
+    };
+
+    class Symbol : Printable
     {
         private:
             std::string _name;
@@ -84,12 +89,11 @@ namespace mj {
 
     };
 
-    class ScopeSymbol : public Symbol {
+    class ScopeContainer : Printable {
         public:
-            ScopeSymbol(const std::string name): Symbol(name){};
             virtual Scope& scope()const=0;
             virtual std::ostream& print(std::ostream& os) const;
-            virtual std::ostream& printSignature(std::ostream& os) const;
+            virtual std::ostream& printSignature(std::ostream& os) const=0;
     };  
 
     class ArrayType: public ReferenceType {
@@ -140,12 +144,13 @@ namespace mj {
             MethodArguments &_arguments;
     };
 
-    class Method : public ScopeSymbol, public Variable {
+    class Method : public ScopeContainer, public Variable {
         friend class MethodScope;
         public:
             Method(const std::string name, 
                     const MethodType &methodType);
             virtual Scope& scope() const {return methodScope;}
+            virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
             const MethodType& methodType() const { return dynamic_cast<const MethodType&>(type()); }
         private:
@@ -161,19 +166,22 @@ namespace mj {
             Type *_c;
     };
 
-    class Class : public ReferenceType, ScopeSymbol {
+    class Class : public ReferenceType, ScopeContainer {
         public:
             Class(std::string name, Scope *parentScope);
             virtual Scope& scope() const {return classScope;}
+            virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
         private:
             ClassScope &classScope;
     };
 
-    class Program : public ScopeSymbol {
+    class Program : public ScopeContainer, public Symbol {
         public:
             Program(std::string name, Scope *parentScope);
             virtual Scope& scope() const {return _scope;}
+            virtual std::ostream& print(std::ostream& os) const;
+            virtual std::ostream& printSignature(std::ostream& os) const;
         private:
             Scope &_scope;
     };
@@ -182,23 +190,27 @@ namespace mj {
         public:
             Symbols();
 
-            void define (Symbol &s);
-
             const Symbol* resolve(const std::string name);
             const Type* resolveType(const std::string name);
             const Variable* resolveVariable(const std::string name);
             const Method* resolveMethod(const std::string name);
             const Class* resolveClass(const std::string name);
 
+            void defineVariable(const std::string name, const Type &t);
+            void defineArray(const std::string name, const Type &t);
+
             Class& enterClassScope(const std::string name);
             Program& enterProgramScope(const std::string name);
-            Method& enterMethodScope(const std::string name, const Type &returnType, MethodArguments &arguments);
+            Method& enterMethodScope(const std::string name, 
+                    const Type &returnType, 
+                    MethodArguments &arguments);
             MethodArguments& enterMethodArgumentsScope();
             void leaveScope();
 
             friend std::ostream& operator<<(std::ostream& os, const Symbols& s);
 
         private:
+            void define (Symbol &s);
             void enterScope(Scope& s) {scopes.push(&s);}
             Scope *currentScope() const {return scopes.top();}
             std::stack<Scope*> scopes;

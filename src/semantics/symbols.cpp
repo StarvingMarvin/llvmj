@@ -137,13 +137,9 @@ ostream& Variable::print(ostream &os) const {
     return os << name() << " : " << type();
 }
 
-ostream& ScopeSymbol::print(ostream &os) const {
+ostream& ScopeContainer::print(ostream &os) const {
     printSignature(os);
     return os << this->scope();
-}
-
-ostream& ScopeSymbol::printSignature(ostream &os) const {
-    return Symbol::print(os);
 }
 
 MethodArguments::MethodArguments(Scope *parentScope): 
@@ -190,7 +186,7 @@ void MethodArguments::define(const Symbol &s) {
 
 Method::Method(const string name, 
         const MethodType &type):
-    ScopeSymbol(name),
+    ScopeContainer(),
     Variable(name, type),
     methodScope(*(new MethodScope(&type.arguments())))
 {
@@ -198,6 +194,10 @@ Method::Method(const string name,
 
 ostream& Method::printSignature(ostream &os) const {
     return Variable::print(os);
+}
+
+ostream& Method::print(ostream &os) const {
+    return ScopeContainer::print(os);
 }
 
 MethodScope::MethodScope (Scope *parent):
@@ -214,12 +214,16 @@ MethodType::MethodType(MethodArguments &arguments, const Type &returnType):
 
 Class::Class(string name, Scope *parentScope):
     ReferenceType(name),
-    ScopeSymbol(name),
+    ScopeContainer(),
     classScope(*(new ClassScope(parentScope, this)))
 {
 }
 
 ostream& Class::printSignature(ostream &os) const {
+    return Type::print(os);
+}
+
+ostream& Class::print(ostream &os) const {
     return Type::print(os);
 }
 
@@ -242,11 +246,110 @@ const Symbol *ClassScope::resolveField(const string name) {
 }
 
 Program::Program(std::string name, Scope *parentScope): 
-    ScopeSymbol(name),
+    ScopeContainer(),
+    Symbol(name),
     _scope(*(new Scope(parentScope)))
 {
 }
 
+ostream& Program::printSignature(ostream &os) const {
+    return Symbol::print(os);
+}
+
+ostream& Program::print(ostream &os) const {
+    return ScopeContainer::print(os);
+}
+
+Symbols::Symbols():
+    scopes(std::stack<Scope*>())
+{
+    scopes.push(makeGlobalScope());
+}
+
+void Symbols::define(Symbol &s) {
+    currentScope()->define(s);
+}
+
+Class& Symbols::enterClassScope(const std::string name) {
+    Class *c = new Class(name, currentScope());
+    define(*c);
+    enterScope(c->scope());
+    return *c;
+}
+
+MethodArguments& Symbols::enterMethodArgumentsScope() {
+    MethodArguments *ma = new MethodArguments(currentScope());
+    enterScope(*ma);
+    return *ma;
+}
+
+Method& Symbols::enterMethodScope(const std::string name, const Type &returnType, MethodArguments &arguments) {
+    const MethodType *mtype = new MethodType(arguments, returnType);
+    const Symbol *existingType = currentScope()->resolve(mtype->name());
+    if (!existingType) {
+        currentScope()->define(*mtype);
+#ifdef DEBUG
+        std::cout << "new method type: " << *mtype << std::endl;
+    } else {
+        std::cout << "existing method type: " << *existingType << std::endl;
+#endif
+    }
+    Method* m = new Method(name, *mtype);
+    define(*m);
+    enterScope(m->scope());
+    return *m;
+}
+
+Program& Symbols::enterProgramScope(const std::string name) {
+    Program* p = new Program(name, currentScope());
+    define(*p);
+    enterScope(p->scope());
+    return *p;
+}
+
+void Symbols::leaveScope() {
+#ifdef DEBUG
+    std::cout << "Leaving scope: " << *scopes.top();
+#endif
+    scopes.pop();
+}
+
+const Symbol* Symbols::resolve(string name) {
+    return currentScope()->resolve(name);
+}
+
+const Type* Symbols::resolveType(const string name) {
+    return dynamic_cast<const Type*>(resolve(name));
+}
+
+const Variable* Symbols::resolveVariable(const string name) {
+    return dynamic_cast<const Variable*>(resolve(name));
+}
+
+const Method* Symbols::resolveMethod(const string name) {
+    return dynamic_cast<const Method*>(resolve(name));
+}
+
+const Class* Symbols::resolveClass(const string name) {
+    return dynamic_cast<const Class*>(resolve(name));
+}
+
+void Symbols::defineVariable(const string name, const Type &t) {
+    Variable *v = new Variable(name, t);
+    define(*v);
+}
+
+void Symbols::defineArray(const string name, const Type &t) {
+    const Type *at = resolveType(ArrayType(t).name());
+    if (!at) {
+        at = new const ArrayType(t);
+        define(*const_cast<Type*>(at));
+#ifdef DEBUG
+        std::cout << "new array type: " << *at << std::endl;
+#endif
+    }
+    defineVariable(name, *at);
+}
 
 Scope *mj::makeGlobalScope() {
     const Type *mjInt = new Type("int");
@@ -290,82 +393,12 @@ Scope *mj::makeGlobalScope() {
     global->define(NULL_TYPE);
     global->define(*mjNull);
     global->define(*ordType);
-    global->define(*dynamic_cast<const ScopeSymbol*>(mjOrd));
+    global->define(*mjOrd);
     global->define(*chrType);
-    global->define(*dynamic_cast<const ScopeSymbol*>(mjChr));
+    global->define(*mjChr);
     global->define(*lenType);
-    global->define(*dynamic_cast<const ScopeSymbol*>(mjLen));
+    global->define(*mjLen);
 
     return global;
 }
 
-Symbols::Symbols():
-    scopes(std::stack<Scope*>())
-{
-    scopes.push(makeGlobalScope());
-}
-
-void Symbols::define(Symbol &s) {
-    currentScope()->define(s);
-}
-
-Class& Symbols::enterClassScope(const std::string name) {
-    Class *c = new Class(name, currentScope());
-    enterScope(c->scope());
-    return *c;
-}
-
-MethodArguments& Symbols::enterMethodArgumentsScope() {
-    MethodArguments *ma = new MethodArguments(currentScope());
-    enterScope(*ma);
-    return *ma;
-}
-
-Method& Symbols::enterMethodScope(const std::string name, const Type &returnType, MethodArguments &arguments) {
-    const MethodType *mtype = new MethodType(arguments, returnType);
-    const Symbol *existingType = currentScope()->resolve(mtype->name());
-    if (!existingType) {
-        currentScope()->define(*mtype);
-#ifdef DEBUG
-        std::cout << "new method type: " << *mtype << std::endl;
-    } else {
-        std::cout << "existing method type: " << *existingType << std::endl;
-#endif
-    }
-    Method* m = new Method(name, *mtype);
-    enterScope(m->scope());
-    return *m;
-}
-
-Program& Symbols::enterProgramScope(const std::string name) {
-    Program* p = new Program(name, currentScope());
-    enterScope(p->scope());
-    return *p;
-}
-
-void Symbols::leaveScope() {
-#ifdef DEBUG
-    std::cout << "Leaving scope: " << *scopes.top();
-#endif
-    scopes.pop();
-}
-
-const Symbol* Symbols::resolve(string name) {
-    return currentScope()->resolve(name);
-}
-
-const Type* Symbols::resolveType(const string name) {
-    return dynamic_cast<const Type*>(resolve(name));
-}
-
-const Variable* Symbols::resolveVariable(const string name) {
-    return dynamic_cast<const Variable*>(resolve(name));
-}
-
-const Method* Symbols::resolveMethod(const string name) {
-    return dynamic_cast<const Method*>(resolve(name));
-}
-
-const Class* Symbols::resolveClass(const string name) {
-    return dynamic_cast<const Class*>(resolve(name));
-}

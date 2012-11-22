@@ -20,7 +20,7 @@ namespace mj {
 
     class NodeVisitor {
         public: 
-            virtual void operator()(AstWalker &walker);
+            virtual void operator()(AstWalker &walker) const;
     };
 
 
@@ -57,9 +57,9 @@ namespace mj {
 
     class AstWalker {
         public:
-            AstWalker(AST ast, NodeVisitor* defaultVisitor = new NodeVisitor());
-            void addVisitor(uint32_t tokenType, NodeVisitor* visitor);
-            NodeVisitor* getVisitor(uint32_t tokenType);
+            AstWalker(AST ast, const NodeVisitor& defaultVisitor = NodeVisitor());
+            void addVisitor(uint32_t tokenType, const NodeVisitor& visitor);
+            const NodeVisitor& getVisitor(uint32_t tokenType);
             void visit(AST ast);
             void walkTree();
             uint32_t tokenType();
@@ -79,14 +79,14 @@ namespace mj {
                 return static_cast<T*>(stack.back()->u);
             }
         private:
-            NodeVisitor* _defaultVisitor;
+            const NodeVisitor &_defaultVisitor;
             std::map<uint32_t, NodeVisitor*> visitors;
             std::vector<AST> stack;
     };
 
     class VisitChildren : public NodeVisitor {
         public: 
-            virtual void operator()(AstWalker &walker) {
+            virtual void operator()(AstWalker &walker) const {
                 for(nodeiterator bi = walker.firstChild(); bi < walker.lastChild(); bi++) {
                     AST child = *bi;
                     walker.visit(child);
