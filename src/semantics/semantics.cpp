@@ -21,11 +21,11 @@ void visitChildren(AstWalker &walker, nodeiterator &ni) {
 
 void CheckCompatibleVisitor::operator()(AstWalker &walker) {
     nodeiterator b = walker.firstChild();
-    Type *l = visitChild<Type>(walker, b);
-    Type *r = visitChild<Type>(walker, b);
+    Type &l = *visitChild<Type>(walker, b);
+    Type &r = *visitChild<Type>(walker, b);
     
-    if (!l->compatible(*r)) {
-        std::cerr << "ERROR! Types " << *l << " and " << *r << " not compatible!" << std::endl;
+    if (!l.compatible(r)) {
+        std::cerr << "ERROR! Types " << l << " and " << r << " not compatible!" << std::endl;
     }
 }
 
@@ -62,23 +62,23 @@ void CharLiteralVisitor::operator()(AstWalker &walker) {
 void IntOpVisitor::operator()(AstWalker &walker) {
     const Type &mjInt = *symbols.resolveType("int");
     nodeiterator b = walker.firstChild();
-    Type *l = visitChild<Type>(walker, b);
-    Type *r = visitChild<Type>(walker, b);
-    if (mjInt == *l && mjInt == *r) {
+    Type &l = *visitChild<Type>(walker, b);
+    Type &r = *visitChild<Type>(walker, b);
+    if (mjInt == l && mjInt == r) {
         walker.setData(const_cast<Type*>(&mjInt));
     } else {
         std::cerr << "ERROR! Both arguments should be int, instead got " 
-            << *l << " and " << *r << std::endl;
+            << l << " and " << r << std::endl;
     }
 }
 
 void UnOpVisitor::operator()(AstWalker &walker) {
     nodeiterator ni = walker.firstChild();
     const Type &mjInt = *symbols.resolveType("int");
-    Type *l = visitChild<Type>(walker, ni);
+    Type &l = *visitChild<Type>(walker, ni);
 
-    if (mjInt != *l) {
-        std::cerr << "ERROR! int expected, got " << *l << std::endl;
+    if (mjInt != l) {
+        std::cerr << "ERROR! int expected, got " << l << std::endl;
     }
     walker.setData(const_cast<Type *>(&mjInt));
 }
@@ -142,7 +142,7 @@ void VarVisitor::operator()(AstWalker &walker) {
         Variable *v = new Variable(varName, *t);
         walker.setData(v);
     } else {
-        std::cerr << "ERROR! type expected, got NULL!" << std::endl;
+        std::cerr << "ERROR! type expected, got " << typeName << "!" << std::endl;
     }
 }
 
@@ -167,8 +167,8 @@ void PrintVisitor::operator()(AstWalker &walker) {
     const Type &mjInt = *symbols.resolveType("int");
     const Type &mjChar = *symbols.resolveType("char");
     nodeiterator ni = walker.firstChild();
-    Type *t = visitChild<Type>(walker, ni);
-    if ((*t!=mjInt) && (*t!=mjChar)) {
+    Type &t = *visitChild<Type>(walker, ni);
+    if ((t!=mjInt) && (t!=mjChar)) {
         std::cerr << "ERROR! int or char expected, got " << t << std::endl;
     }
 }
@@ -177,7 +177,7 @@ void ReadVisitor::operator()(AstWalker &walker) {
     const Type mjInt = *symbols.resolveType("int");
     const Type mjChar = *symbols.resolveType("char");
     nodeiterator ni = walker.firstChild();
-    Type t = *visitChild<Type>(walker, ni);
+    Type &t = *visitChild<Type>(walker, ni);
     if ((t!=mjInt) && (t!=mjChar)) {
         std::cerr << "ERROR! int or char expected, got " << t << std::endl;
     }
@@ -235,7 +235,6 @@ void FieldDesVisitor::operator()(AstWalker &walker) {
 void ArrDesVisitor::operator()(AstWalker &walker) {
     nodeiterator ni = walker.firstChild();
     char* name = tokenText(*ni);
-    //cout << "Array " << name << std::endl;
     const Symbol *arrSymbol = symbols.resolve(name);
     if (arrSymbol == NULL) {
         //
@@ -243,9 +242,6 @@ void ArrDesVisitor::operator()(AstWalker &walker) {
 
     const Variable *arrVar = dynamic_cast<const Variable*>(arrSymbol);
     const ArrayType &arr = dynamic_cast<const ArrayType&>(arrVar->type());
-
-    //cout << "Array type " << arr.name() << std::endl;
-    //cout << "Elem type " << arr.valueType().name() << std::endl;
 
     walker.setData(const_cast<Type*>(&arr.valueType()));
 }
