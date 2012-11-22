@@ -23,6 +23,7 @@ tokens {
     VAR_DES;
     FIELD_DES;
     ARR_DES;
+    UNARY_MINUS;
 
     CLASS   = 'class';
     NEW     = 'new';
@@ -138,7 +139,7 @@ condition_fact
     :   expr relop^ expr;
 
 expr    :   term (addop^ term)*
-        | MINUS^ expr;
+        | MINUS expr -> ^(UNARY_MINUS expr);
 
 term    : factor (mulop^ factor)*;
 

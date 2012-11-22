@@ -20,7 +20,7 @@ namespace mj {
 
     class NodeVisitor {
         public: 
-            virtual void operator()(AstWalker *walker);
+            virtual void operator()(AstWalker &walker);
     };
 
 
@@ -86,10 +86,10 @@ namespace mj {
 
     class VisitChildren : public NodeVisitor {
         public: 
-            virtual void operator()(AstWalker *walker) {
-                for(nodeiterator bi = walker->firstChild(); bi < walker->lastChild(); bi++) {
+            virtual void operator()(AstWalker &walker) {
+                for(nodeiterator bi = walker.firstChild(); bi < walker.lastChild(); bi++) {
                     AST child = *bi;
-                    walker->visit(child);
+                    walker.visit(child);
                 }
             }
     };

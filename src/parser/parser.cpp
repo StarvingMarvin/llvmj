@@ -115,7 +115,7 @@ nodeiterator mj::end(AST parent) {
     return nodeiterator(parent, childCount(parent));
 }
 
-void NodeVisitor::operator()(AstWalker *walker) {}
+void NodeVisitor::operator()(AstWalker &walker) {}
 
 AstWalker::AstWalker(AST ast, NodeVisitor* defaultVisitor):
     _defaultVisitor(defaultVisitor),
@@ -143,7 +143,7 @@ void AstWalker::visit(AST ast) {
 #endif
     uint32_t tt = tokenType();
     NodeVisitor* visitor = getVisitor(tt);
-    visitor->operator()(this);
+    visitor->operator()(*this);
     stack.pop_back();
 }
 

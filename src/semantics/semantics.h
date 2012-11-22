@@ -18,181 +18,131 @@ namespace mj {
             char* message;
     };
 
-    class BinOpVisitor : public NodeVisitor {
+    class SemanticNodeVisitor : public NodeVisitor {
         public:
-            BinOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-            virtual bool check(Type *l, Type *r) = 0;
+            SemanticNodeVisitor(Symbols &symbolsTable): symbols(symbolsTable){}
         protected:
-            Symbols *symbols;
+            Symbols &symbols;
     };
 
-    class SetVisitor : public BinOpVisitor {
+    class CheckCompatibleVisitor : public SemanticNodeVisitor {
         public:
-            SetVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
-            virtual bool check(Type *l, Type *r);
+            CheckCompatibleVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class VarDesVisitor : public NodeVisitor {
+    class VarDesVisitor : public SemanticNodeVisitor {
         public:
-            VarDesVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            VarDesVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class IntLiteralVisitor : public NodeVisitor  {
+    class IntLiteralVisitor : public SemanticNodeVisitor {
         public:
-            IntLiteralVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            IntLiteralVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class CharLiteralVisitor : public NodeVisitor  {
+    class CharLiteralVisitor : public SemanticNodeVisitor {
         public:
-            CharLiteralVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            CharLiteralVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class BoolOpVisitor : public BinOpVisitor {
+    class IntOpVisitor : public SemanticNodeVisitor {
         public:
-            BoolOpVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
-            virtual bool check(Type *l, Type *r);
+            IntOpVisitor(Symbols &symbolsTable): SemanticNodeVisitor (symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class IntOpVisitor : public BinOpVisitor {
+    class UnOpVisitor : public SemanticNodeVisitor {
         public:
-            IntOpVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
-            virtual bool check(Type *l, Type *r);
+            UnOpVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class RelOpVisitor : public BinOpVisitor {
+    class DefVisitor : public SemanticNodeVisitor {
         public:
-            RelOpVisitor(Symbols *symbolsTable): BinOpVisitor(symbolsTable){}
-            virtual bool check(Type *l, Type *r);
+            DefVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class UnOpVisitor : public NodeVisitor {
+    class MethodVisitor : public SemanticNodeVisitor {
         public:
-            UnOpVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        protected:
-            Symbols *symbols;
+            MethodVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class DefVisitor : public NodeVisitor {
+    class ClassVisitor : public SemanticNodeVisitor {
         public:
-            DefVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            ClassVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class MethodVisitor : public NodeVisitor {
+    class VarVisitor : public SemanticNodeVisitor {
         public:
-            MethodVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            VarVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class ClassVisitor : public NodeVisitor {
+    class ArrVisitor : public SemanticNodeVisitor {
         public:
-            ClassVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            ArrVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class VarVisitor : public NodeVisitor {
+    class PrintVisitor : public SemanticNodeVisitor {
         public:
-            VarVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            PrintVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class ArrVisitor : public NodeVisitor {
+    class ReadVisitor : public SemanticNodeVisitor {
         public:
-            ArrVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            ReadVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class PrintVisitor : public NodeVisitor {
+    class LoopVisitor : public SemanticNodeVisitor {
         public:
-            PrintVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            LoopVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class ReadVisitor : public NodeVisitor {
+    class CallVisitor : public SemanticNodeVisitor {
         public:
-            ReadVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            CallVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class LoopVisitor : public NodeVisitor {
+    class FieldDesVisitor : public SemanticNodeVisitor {
         public:
-            LoopVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            FieldDesVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class CallVisitor : public NodeVisitor {
+    class ArrDesVisitor : public SemanticNodeVisitor {
         public:
-            CallVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            ArrDesVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class FieldDesVisitor : public NodeVisitor {
+    class NewVisitor : public SemanticNodeVisitor {
         public:
-            FieldDesVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            NewVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class ArrDesVisitor : public NodeVisitor {
+    class NewArrVisitor : public SemanticNodeVisitor {
         public:
-            ArrDesVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            NewArrVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
-    class NewVisitor : public NodeVisitor {
+    class ProgramVisitor : public SemanticNodeVisitor {
         public:
-            NewVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
-    };
-
-    class NewArrVisitor : public NodeVisitor {
-        public:
-            NewArrVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
-    };
-
-    class ProgramVisitor : public NodeVisitor {
-        public:
-            ProgramVisitor(Symbols *symbolsTable): symbols(symbolsTable){}
-            virtual void operator()(AstWalker *walker);
-        private:
-            Symbols *symbols;
+            ProgramVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker);
     };
 
     Symbols *checkSemantics(AST ast);

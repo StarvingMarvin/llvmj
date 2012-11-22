@@ -6,39 +6,36 @@ using namespace mj;
 using std::cout;
 
 template<class T>
-T* visitChild(AstWalker *walker, nodeiterator &ni) {
-    walker->visit(*ni);
+T* visitChild(AstWalker &walker, nodeiterator &ni) {
+    walker.visit(*ni);
     T *t = getNodeData<T>(*ni);
     ni++;
     return t;
 }
 
-void visitChildren(AstWalker *walker, nodeiterator &ni) {
-    for(; ni < walker->lastChild(); ni++) {
-        walker->visit(*ni);
+void visitChildren(AstWalker &walker, nodeiterator &ni) {
+    for(; ni < walker.lastChild(); ni++) {
+        walker.visit(*ni);
     }
 }
 
-void BinOpVisitor::operator()(AstWalker *walker) {
-    nodeiterator b = walker->firstChild();
+void CheckCompatibleVisitor::operator()(AstWalker &walker) {
+    nodeiterator b = walker.firstChild();
     Type *l = visitChild<Type>(walker, b);
     Type *r = visitChild<Type>(walker, b);
-    if (!check(l, r)) {
+    
+    if (!l->compatible(*r)) {
         std::cerr << "ERROR! Types " << *l << " and " << *r << " not compatible!" << std::endl;
     }
 }
 
-bool SetVisitor::check(Type *l, Type *r) {
-    return l->compatible(*r);
-}
-
-void VarDesVisitor::operator()(AstWalker *walker) {
-    nodeiterator b = walker->firstChild();
+void VarDesVisitor::operator()(AstWalker &walker) {
+    nodeiterator b = walker.firstChild();
     char * ident = tokenText(*b);
 #ifdef DEBUG
     cout << "Var name: " << ident << std::endl;
 #endif
-    const Symbol *s = symbols->resolve(ident);
+    const Symbol *s = symbols.resolve(ident);
     const Variable *v = dynamic_cast<const Variable*>(s);
     if (v != NULL) {
         const Type &t = v->type();
@@ -46,61 +43,62 @@ void VarDesVisitor::operator()(AstWalker *walker) {
         cout << "Var type: " << t.name() << std::endl;
 #endif
 
-        walker->setData(const_cast<Type*>(&t));
+        walker.setData(const_cast<Type*>(&t));
     } else {
         std::cerr << "ERROR! Var expected, got " << ident << std::endl;
     }
 }
 
-void IntLiteralVisitor::operator()(AstWalker *walker) {
-    const Type *t = symbols->resolveType("int");
-    walker->setData(const_cast<Type*>(t));
+void IntLiteralVisitor::operator()(AstWalker &walker) {
+    const Type *t = symbols.resolveType("int");
+    walker.setData(const_cast<Type*>(t));
 }
 
-void CharLiteralVisitor::operator()(AstWalker *walker) {
-    const Type *t = symbols->resolveType("char");
-    walker->setData(const_cast<Type*>(t));
+void CharLiteralVisitor::operator()(AstWalker &walker) {
+    const Type *t = symbols.resolveType("char");
+    walker.setData(const_cast<Type*>(t));
 }
 
-bool BoolOpVisitor::check(Type *l, Type *r) {
-   return true;
+void IntOpVisitor::operator()(AstWalker &walker) {
+    const Type &mjInt = *symbols.resolveType("int");
+    nodeiterator b = walker.firstChild();
+    Type *l = visitChild<Type>(walker, b);
+    Type *r = visitChild<Type>(walker, b);
+    if (mjInt == *l && mjInt == *r) {
+        walker.setData(const_cast<Type*>(&mjInt));
+    } else {
+        std::cerr << "ERROR! Both arguments should be int, instead got " 
+            << *l << " and " << *r << std::endl;
+    }
 }
 
-bool IntOpVisitor::check(Type *l, Type *r) {
-    const Type mjInt = *symbols->resolveType("int");
-    return mjInt == *l && mjInt == *r;
-}
-
-bool RelOpVisitor::check(Type *l, Type *r) {
-    return l->compatible(*r);
-}
-
-void UnOpVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
-    const Type mjInt = *symbols->resolveType("int");
+void UnOpVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
+    const Type &mjInt = *symbols.resolveType("int");
     Type *l = visitChild<Type>(walker, ni);
 
     if (mjInt != *l) {
         std::cerr << "ERROR! int expected, got " << *l << std::endl;
     }
+    walker.setData(const_cast<Type *>(&mjInt));
 }
 
-void DefVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
+void DefVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
     Symbol *s = visitChild<Symbol>(walker, ni);
 #ifdef DEBUG
     cout << "Defining: " << *s << std::endl;
 #endif
-    symbols->define(s);
+    symbols.define(s);
 }
 
-void MethodVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
+void MethodVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
     char *typeName = tokenText(*ni);
 #ifdef DEBUG
     cout << "Method return type name: " << typeName << std::endl;
 #endif
-    const Type &returnType = *symbols->resolveType(typeName);
+    const Type &returnType = *symbols.resolveType(typeName);
     ni++;
     char *methodName = tokenText(*ni);
 #ifdef DEBUG
@@ -108,90 +106,90 @@ void MethodVisitor::operator()(AstWalker *walker) {
     cout << "Method name: " << methodName << std::endl;
 #endif
 
-    MethodArguments *arguments = symbols->enterMethodArgumentsScope();
+    MethodArguments *arguments = symbols.enterMethodArgumentsScope();
     ni++;
     visitChild<void>(walker, ni);
-    symbols->leaveScope();
+    symbols.leaveScope();
 
-    Method *m = symbols->enterMethodScope(methodName, returnType, arguments);
+    Method *m = symbols.enterMethodScope(methodName, returnType, arguments);
     visitChildren(walker, ni);
-    symbols->leaveScope();
+    symbols.leaveScope();
 #ifdef DEBUG
     cout << "Method type: " << m->type() << std::endl;
 #endif
 
-    walker->setData(m);
+    walker.setData(m);
 }
 
-void ClassVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
+void ClassVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
     char *className = tokenText(*ni);
 
-    Class *c = symbols->enterClassScope(className);
+    Class *c = symbols.enterClassScope(className);
     visitChildren(walker, ni);
-    symbols->leaveScope();
+    symbols.leaveScope();
 
-    walker->setData(c);
+    walker.setData(c);
 }
 
-void VarVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
+void VarVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
     char *typeName = tokenText(*ni);
-    const Type *t = symbols->resolveType(typeName);
+    const Type *t = symbols.resolveType(typeName);
     if (t != NULL) {
         ni++;
         char *varName = tokenText(*ni);
         Variable *v = new Variable(varName, *t);
-        walker->setData(v);
+        walker.setData(v);
     } else {
         std::cerr << "ERROR! type expected, got NULL!" << std::endl;
     }
 }
 
-void ArrVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
+void ArrVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
     char *typeName = tokenText(*ni);
-    const Type &t = *symbols->resolveType(typeName);
+    const Type &t = *symbols.resolveType(typeName);
     ni++;
     char *varName = tokenText(*ni);
 
-    const ArrayType *at = dynamic_cast<const ArrayType*>(symbols->resolve(ArrayType(t).name()));
+    const ArrayType *at = dynamic_cast<const ArrayType*>(symbols.resolve(ArrayType(t).name()));
 
     if (! at) {
         at = new const ArrayType(t);
-        symbols->define(const_cast<ArrayType*>(at));
+        symbols.define(const_cast<ArrayType*>(at));
     }
     Variable *v = new Variable(varName, *at);
-    walker->setData(v);
+    walker.setData(v);
 }
 
-void PrintVisitor::operator()(AstWalker *walker) {
-    const Type mjInt = *symbols->resolveType("int");
-    const Type mjChar = *symbols->resolveType("char");
-    nodeiterator ni = walker->firstChild();
+void PrintVisitor::operator()(AstWalker &walker) {
+    const Type &mjInt = *symbols.resolveType("int");
+    const Type &mjChar = *symbols.resolveType("char");
+    nodeiterator ni = walker.firstChild();
     Type *t = visitChild<Type>(walker, ni);
     if ((*t!=mjInt) && (*t!=mjChar)) {
         std::cerr << "ERROR! int or char expected, got " << t << std::endl;
     }
 }
 
-void ReadVisitor::operator()(AstWalker *walker) {
-    const Type mjInt = *symbols->resolveType("int");
-    const Type mjChar = *symbols->resolveType("char");
-    nodeiterator ni = walker->firstChild();
+void ReadVisitor::operator()(AstWalker &walker) {
+    const Type mjInt = *symbols.resolveType("int");
+    const Type mjChar = *symbols.resolveType("char");
+    nodeiterator ni = walker.firstChild();
     Type t = *visitChild<Type>(walker, ni);
     if ((t!=mjInt) && (t!=mjChar)) {
         std::cerr << "ERROR! int or char expected, got " << t << std::endl;
     }
 }
 
-void CallVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
+void CallVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
 
     const MethodType *mt = visitChild<const MethodType>(walker, ni);
     ArgumentTypes argumentTypes;
 
-    while(ni < walker->lastChild()) {
+    while(ni < walker.lastChild()) {
         argumentTypes.push_back(visitChild<const Type>(walker, ni));
     }
 
@@ -208,14 +206,14 @@ void CallVisitor::operator()(AstWalker *walker) {
     cout << "Method type: " << *mt << std::endl;
     cout << "Return type: " << mt->returnType() << std::endl;
 #endif
-    walker->setData(const_cast<Type*>(&mt->returnType()));
+    walker.setData(const_cast<Type*>(&mt->returnType()));
 }
 
-void FieldDesVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
+void FieldDesVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
     char* name = tokenText(*ni);
     ni++;
-    const Symbol *varSymbol = symbols->resolve(name);
+    const Symbol *varSymbol = symbols.resolve(name);
     const Variable *var = dynamic_cast<const Variable*>(varSymbol);
     if (var == NULL) {
         //
@@ -230,15 +228,15 @@ void FieldDesVisitor::operator()(AstWalker *walker) {
 
     const Type *fieldType = &field->type();
 
-    walker->setData(const_cast<Type*>(fieldType));
+    walker.setData(const_cast<Type*>(fieldType));
 
 }
 
-void ArrDesVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
+void ArrDesVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
     char* name = tokenText(*ni);
     //cout << "Array " << name << std::endl;
-    const Symbol *arrSymbol = symbols->resolve(name);
+    const Symbol *arrSymbol = symbols.resolve(name);
     if (arrSymbol == NULL) {
         //
     }
@@ -249,47 +247,46 @@ void ArrDesVisitor::operator()(AstWalker *walker) {
     //cout << "Array type " << arr.name() << std::endl;
     //cout << "Elem type " << arr.valueType().name() << std::endl;
 
-    walker->setData(const_cast<Type*>(&arr.valueType()));
+    walker.setData(const_cast<Type*>(&arr.valueType()));
 }
 
-void NewVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
+void NewVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
     char* name = tokenText(*ni);
-    const Symbol *classSymbol = symbols->resolve(name);
+    const Symbol *classSymbol = symbols.resolve(name);
     const Class *clazz = dynamic_cast<const Class*>(classSymbol);
     if (clazz == NULL) {
         std::cerr << "ERROR! Class is NULL!" << std::endl;
     }
-    walker->setData(const_cast<Class*>(clazz));
+    walker.setData(const_cast<Class*>(clazz));
 
 }
 
-void NewArrVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
+void NewArrVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
     char* name = tokenText(*ni);
-    const Symbol *typeSymbol = symbols->resolve(name);
+    const Symbol *typeSymbol = symbols.resolve(name);
     const Type *t = dynamic_cast<const Type*>(typeSymbol);
     if (t == NULL) {
         std::cerr << "ERROR! Type is NULL!" << std::endl;
     }
-    walker->setData(new ArrayType(*t));
+    walker.setData(new ArrayType(*t));
 }
 
-void ProgramVisitor::operator()(AstWalker *walker) {
-    nodeiterator ni = walker->firstChild();
+void ProgramVisitor::operator()(AstWalker &walker) {
+    nodeiterator ni = walker.firstChild();
     char* name = tokenText(*ni);
-    Program *p = symbols->enterProgramScope(name);
+    Program *p = symbols.enterProgramScope(name);
     visitChildren(walker, ni);
-    symbols->leaveScope();
-    symbols->define(p);
+    symbols.leaveScope();
+    symbols.define(p);
 }
 
 Symbols* mj::checkSemantics(AST ast) {
     AstWalker walker(ast, new VisitChildren());
 
-    Symbols *symbolsTable = new Symbols();
+    Symbols &symbolsTable = *(new Symbols());
 
-    walker.addVisitor(SET, new SetVisitor(symbolsTable));
     walker.addVisitor(VAR_DES, new VarDesVisitor(symbolsTable));
     walker.addVisitor(FIELD_DES, new FieldDesVisitor(symbolsTable));
     walker.addVisitor(ARR_DES, new ArrDesVisitor(symbolsTable));
@@ -304,6 +301,8 @@ Symbols* mj::checkSemantics(AST ast) {
     walker.addVisitor(DIV, iov);
     walker.addVisitor(MOD, iov);
 
+    walker.addVisitor(UNARY_MINUS, new UnOpVisitor(symbolsTable));
+
     walker.addVisitor(DEF, new DefVisitor(symbolsTable));
     walker.addVisitor(VAR, new VarVisitor(symbolsTable));
     walker.addVisitor(CONST, new VarVisitor(symbolsTable));
@@ -313,17 +312,14 @@ Symbols* mj::checkSemantics(AST ast) {
     walker.addVisitor(NEW, new NewVisitor(symbolsTable));
     walker.addVisitor(NEW_ARR, new NewArrVisitor(symbolsTable));
 
-    BoolOpVisitor *bov = new BoolOpVisitor(symbolsTable);
-    walker.addVisitor(OR, bov);
-    walker.addVisitor(AND, bov);
-
-    RelOpVisitor *rov = new RelOpVisitor(symbolsTable);
-    walker.addVisitor(EQL, rov);
-    walker.addVisitor(NEQ, rov);
-    walker.addVisitor(GRT, rov);
-    walker.addVisitor(GRE, rov);
-    walker.addVisitor(LST, rov);
-    walker.addVisitor(LSE, rov);
+    CheckCompatibleVisitor *ccv = new CheckCompatibleVisitor(symbolsTable);
+    walker.addVisitor(SET, ccv);
+    walker.addVisitor(EQL, ccv);
+    walker.addVisitor(NEQ, ccv);
+    walker.addVisitor(GRT, ccv);
+    walker.addVisitor(GRE, ccv);
+    walker.addVisitor(LST, ccv);
+    walker.addVisitor(LSE, ccv);
 
     UnOpVisitor *uov = new UnOpVisitor(symbolsTable);
     walker.addVisitor(INC, uov);
@@ -336,5 +332,5 @@ Symbols* mj::checkSemantics(AST ast) {
 
     walker.walkTree();
 
-    return symbolsTable;
+    return &symbolsTable;
 }
