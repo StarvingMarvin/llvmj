@@ -96,6 +96,13 @@ Scope::Scope(Scope *parent):
 {
 }
 
+Scope::~Scope() {
+    SymbolTable::iterator it = symbolTable.begin();
+    for(;it != symbolTable.end(); it++) {
+        delete it->second;
+    }
+}
+
 void Scope::define(const Symbol &s) {
     const string name = s.name();
     if (symbolTable[name] != NULL) {
@@ -188,7 +195,7 @@ Method::Method(const string name,
         const MethodType &type):
     ScopeContainer(),
     Variable(name, type),
-    methodScope(*(new MethodScope(&type.arguments())))
+    methodScope(new MethodScope(&type.arguments()))
 {
 }
 
@@ -263,7 +270,7 @@ ostream& Program::print(ostream &os) const {
 Symbols::Symbols():
     scopes(std::stack<Scope*>())
 {
-    scopes.push(makeGlobalScope());
+    scopes.push(new GlobalScope());
 }
 
 void Symbols::define(Symbol &s) {
@@ -351,17 +358,24 @@ void Symbols::defineArray(const string name, const Type &t) {
     defineVariable(name, *at);
 }
 
-Scope *mj::makeGlobalScope() {
+Symbols::~Symbols() {
+    Scope * s;
+    while(!scopes.empty()) {
+        s = scopes.top();
+        scopes.pop();
+    }
+    delete s;
+}
+
+GlobalScope::GlobalScope() : Scope(NULL) {
     const Type *mjInt = new Type("int");
     const Type *mjChar = new Type("char");
     const Type *mjArr = new AnyArrayType();
     const Variable *mjEol = new Variable("eol", *mjChar);
     const Variable *mjNull = new Variable("null", NULL_TYPE);
 
-    Scope *global = new Scope(NULL);
-
     // ord method
-    MethodArguments *ordArgs = new MethodArguments(global);
+    MethodArguments *ordArgs = new MethodArguments(this);
     ordArgs->define(*(new Variable("c", *mjChar)));
 
     const MethodType *ordType = new MethodType(*ordArgs, *mjInt);
@@ -370,7 +384,7 @@ Scope *mj::makeGlobalScope() {
 
 
     // chr method
-    MethodArguments *chrArgs = new MethodArguments(global);
+    MethodArguments *chrArgs = new MethodArguments(this);
     chrArgs->define(*(new Variable("i", *mjInt)));
 
     const MethodType *chrType = new MethodType(*chrArgs, *mjChar);
@@ -379,26 +393,29 @@ Scope *mj::makeGlobalScope() {
 
 
     // len method
-    MethodArguments *lenArgs = new MethodArguments(global);
+    MethodArguments *lenArgs = new MethodArguments(this);
     lenArgs->define(*(new Variable("arr", *mjArr)));
 
     const MethodType *lenType = new MethodType(*lenArgs, *mjInt);
 
     Method *mjLen = new Method("len", *lenType);
 
-    global->define(*mjInt);
-    global->define(*mjChar);
-    global->define(VOID_TYPE);
-    global->define(*mjEol);
-    global->define(NULL_TYPE);
-    global->define(*mjNull);
-    global->define(*ordType);
-    global->define(*mjOrd);
-    global->define(*chrType);
-    global->define(*mjChr);
-    global->define(*lenType);
-    global->define(*mjLen);
+    define(*mjInt);
+    define(*mjChar);
+    define(VOID_TYPE);
+    define(*mjEol);
+    define(NULL_TYPE);
+    define(*mjNull);
+    define(*ordType);
+    define(*mjOrd);
+    define(*chrType);
+    define(*mjChr);
+    define(*lenType);
+    define(*mjLen);
+}
 
-    return global;
+GlobalScope::~GlobalScope() {
+    symbolTable.erase(VOID_TYPE.name());
+    symbolTable.erase(NULL_TYPE.name());
 }
 

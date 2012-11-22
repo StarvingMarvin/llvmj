@@ -25,13 +25,10 @@ namespace mj {
             std::string _name;
 
         public:
-
             Symbol(const std::string name);
-
             const std::string name() const { return _name; }
-
-            virtual std::ostream& print(std::ostream& os)const;
-
+            virtual std::ostream& print(std::ostream& os) const;
+            virtual ~Symbol() {}
     };
 
     class Type : public Symbol
@@ -46,7 +43,6 @@ namespace mj {
 
     const Type NULL_TYPE("mj.null");
     const Type VOID_TYPE("void");
-    //const Type UNDEFINED_TYPE("mj.undefined");
 
     class ReferenceType: public Type {
         public:
@@ -69,15 +65,11 @@ namespace mj {
     {
         public:
             Scope(Scope *parent);
-
             Scope *parent() const { return _parent; }
-
             virtual void define (const Symbol &s);
-
             virtual const Symbol* resolve(const std::string name);
-
             friend std::ostream& operator<<(std::ostream& os, const Scope& s);
-
+            virtual ~Scope();
         protected:
             virtual unsigned int depth() const;
             SymbolTable symbolTable;
@@ -139,6 +131,7 @@ namespace mj {
             MethodType(MethodArguments &arguments, const Type &returnType);
             const Type &returnType() const { return _type; }
             MethodArguments& arguments() const { return _arguments; }
+            virtual ~MethodType() { delete &_arguments; }
         private:
             const Type &_type;
             MethodArguments &_arguments;
@@ -149,12 +142,12 @@ namespace mj {
         public:
             Method(const std::string name, 
                     const MethodType &methodType);
-            virtual Scope& scope() const {return methodScope;}
+            virtual Scope& scope() const {return *methodScope;}
             virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
             const MethodType& methodType() const { return dynamic_cast<const MethodType&>(type()); }
         private:
-            MethodScope &methodScope;
+            MethodScope *methodScope;
     };
 
     class ClassScope : public Scope {
@@ -172,6 +165,7 @@ namespace mj {
             virtual Scope& scope() const {return classScope;}
             virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
+            virtual ~Class() { delete &classScope; }
         private:
             ClassScope &classScope;
     };
@@ -182,8 +176,15 @@ namespace mj {
             virtual Scope& scope() const {return _scope;}
             virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
+            virtual ~Program() { delete &_scope; }
         private:
             Scope &_scope;
+    };
+
+    class GlobalScope : public Scope {
+        public:
+        GlobalScope();
+        virtual ~GlobalScope();
     };
 
     class Symbols {
@@ -207,6 +208,8 @@ namespace mj {
             MethodArguments& enterMethodArgumentsScope();
             void leaveScope();
 
+            ~Symbols();
+
             friend std::ostream& operator<<(std::ostream& os, const Symbols& s);
 
         private:
@@ -215,8 +218,6 @@ namespace mj {
             Scope *currentScope() const {return scopes.top();}
             std::stack<Scope*> scopes;
     };
-
-    Scope *makeGlobalScope();
 
     std::ostream& operator<<(std::ostream &os, const mj::Symbol& s);
 
