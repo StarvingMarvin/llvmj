@@ -145,7 +145,7 @@ namespace mj {
             virtual void operator()(AstWalker &walker);
     };
 
-    Symbols *checkSemantics(AST ast);
+    void checkSemantics(AST ast, Symbols &symbols);
 
 }
 

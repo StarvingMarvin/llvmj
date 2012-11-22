@@ -85,9 +85,9 @@ void UnOpVisitor::operator()(AstWalker &walker) {
 
 void DefVisitor::operator()(AstWalker &walker) {
     nodeiterator ni = walker.firstChild();
-    Symbol *s = visitChild<Symbol>(walker, ni);
+    Symbol &s = *visitChild<Symbol>(walker, ni);
 #ifdef DEBUG
-    cout << "Defining: " << *s << std::endl;
+    cout << "Defining: " << s << std::endl;
 #endif
     symbols.define(s);
 }
@@ -106,30 +106,30 @@ void MethodVisitor::operator()(AstWalker &walker) {
     cout << "Method name: " << methodName << std::endl;
 #endif
 
-    MethodArguments *arguments = symbols.enterMethodArgumentsScope();
+    MethodArguments &arguments = symbols.enterMethodArgumentsScope();
     ni++;
     visitChild<void>(walker, ni);
     symbols.leaveScope();
 
-    Method *m = symbols.enterMethodScope(methodName, returnType, arguments);
+    Method &m = symbols.enterMethodScope(methodName, returnType, arguments);
     visitChildren(walker, ni);
     symbols.leaveScope();
 #ifdef DEBUG
-    cout << "Method type: " << m->type() << std::endl;
+    cout << "Method type: " << m.type() << std::endl;
 #endif
 
-    walker.setData(m);
+    walker.setData(&m);
 }
 
 void ClassVisitor::operator()(AstWalker &walker) {
     nodeiterator ni = walker.firstChild();
     char *className = tokenText(*ni);
 
-    Class *c = symbols.enterClassScope(className);
+    Class &c = symbols.enterClassScope(className);
     visitChildren(walker, ni);
     symbols.leaveScope();
 
-    walker.setData(c);
+    walker.setData(&c);
 }
 
 void VarVisitor::operator()(AstWalker &walker) {
@@ -157,7 +157,7 @@ void ArrVisitor::operator()(AstWalker &walker) {
 
     if (! at) {
         at = new const ArrayType(t);
-        symbols.define(const_cast<ArrayType*>(at));
+        symbols.define(*const_cast<ArrayType*>(at));
     }
     Variable *v = new Variable(varName, *at);
     walker.setData(v);
@@ -193,13 +193,13 @@ void CallVisitor::operator()(AstWalker &walker) {
         argumentTypes.push_back(visitChild<const Type>(walker, ni));
     }
 
-    if (!mt->arguments()->matchArguments(argumentTypes)) {
+    if (!mt->arguments().matchArguments(argumentTypes)) {
         std::cerr << "ERROR! Invalid argument types: (";
         for (ArgumentTypes::iterator it = argumentTypes.begin();
                 it != argumentTypes.end(); it++) {
             std::cerr << *(*it) << ", ";
         }
-        std::cerr << "). Expected " << mt->arguments()->typeSignature() <<std::endl;
+        std::cerr << "). Expected " << mt->arguments().typeSignature() <<std::endl;
     }
 
 #ifdef DEBUG
@@ -220,7 +220,7 @@ void FieldDesVisitor::operator()(AstWalker &walker) {
     }
     const Class &clazz = dynamic_cast<const Class&>(var->type());
     char* fieldName = tokenText(*ni);
-    const Symbol *fieldSymbol = clazz.scope()->resolve(fieldName);
+    const Symbol *fieldSymbol = clazz.scope().resolve(fieldName);
     const Variable *field = dynamic_cast<const Variable*>(fieldSymbol);
     if (field == NULL) {
         //
@@ -272,16 +272,33 @@ void NewArrVisitor::operator()(AstWalker &walker) {
 void ProgramVisitor::operator()(AstWalker &walker) {
     nodeiterator ni = walker.firstChild();
     char* name = tokenText(*ni);
-    Program *p = symbols.enterProgramScope(name);
+    Program &p = symbols.enterProgramScope(name);
     visitChildren(walker, ni);
+    
+    // check main
+    const Symbol *main = symbols.resolve("main");
+    if (main == NULL) {
+        //
+    }
+
+    const Method *mainFunc = dynamic_cast<const Method*>(main);
+    if (mainFunc == NULL) {
+        //
+    }
+
+    const MethodType &mt = mainFunc->methodType();
+
+    if(!mt.arguments().matchArguments(ArgumentTypes())
+            && mt.returnType() != VOID_TYPE) {
+        //
+    }
+
     symbols.leaveScope();
     symbols.define(p);
 }
 
-Symbols* mj::checkSemantics(AST ast) {
+void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
     AstWalker walker(ast, new VisitChildren());
-
-    Symbols &symbolsTable = *(new Symbols());
 
     walker.addVisitor(VAR_DES, new VarDesVisitor(symbolsTable));
     walker.addVisitor(FIELD_DES, new FieldDesVisitor(symbolsTable));
@@ -327,6 +344,4 @@ Symbols* mj::checkSemantics(AST ast) {
     walker.addVisitor(PROGRAM, new ProgramVisitor(symbolsTable));
 
     walker.walkTree();
-
-    return &symbolsTable;
 }

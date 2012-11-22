@@ -40,7 +40,7 @@ namespace mj {
     };
 
     const Type NULL_TYPE("mj.null");
-    //const Type VOID_TYPE("void");
+    const Type VOID_TYPE("void");
     //const Type UNDEFINED_TYPE("mj.undefined");
 
     class ReferenceType: public Type {
@@ -67,7 +67,7 @@ namespace mj {
 
             Scope *parent() const { return _parent; }
 
-            virtual void define (const Symbol *s);
+            virtual void define (const Symbol &s);
 
             virtual const Symbol* resolve(const std::string name);
 
@@ -87,7 +87,7 @@ namespace mj {
     class ScopeSymbol : public Symbol {
         public:
             ScopeSymbol(const std::string name): Symbol(name){};
-            virtual Scope* scope()const=0;
+            virtual Scope& scope()const=0;
             virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
     };  
@@ -114,7 +114,7 @@ namespace mj {
     class MethodArguments: public Scope {
         public:
             MethodArguments(Scope *parentScope);
-            virtual void define(const Symbol *s);
+            virtual void define(const Symbol &s);
             bool matchArguments(ArgumentTypes argumentTypes);
             std::string typeSignature();
         private:
@@ -132,12 +132,12 @@ namespace mj {
 
     class MethodType: public Type {
         public:
-            MethodType(MethodArguments *arguments, const Type &returnType);
+            MethodType(MethodArguments &arguments, const Type &returnType);
             const Type &returnType() const { return _type; }
-            MethodArguments* arguments() const { return _arguments; }
+            MethodArguments& arguments() const { return _arguments; }
         private:
             const Type &_type;
-            MethodArguments *_arguments;
+            MethodArguments &_arguments;
     };
 
     class Method : public ScopeSymbol, public Variable {
@@ -145,60 +145,61 @@ namespace mj {
         public:
             Method(const std::string name, 
                     const MethodType &methodType);
-            virtual Scope* scope() const {return methodScope;}
+            virtual Scope& scope() const {return methodScope;}
             virtual std::ostream& printSignature(std::ostream& os) const;
+            const MethodType& methodType() const { return dynamic_cast<const MethodType&>(type()); }
         private:
-            MethodScope *methodScope;
+            MethodScope &methodScope;
     };
 
     class ClassScope : public Scope {
         public:
-            ClassScope(Scope *parent, Symbol * c);
+            ClassScope(Scope *parent, Type * c);
             virtual const Symbol *resolve(const std::string name);
             const Symbol *resolveField(const std::string name);
         private:
-            Symbol *_c;
+            Type *_c;
     };
 
     class Class : public ReferenceType, ScopeSymbol {
-        friend class ClassScope;
         public:
             Class(std::string name, Scope *parentScope);
-            virtual Scope* scope() const {return classScope;}
+            virtual Scope& scope() const {return classScope;}
             virtual std::ostream& printSignature(std::ostream& os) const;
         private:
-            ClassScope *classScope;
+            ClassScope &classScope;
     };
 
     class Program : public ScopeSymbol {
         public:
             Program(std::string name, Scope *parentScope);
-            virtual Scope* scope() const {return _scope;}
+            virtual Scope& scope() const {return _scope;}
         private:
-            Scope *_scope;
+            Scope &_scope;
     };
 
     class Symbols {
         public:
             Symbols();
 
-            void define (Symbol *s);
+            void define (Symbol &s);
 
             const Symbol* resolve(const std::string name);
             const Type* resolveType(const std::string name);
             const Variable* resolveVariable(const std::string name);
+            const Method* resolveMethod(const std::string name);
+            const Class* resolveClass(const std::string name);
 
-            void enterScope(Scope* s) {scopes.push(s);}
-            //Scope* enterNewScope();
-            Class* enterClassScope(const std::string name);
-            Program* enterProgramScope(const std::string name);
-            Method* enterMethodScope(const std::string name, const Type &returnType, MethodArguments* arguments);
-            MethodArguments* enterMethodArgumentsScope();
+            Class& enterClassScope(const std::string name);
+            Program& enterProgramScope(const std::string name);
+            Method& enterMethodScope(const std::string name, const Type &returnType, MethodArguments &arguments);
+            MethodArguments& enterMethodArgumentsScope();
             void leaveScope();
 
             friend std::ostream& operator<<(std::ostream& os, const Symbols& s);
 
         private:
+            void enterScope(Scope& s) {scopes.push(&s);}
             Scope *currentScope() const {return scopes.top();}
             std::stack<Scope*> scopes;
     };

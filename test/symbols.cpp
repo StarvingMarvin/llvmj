@@ -38,29 +38,28 @@ void testMethod() {
 
     // ord method
     MethodArguments *ordArgs = new MethodArguments(global);
-    ordArgs->define(new Variable("c", *mjChar));
+    ordArgs->define(*(new Variable("c", *mjChar)));
 
-    const MethodType *ordType = new MethodType(ordArgs, *mjInt);
+    const MethodType *ordType = new MethodType(*ordArgs, *mjInt);
     assert(ordType->returnType() == *mjInt);
     
     const Method *mjOrd = new Method("ord", *ordType);
 
     // toUpper method
     MethodArguments *upperArgs = new MethodArguments(global);
-    upperArgs->define(new Variable("c", *mjChar));
+    upperArgs->define(*(new Variable("c", *mjChar)));
 
-    const MethodType *upperType = new MethodType(upperArgs, *mjChar);
+    const MethodType *upperType = new MethodType(*upperArgs, *mjChar);
     assert(upperType->returnType() == *mjChar);
     
     const Method *upper = new Method("toUpper", *upperType);
 
-
-    global->define(mjInt);
-    global->define(mjChar);
-    global->define(ordType);
-    global->define(dynamic_cast<const Variable*>(mjOrd));
-    global->define(upperType);
-    global->define(dynamic_cast<const Variable*>(upper));
+    global->define(*mjInt);
+    global->define(*mjChar);
+    global->define(*ordType);
+    global->define(*dynamic_cast<const Variable*>(mjOrd));
+    global->define(*upperType);
+    global->define(*dynamic_cast<const Variable*>(upper));
 
     const Symbol *ots = global->resolve(ordType->name());
     assert(std::string("(char)->int") == ots->name());

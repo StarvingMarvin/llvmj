@@ -12,7 +12,8 @@ int main (int argc, char** argv) {
     Parser p(filename);
     AST ast = p.parse();
 
-    Symbols *symbolTable = checkSemantics(ast);
-    std::cout << "Symbol table: " << *symbolTable;
+    Symbols symbols;
+    checkSemantics(ast, symbols);
+    std::cout << "Symbol table: " << symbols;
     std::cout << std::endl;
 }

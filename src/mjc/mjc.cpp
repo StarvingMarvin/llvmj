@@ -8,8 +8,7 @@
 
 using namespace mj;
 
-Symbols* collectSymbols(AST ast);
-MjModule generateCode(AST ast, Symbols* global);
+MjModule generateCode(AST ast, Symbols &global);
 
 int main(int argc, char** argv) {
 
@@ -17,13 +16,14 @@ int main(int argc, char** argv) {
                         "./input" : argv[1];
     Parser p(filename);
     AST ast = p.parse();
-    Symbols* symbols = checkSemantics(ast);
+    Symbols symbols;
+    checkSemantics(ast, symbols);
     MjModule module = generateCode(ast, symbols);
 
     return 0;
 }
 
-MjModule generateCode(AST ast, Symbols* symbols) {
+MjModule generateCode(AST ast, Symbols &symbols) {
     return MjModule("");
 }
 
