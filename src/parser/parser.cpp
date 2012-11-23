@@ -107,6 +107,12 @@ bool mj::nilNode(AST ast) {
     return ast->isNilNode(ast);
 }
 
+std::ostream& mj::printPosition(std::ostream& os, AST ast) {
+    os << "line " << ast->getLine(ast) 
+        << ", column " << ast->getCharPositionInLine(ast);
+    return os;
+}
+
 nodeiterator mj::begin(AST parent) {
     return nodeiterator(parent);
 }
@@ -161,6 +167,10 @@ size_t AstWalker::childCount() {
 
 bool AstWalker::nilNode() {
     return mj::nilNode(stack.back());
+}
+
+std::ostream& AstWalker::printPosition(std::ostream& os) {
+    return mj::printPosition(os, stack.back());
 }
 
 nodeiterator AstWalker::firstChild() {

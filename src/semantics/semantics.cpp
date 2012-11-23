@@ -30,7 +30,8 @@ void CheckCompatibleVisitor::operator()(AstWalker &walker) const {
     const Type &r = visitChild(walker, b);
     
     if (!l.compatible(r)) {
-        std::cerr << "ERROR! Types " << l << " and " << r << " not compatible!" << std::endl;
+        std::cerr << "ERROR! Types " << l << " and " << r << " not compatible at ";
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
     }
 }
@@ -40,7 +41,8 @@ void VarDesVisitor::operator()(AstWalker &walker) const {
     char * ident = tokenText(*b);
     const Variable *v = symbols.resolveVariable(ident);
     if (v == NULL) {
-        std::cerr << "ERROR! Var expected, got " << ident << std::endl;
+        std::cerr << "ERROR! Unknown variable '" << ident << "' at ";
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     }
@@ -67,6 +69,7 @@ void IntOpVisitor::operator()(AstWalker &walker) const {
     if (mjInt != l || mjInt != r) {
         std::cerr << "ERROR! Both arguments should be int, instead got '" 
             << l << "' and '" << r << "'" << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     }
@@ -81,6 +84,7 @@ void UnOpVisitor::operator()(AstWalker &walker) const {
 
     if (mjInt != l) {
         std::cerr << "ERROR! int expected, got " << l << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     } 
@@ -95,6 +99,7 @@ void MethodVisitor::operator()(AstWalker &walker) const {
 
     if (returnType == NULL) {
         std::cerr << "ERROR! Unknown type: " << typeName << "!" << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     }
@@ -128,6 +133,7 @@ void VarVisitor::operator()(AstWalker &walker) const {
     const Type *t = symbols.resolveType(typeName);
     if (t == NULL) {
         std::cerr << "ERROR! Unknown type: " << typeName << "!" << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     }
@@ -146,6 +152,7 @@ void ArrVisitor::operator()(AstWalker &walker) const {
 
     if (t == NULL) {
         std::cerr << "ERROR! Unknown type: " << typeName << "!" << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     }
@@ -160,6 +167,7 @@ void PrintVisitor::operator()(AstWalker &walker) const {
     const Type &t = visitChild(walker, ni);
     if ((t!=mjInt) && (t!=mjChar)) {
         std::cerr << "ERROR! int or char expected, got " << t << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
     }
 }
@@ -171,6 +179,7 @@ void ReadVisitor::operator()(AstWalker &walker) const {
     const Type &t = visitChild(walker, ni);
     if ((t!=mjInt) && (t!=mjChar)) {
         std::cerr << "ERROR! int or char expected, got " << t << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
     }
 }
@@ -193,6 +202,7 @@ void CallVisitor::operator()(AstWalker &walker) const {
             std::cerr << *(*it) << ", ";
         }
         std::cerr << "). Expected " << mt->arguments().typeSignature() <<std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     }
@@ -210,6 +220,7 @@ void FieldDesVisitor::operator()(AstWalker &walker) const {
     const Variable *var = symbols.resolveVariable(name);
     if (var == NULL) {
         std::cerr << "ERROR! Unknown variable: " << name << "!" << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     }
@@ -220,6 +231,7 @@ void FieldDesVisitor::operator()(AstWalker &walker) const {
     if (field == NULL) {
         std::cerr << "ERROR! Unknown field: " << fieldName << " in class " 
             << name << "!" << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     }
@@ -234,6 +246,7 @@ void ArrDesVisitor::operator()(AstWalker &walker) const {
     const Variable *arrVar = symbols.resolveVariable(name);
     if (arrVar == NULL) {
         std::cerr << "ERROR! Unknown variable: " << name << "!" << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     }
@@ -248,6 +261,7 @@ void NewVisitor::operator()(AstWalker &walker) const {
     const Class *clazz = symbols.resolveClass(name);
     if (clazz == NULL) {
         std::cerr << "ERROR! Unknown class: " << name << "!" << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     }
@@ -260,6 +274,7 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
     const Type *t = symbols.resolveType(name);
     if (t == NULL) {
         std::cerr << "ERROR! Unknown type: " << name << "!" << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
         return;
     }
@@ -277,6 +292,7 @@ void ProgramVisitor::operator()(AstWalker &walker) const {
     const Method *mainFunc = symbols.resolveMethod("main");
     if (mainFunc == NULL) {
         std::cerr << "ERROR! Method 'main' must be defined!" << std::endl;
+        walker.printPosition(std::cerr)<< "!" << std::endl;
         setDirty();
     } else {
 
@@ -284,6 +300,7 @@ void ProgramVisitor::operator()(AstWalker &walker) const {
         if(!mt.arguments().matchArguments(ArgumentTypes())
                 && mt.returnType() != VOID_TYPE) {
             std::cerr << "ERROR! Method 'main' doesn't accept any parameters!" << std::endl;
+            walker.printPosition(std::cerr)<< "!" << std::endl;
             setDirty();
         }
     }

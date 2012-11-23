@@ -1,0 +1,7 @@
+class Invalid {
+    void main()
+        int i;
+    {
+        j = 5;
+    }
+}

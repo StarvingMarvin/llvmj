@@ -11,6 +11,7 @@
 #include <iterator>
 #include <map>
 #include <vector>
+#include <iostream>
 
 namespace mj {
 
@@ -66,6 +67,7 @@ namespace mj {
             char* tokenText();
             size_t childCount();
             bool nilNode();
+            std::ostream& printPosition(std::ostream& os);
             nodeiterator firstChild();
             nodeiterator lastChild();
             AST currentNode();
@@ -131,6 +133,8 @@ namespace mj {
     AST parentNode(AST ast);
 
     bool nilNode(AST ast);
+
+    std::ostream& printPosition(std::ostream& os, AST ast);
 
     nodeiterator begin(AST parent);
     nodeiterator end(AST parent);
