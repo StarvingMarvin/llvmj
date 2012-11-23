@@ -6,10 +6,14 @@ using namespace mj;
 using std::cout;
 
 bool SemanticNodeVisitor::dirty = false;
+const Type UNKNOWN_TYPE("mj.unknown");
 
 const Type& visitChild(AstWalker &walker, nodeiterator &ni) {
     walker.visit(*ni);
     const Type *t = getNodeData<const Type>(*ni);
+    if (t == NULL) {
+        t = &UNKNOWN_TYPE;
+    }
     ni++;
     return *t;
 }
