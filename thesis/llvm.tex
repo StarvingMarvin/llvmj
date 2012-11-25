@@ -54,11 +54,12 @@ LLVM je infrastrujtura za razvijanje optimizujućih prevodilaca. Dizajniran je t
 
 JIT
 Clang, kompajler za C, C++ i Objective-C
-VMKit implementacija JVM-a
+VMKit implementacija JVM-a \\
 
+\centering
 \begin{tikzpicture}
-	[inner sep=3mm,
-	box/.style={rectangle, draw, minimum width=30mm, }]
+	[inner sep=2.5mm,
+	box/.style={rectangle, draw, minimum width=25mm, }]
 	\node[box] (c-frontend)   {C};
 	\node[box] (haskell-frontend)  [below=of c-frontend]  {Haskell};
 	\node[box] (other-frontend)  [below=of haskell-frontend]  {$\cdots$};

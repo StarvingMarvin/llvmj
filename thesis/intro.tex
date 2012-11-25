@@ -1,6 +1,15 @@
 \chapter{Uvod}
 
-% apstraktno sintaksno stablo
+Posao prevođenja programskog jezika u mašinsku reprezentaciju se može jako jednostavno podeliti na dva dela: analiza ulaznog programa i generisanje krajnjeg izlaza\cite{dragon}. Ako se pogleda malo detaljnije, vidi se da analizu sačinjava nekoliko koraka. Svaki korak transformiše svoj ulaz u oblik pogodniji za dalji proces prevođenja. Na samom početku \emph{leksičkom analizom} će se niz slova i znakova sa ulaza pretvoriti u niz \emph{tokena}, logičkih celina kao što su idetifikator, ključna reč, broj i slično. Potom će \emph{sintaksnom analizom} za niz tokena da se utvrdi da li odgovaraju gramatičkim pravilima jezika. Potrebno je sakupiti simbole koji se u programu javljaju i izgraditi neku strukturnu model programa u memoriji pogodnu za dalju obradu. Ako program zadovoljava gramatiku jezika, to i dalje ne mora da znači da je ispravan. Slično govornim jzicima, gramatički validna rečenica ne mora da ima smisla, pa je potrebno proći kroz izgrađeni model programa, i proveriti da li su zadovoljena i semantička pravila. Sada je moguće preći i na generisanje koda.
 
-% optimizacije
+Slično analizi i generisanje se sastoji iz mnoštva manjih koraka. Model programa koji je bio pogodan za semantičku analizu treba dalje transformisati u novi model koji je pogodniji za optimizaciju i generisanje koda. Neke tehnike optimizacije su primenjive nezavisno od konkretne procesorske arhitekture i njima je moguće transformisati trenutni model programa. Zatim se generišu mašinske instrukcije i primenjuju optimizacije specifične za ciljanu procesorsku arhitekturu.
 
+antlr ide od lexera do asta.
+ima dosta parsera.
+
+llvm ide od tri address koda do mašinskih instrukcija.
+nema dosta projekata kao sto je llvm - eventualno jvm i clr.
+
+ostaje esemantika u sredini.
+
+naredno poglavlje opisuje mikrojava jezik, zatim deo koji rešava antlr, semantika i llvm.
