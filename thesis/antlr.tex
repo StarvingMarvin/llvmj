@@ -1,10 +1,19 @@
 \chapter{Prepoznavanje jezika i sintaksna analiza}
 
-Prvi korak u implementaciji jezika je prepoznavanje ulaza i provera sintaksih i semantičkih pravila. U slučaju jako jednostavnih gramatika, parser se veoma lako može napisati ručno. Sa druge strane u slučaju jako komplikovanih gramatika ručno kodiranje određenih delova je verovatno jedini način da se parser verno implementira. Međutim, za većinu svakodnevnih problema, najlakši način da se napravi parser je pomoću nekog od mnogobrojnih alata koji će za zadatu gramatiku generisati potreban kod. Opredelio sam se za ANTLR\footnote{\skr \eng Another Tool for Langauage Recognition} zbog nekih njegovih svojstava kojima ću posvetiti nekoliko strana.
+Prvi korak u implementaciji jezika je prepoznavanje ulaza i provera sintaksih i semantičkih pravila. 
+U slučaju jako jednostavnih gramatika, parser se veoma lako može napisati ručno. 
+Sa druge strane u slučaju jako komplikovanih gramatika ručno kodiranje određenih delova je verovatno jedini način da se parser verno implementira. 
+Međutim, za većinu svakodnevnih problema, najlakši način da se napravi parser je pomoću nekog od mnogobrojnih alata koji će za zadatu gramatiku generisati potreban kod. 
+Opredelio sam se za ANTLR
+\footnote{\skr \eng Another Tool for Langauage Recognition} 
+zbog nekih njegovih svojstava kojima ću posvetiti nekoliko strana.
 
 \section{Uvod u ANTLR}
 
-ANTLR je parser generator napisan u Javi. Razvijan je u prethodne dve decenije, prevenstveno od strane Terensa Para\footnote{Terrence Parr}, profesora univerziteta u San Francisku. Postoji nekoliko stvari koje ANTLR čine jedinstvenim\cite{antlr-contrib}:
+ANTLR je parser generator napisan u Javi. 
+Razvijan je u prethodne dve decenije, prevenstveno od strane Terensa Para
+\footnote{Terrence Parr}
+, profesora univerziteta u San Francisku. Postoji nekoliko stvari koje ANTLR čine jedinstvenim\cite{antlr-contrib}:
 
 \begin{description}
 
@@ -28,15 +37,19 @@ ANTLR je parser generator napisan u Javi. Razvijan je u prethodne dve decenije, 
 	\item[Jedinstvena gramatika za lekser, parser i AST\footnote{\skr \eng Abstract syntax tree}  parser] \hfill \\
 	Istom notacijom se opisuje građenje terminalnog simbola od ulaznih karaktera, građenje neterminalnih simbola od terminalnih, kao i građenje pravila na osnovu sintaksnih stabala.
 	\item[Kanali za simbole] \hfill \\
-	Ideja je proistekla iz potrebe da se određeni terminalni simboli na ulazu ignorišu, ali ne i odbace, kao recimo komentari. Uopštenjem ove ideje došlo je do implementacije odvojenih kanala u koje lekser može da emituje simbole. Tako se recimo komentari, deklaracije, funkcije i slično mogu slati u odvojene kanale. Lekser time postaje emiter tokena, parser konzument, a između njih se može umetnuti i filter koji funkcioniše sa strane leksera kao kunzument, a sa strane parsera kao emiter.
+	Ideja je proistekla iz potrebe da se određeni terminalni simboli na ulazu ignorišu, ali ne i odbace, kao recimo komentari. 
+Uopštenjem ove ideje došlo je do implementacije odvojenih kanala u koje lekser može da emituje simbole. Tako se recimo komentari, deklaracije, funkcije i slično mogu slati u odvojene kanale. 
+Lekser time postaje emiter tokena, parser konzument, a između njih se može umetnuti i filter koji funkcioniše sa strane leksera kao kunzument, a sa strane parsera kao emiter.
 	\item [\LLa gramatike] \hfill \\
 	Ovo je novina u verziji 3. Generator parsera ovom strategijom može da prihvati gramatike koje zahtevaju čitanje proizvoljno mnogo simbola sa ulaza.
 
 \end{description}
 
-  U poglavljima ,,\LLa gramatike'' i ,,ANTLR gramatika'' detaljnije ću opisati neke od ovih osobina.
+U poglavljima ,,\LLa gramatike'' i ,,ANTLR gramatika'' detaljnije ću opisati neke od ovih osobina.
   
-  ANTLR može da generiše kod u više programskih jezika (Java, C, C\#, Ruby, Python\ldots). Za lakšu izradu parsera postoji i razvojno okruženje, ANTLRWorks, koje poseduje širok skup mogućnosti, kao što su: automatsko kompletiranje i formatiranje koda, grafički prikaz gramatičkih pravila u vidu grafa stanja i testiranje gramatike za zadate ulaze.
+ANTLR može da generiše kod u više programskih jezika (Java, C, C\#, Ruby, Python\ldots). 
+Za lakšu izradu parsera postoji i razvojno okruženje, ANTLRWorks, koje poseduje širok skup mogućnosti, kao što su: 
+automatsko kompletiranje i formatiranje koda, grafički prikaz gramatičkih pravila u vidu grafa stanja i testiranje gramatike za zadate ulaze.
 
 
 \section{ANTLR gramatika}
