@@ -1,3 +1,9 @@
+
+#include <string>
+#include <iostream>
+#include <stack>
+#include <vector>
+#include <map>
 #include "mjmodule.h"
 
 using namespace llvm;

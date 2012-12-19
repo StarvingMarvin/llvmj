@@ -1,8 +1,12 @@
 
-#include "semantics.h"
 #include <string>
 #include <iostream>
+#include <stack>
+#include <map>
+#include <vector>
 #include <stdexcept>
+
+#include "semantics.h"
 
 using namespace mj;
 using namespace std;

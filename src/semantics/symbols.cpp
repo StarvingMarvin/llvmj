@@ -1,11 +1,12 @@
 
-#include "symbols.h"
 #include <string>
 #include <iostream>
 #include <vector>
 #include <stack>
 #include <map>
 #include <stdexcept>
+
+#include "symbols.h"
 
 using namespace mj;
 using namespace std;

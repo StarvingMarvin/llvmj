@@ -1,8 +1,11 @@
 
-#include "semantics/symbols.h"
-#include <iostream>
 #include <string>
+#include <iostream>
+#include <stack>
+#include <vector>
+#include <map>
 #include <cassert>
+#include "semantics/symbols.h"
 
 using namespace mj;
 

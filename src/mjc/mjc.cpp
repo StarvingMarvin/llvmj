@@ -1,10 +1,15 @@
 
+#include <string>
+#include <iostream>
+#include <stack>
+#include <vector>
+#include <map>
+
 #include "llvmjConfig.h"
 #include "semantics/semantics.h"
 #include "parser/parser.h"
 #include "codegen/mjmodule.h"
 
-#include <iostream>
 
 using namespace mj;
 using namespace std;
@@ -21,7 +26,7 @@ int main(int argc, char** argv) {
     Symbols symbols;
     checkSemantics(ast, symbols);
     MjModule module = generateCode(ast, symbols);
-    } catch (exception e) {
+    } catch (exception& e) {
         cerr << "Error occured: " << e.what() << endl;
         return 1;
     } catch (...) {

@@ -4,14 +4,6 @@
 
 #include "llvmjConfig.h"
 
-#include <string>
-#include <vector>
-#include <stack>
-#include <map>
-#include <cstdlib>
-#include <memory>
-#include <iostream>
-
 namespace mj {
 
     class Printable {
