@@ -1,14 +1,14 @@
 
 #include "symbols.h"
+#include <string>
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <map>
+#include <stdexcept>
 
 using namespace mj;
-using std::string;
-using std::ostream;
-using std::vector;
-using std::map;
-using std::auto_ptr;
-using std::cerr;
-using std::endl;
+using namespace std;
 
 Symbol::Symbol(const string name):
     _name(name)
@@ -106,7 +106,7 @@ Scope::~Scope() {
 void Scope::define(const Symbol &s) {
     const string name = s.name();
     if (symbolTable[name] != NULL) {
-        throw "Symbol '" + name + "' already defined!";
+        throw runtime_error("Symbol '" + name + "' already defined!");
     }
     symbolTable[name] = &s;
 }
@@ -185,7 +185,7 @@ void MethodArguments::define(const Symbol &s) {
     const Variable *v = dynamic_cast<const Variable*>(&s);
     if (v == NULL) {
         cerr << "ERROR! Expecting variable, got" << s;
-        throw "Illegal symbol";
+        throw runtime_error("Illegal symbol");
     }
     Scope::define(*v);
     arguments.push_back(&v->type());
@@ -252,7 +252,7 @@ const Symbol *ClassScope::resolveField(const string name) {
     return symbolTable[name];
 }
 
-Program::Program(std::string name, Scope *parentScope): 
+Program::Program(string name, Scope *parentScope): 
     ScopeContainer(),
     Symbol(name),
     _scope(*(new Scope(parentScope)))
@@ -268,7 +268,7 @@ ostream& Program::print(ostream &os) const {
 }
 
 Symbols::Symbols():
-    scopes(std::stack<Scope*>())
+    scopes(stack<Scope*>())
 {
     scopes.push(new GlobalScope());
 }
@@ -277,7 +277,7 @@ void Symbols::define(Symbol &s) {
     currentScope()->define(s);
 }
 
-Class& Symbols::enterClassScope(const std::string name) {
+Class& Symbols::enterClassScope(const string name) {
     Class *c = new Class(name, currentScope());
     define(*c);
     enterScope(c->scope());
@@ -290,15 +290,15 @@ MethodArguments& Symbols::enterMethodArgumentsScope() {
     return *ma;
 }
 
-Method& Symbols::enterMethodScope(const std::string name, const Type &returnType, MethodArguments &arguments) {
+Method& Symbols::enterMethodScope(const string name, const Type &returnType, MethodArguments &arguments) {
     const MethodType *mtype = new MethodType(arguments, returnType);
     const Symbol *existingType = currentScope()->resolve(mtype->name());
     if (!existingType) {
         currentScope()->define(*mtype);
 #ifdef DEBUG
-        std::cout << "new method type: " << *mtype << std::endl;
+        cout << "new method type: " << *mtype << endl;
     } else {
-        std::cout << "existing method type: " << *existingType << std::endl;
+        cout << "existing method type: " << *existingType << endl;
 #endif
     }
     Method* m = new Method(name, *mtype);
@@ -307,7 +307,7 @@ Method& Symbols::enterMethodScope(const std::string name, const Type &returnType
     return *m;
 }
 
-Program& Symbols::enterProgramScope(const std::string name) {
+Program& Symbols::enterProgramScope(const string name) {
     Program* p = new Program(name, currentScope());
     define(*p);
     enterScope(p->scope());
@@ -316,7 +316,7 @@ Program& Symbols::enterProgramScope(const std::string name) {
 
 void Symbols::leaveScope() {
 #ifdef DEBUG
-    std::cout << "Leaving scope: " << *scopes.top();
+    cout << "Leaving scope: " << *scopes.top();
 #endif
     scopes.pop();
 }
@@ -352,7 +352,7 @@ void Symbols::defineArray(const string name, const Type &t) {
         at = new const ArrayType(t);
         define(*const_cast<Type*>(at));
 #ifdef DEBUG
-        std::cout << "new array type: " << *at << std::endl;
+        cout << "new array type: " << *at << endl;
 #endif
     }
     defineVariable(name, *at);
