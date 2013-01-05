@@ -1,3 +1,3 @@
 
-add_library(Codegen mjmodule.cpp)
+add_library(Codegen mjmodule.cpp codegen.cpp)
 

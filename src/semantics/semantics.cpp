@@ -9,12 +9,13 @@
 #include "semantics.h"
 
 using namespace mj;
+using namespace mj::semantics;
 using namespace std;
 
 bool SemanticNodeVisitor::dirty = false;
 const Type UNKNOWN_TYPE("mj.unknown");
 
-const Type& visitChild(AstWalker &walker, nodeiterator &ni) {
+static const Type& visitChild(AstWalker &walker, nodeiterator &ni) {
     walker.visit(*ni);
     const Type *t = getNodeData<const Type>(*ni);
     if (t == NULL) {
@@ -337,11 +338,11 @@ void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
 
     walker.addVisitor(UNARY_MINUS, UnOpVisitor(symbolsTable));
 
-    walker.addVisitor(VAR, VarVisitor(symbolsTable));
-    walker.addVisitor(CONST, VarVisitor(symbolsTable));
-    walker.addVisitor(ARR, ArrVisitor(symbolsTable));
-    walker.addVisitor(FN, MethodVisitor(symbolsTable));
-    walker.addVisitor(CLASS, ClassVisitor(symbolsTable));
+    walker.addVisitor(DEFVAR, VarVisitor(symbolsTable));
+    walker.addVisitor(DEFCONST, VarVisitor(symbolsTable));
+    walker.addVisitor(DEFARR, ArrVisitor(symbolsTable));
+    walker.addVisitor(DEFFN, MethodVisitor(symbolsTable));
+    walker.addVisitor(DEFCLASS, ClassVisitor(symbolsTable));
     walker.addVisitor(NEW, NewVisitor(symbolsTable));
     walker.addVisitor(NEW_ARR, NewArrVisitor(symbolsTable));
 

@@ -18,6 +18,8 @@ namespace mj {
             char* message;
     };
 
+    namespace semantics {
+
     class SemanticNodeVisitor : public NodeVisitor {
         public:
             static bool dirty;
@@ -140,6 +142,8 @@ namespace mj {
             ProgramVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
             virtual void operator()(AstWalker &walker) const;
     };
+
+    }
 
     void checkSemantics(AST ast, Symbols &symbols);
 

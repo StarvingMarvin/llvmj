@@ -67,8 +67,8 @@ namespace mj {
             SymbolTable symbolTable;
 
         private:
-            Scope(Scope & s){}
-            void operator=(Scope& s){}
+            Scope(const Scope& s){}
+            void operator=(const Scope& s){}
             Scope *_parent;
 
     };
