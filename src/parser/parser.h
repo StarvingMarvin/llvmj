@@ -37,21 +37,48 @@ namespace mj {
             _parent(parent), _index(index) {}
 
         nodeiterator& operator++() {_index++; return *this;}
-        nodeiterator operator++(int) {nodeiterator tmp(*this); operator++(); return tmp;}
+        
+        nodeiterator operator++(int) 
+            {nodeiterator tmp(*this); operator++(); return tmp;}
+        
         nodeiterator& operator--() {_index--; return *this;}
-        nodeiterator operator--(int) {nodeiterator tmp(*this); operator--(); return tmp;}
-        nodeiterator operator+(int i) {return nodeiterator(_parent, _index + i);}
-        nodeiterator operator-(int i) {return nodeiterator(_parent, _index - i);}
+        
+        nodeiterator operator--(int) 
+            {nodeiterator tmp(*this); operator--(); return tmp;}
+        
+        nodeiterator operator+(int i) 
+            {return nodeiterator(_parent, _index + i);}
+        
+        nodeiterator operator-(int i) 
+            {return nodeiterator(_parent, _index - i);}
+        
         nodeiterator& operator+=(int i) {_index+=i; return *this;}
+        
         nodeiterator& operator-=(int i) {_index-=i; return *this;}
-        int operator-(const nodeiterator &rhs) {return _index - rhs._index;}
-        bool operator==(const nodeiterator &rhs) {return _index == rhs._index;}
-        bool operator!=(const nodeiterator &rhs) {return _index != rhs._index;}
-        bool operator>(const nodeiterator &rhs) {return _index > rhs._index;}
-        bool operator<(const nodeiterator &rhs) {return _index < rhs._index;}
-        bool operator>=(const nodeiterator &rhs) {return _index <= rhs._index;}
-        bool operator<=(const nodeiterator &rhs) {return _index >= rhs._index;}
+        
+        int operator-(const nodeiterator &rhs) 
+            {return _index - rhs._index;}
+        
+        bool operator==(const nodeiterator &rhs) 
+            {return _index == rhs._index;}
+        
+        bool operator!=(const nodeiterator &rhs) 
+            {return _index != rhs._index;}
+        
+        bool operator>(const nodeiterator &rhs) 
+            {return _index > rhs._index;}
+        
+        bool operator<(const nodeiterator &rhs) 
+            {return _index < rhs._index;}
+        
+        bool operator>=(const nodeiterator &rhs) 
+            {return _index <= rhs._index;}
+        
+        bool operator<=(const nodeiterator &rhs) 
+            {return _index >= rhs._index;}
+        
         AST operator*() {return (AST)_parent->getChild(_parent, _index);}
+        
         AST operator[](int i) {return (AST)_parent->getChild(_parent, i);}
 
     };

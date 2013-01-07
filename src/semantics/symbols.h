@@ -62,6 +62,32 @@ namespace mj {
             virtual const Symbol* resolve(const std::string name);
             friend std::ostream& operator<<(std::ostream& os, const Scope& s);
             virtual ~Scope();
+
+            class iterator : 
+                std::iterator<std::input_iterator_tag, Symbol>
+            {
+                public: 
+                    iterator(SymbolTable::const_iterator it): _it(it){}
+
+                    iterator& operator++() { _it++; return *this; }
+                    
+                    iterator operator++(int) 
+                        { iterator tmp(*this); operator++(); return tmp; }
+
+                    bool operator==(const iterator &rhs)
+                        { return _it == rhs._it; }
+
+                    bool operator!=(const iterator &rhs)
+                        { return _it != rhs._it; }
+
+                    const Symbol& operator*() { return *(_it->second); }
+                private:
+                    SymbolTable::const_iterator _it;
+            };
+
+            iterator begin() const { return iterator(symbolTable.begin()); }
+            iterator end() const { return iterator(symbolTable.end()); }
+
         protected:
             virtual unsigned int depth() const;
             SymbolTable symbolTable;

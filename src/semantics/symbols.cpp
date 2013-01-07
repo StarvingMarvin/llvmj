@@ -33,10 +33,10 @@ namespace mj {
     ostream& operator<<(ostream& os, const Scope& s) {
         unsigned int depth = s.depth();
         os << " {\n";
-        SymbolTable::const_iterator i = s.symbolTable.begin();
-        for (; i != s.symbolTable.end(); i++) {
+        Scope::iterator it = s.begin();
+        for (; it != s.end(); ++it) {
             for (unsigned int d = 0; d <= depth; d++) os << "\t";
-            os << *(i->second) << endl;
+            os << *it << endl;
         }
         for (unsigned int i = 0; i < depth; i++) os << "\t";
         os << "}\n";
