@@ -84,7 +84,7 @@ namespace mj {
         private:
             const Type &_valueType;
         public:
-            ArrayType(const Type &valueType);
+            explicit ArrayType(const Type &valueType);
             const Type& valueType() const { return _valueType; }
     };
 
@@ -173,10 +173,21 @@ namespace mj {
             Scope &_scope;
     };
 
+    typedef std::vector<const MethodType*>::iterator method_iterator;
+
     class GlobalScope : public Scope {
         public:
-        GlobalScope();
-        virtual ~GlobalScope();
+            GlobalScope();
+            void defineArrayAutoType(const ArrayType &t);
+            void defineMethodAutoType(const MethodType &t);
+            void defineProgram(const Program &p);
+            method_iterator methodPrototypesBegin();
+            method_iterator methodPrototypesEnd();
+            const Program *program();
+            virtual ~GlobalScope();
+        private:
+            std::vector<const MethodType*> prototypes;
+            const Program *_program;
     };
 
     class Symbols {
@@ -199,16 +210,17 @@ namespace mj {
                     MethodArguments &arguments);
             MethodArguments& enterMethodArgumentsScope();
             void leaveScope();
-
-            ~Symbols();
+            const GlobalScope &globalScope() { return global; }
+            // no destructor as global will cleanup allocates symbols
 
             friend std::ostream& operator<<(std::ostream& os, const Symbols& s);
 
         private:
-            void define (Symbol &s);
+            void define (const Symbol &s);
             void enterScope(Scope& s) {scopes.push(&s);}
             Scope *currentScope() const {return scopes.top();}
             std::stack<Scope*> scopes;
+            GlobalScope global;
     };
 
     std::ostream& operator<<(std::ostream &os, const mj::Symbol& s);

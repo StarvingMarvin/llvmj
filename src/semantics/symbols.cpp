@@ -271,10 +271,10 @@ ostream& Program::print(ostream &os) const {
 Symbols::Symbols():
     scopes(stack<Scope*>())
 {
-    scopes.push(new GlobalScope());
+    scopes.push(&global);
 }
 
-void Symbols::define(Symbol &s) {
+void Symbols::define(const Symbol &s) {
     currentScope()->define(s);
 }
 
@@ -295,7 +295,7 @@ Method& Symbols::enterMethodScope(const string name, const Type &returnType, Met
     const MethodType *mtype = new MethodType(arguments, returnType);
     const Symbol *existingType = currentScope()->resolve(mtype->name());
     if (!existingType) {
-        currentScope()->define(*mtype);
+        global.defineMethodAutoType(*mtype);
 #ifdef DEBUG
         cout << "new method type: " << *mtype << endl;
     } else {
@@ -310,12 +310,15 @@ Method& Symbols::enterMethodScope(const string name, const Type &returnType, Met
 
 Program& Symbols::enterProgramScope(const string name) {
     Program* p = new Program(name, currentScope());
-    define(*p);
+    global.defineProgram(*p);
     enterScope(p->scope());
     return *p;
 }
 
 void Symbols::leaveScope() {
+    if (scopes.size() == 1) {
+        throw runtime_error("Can't leave the global scope.");
+    }
 #ifdef DEBUG
     cout << "Leaving scope: " << *scopes.top();
 #endif
@@ -348,10 +351,15 @@ void Symbols::defineVariable(const string name, const Type &t) {
 }
 
 void Symbols::defineArray(const string name, const Type &t) {
-    const Type *at = resolveType(ArrayType(t).name());
+
+    string typeName = ArrayType(t).name();
+#ifdef DEBUG
+    cout << "definning array var '" << name << "' of type " << typeName <<endl;
+#endif
+    const Type *at = resolveType(typeName);
     if (!at) {
         at = new const ArrayType(t);
-        define(*const_cast<Type*>(at));
+        global.defineArrayAutoType(*dynamic_cast<const ArrayType*>(at));
 #ifdef DEBUG
         cout << "new array type: " << *at << endl;
 #endif
@@ -359,16 +367,7 @@ void Symbols::defineArray(const string name, const Type &t) {
     defineVariable(name, *at);
 }
 
-Symbols::~Symbols() {
-    Scope * s;
-    while(!scopes.empty()) {
-        s = scopes.top();
-        scopes.pop();
-    }
-    delete s;
-}
-
-GlobalScope::GlobalScope() : Scope(NULL) {
+GlobalScope::GlobalScope() : Scope(NULL), _program(NULL) {
     const Type *mjInt = new Type("int");
     const Type *mjChar = new Type("char");
     const Type *mjArr = new AnyArrayType();
@@ -418,5 +417,38 @@ GlobalScope::GlobalScope() : Scope(NULL) {
 GlobalScope::~GlobalScope() {
     symbolTable.erase(VOID_TYPE.name());
     symbolTable.erase(NULL_TYPE.name());
+    prototypes.clear();
+}
+
+void GlobalScope::defineArrayAutoType(const ArrayType &t) {
+#ifdef DEBUG
+    cout << "def arr type: " << t  << endl;
+#endif
+    Scope::define(t);
+}
+
+void GlobalScope::defineMethodAutoType(const MethodType &t) {
+    Scope::define(t);
+    prototypes.push_back(&t);
+}
+
+void GlobalScope::defineProgram(const Program &p) {
+    if (_program) {
+        throw runtime_error("Program already defined!" + _program->name());
+    }
+    Scope::define(p);
+    _program = &p;
+}
+
+method_iterator GlobalScope::methodPrototypesBegin() {
+    return prototypes.begin();
+}
+
+method_iterator GlobalScope::methodPrototypesEnd() {
+    return prototypes.end();
+}
+
+const Program *GlobalScope::program() {
+    return _program;
 }
 

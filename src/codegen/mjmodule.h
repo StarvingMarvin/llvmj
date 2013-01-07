@@ -83,7 +83,7 @@ namespace mj {
             llvm::Function *chr;
             llvm::Function *len;
 
-            mj::Symbols symbolTable;
+            //Symbols &symbols;
 
 
             void init();
