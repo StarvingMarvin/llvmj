@@ -207,9 +207,14 @@ namespace mj {
             void defineArrayAutoType(const ArrayType &t);
             void defineMethodAutoType(const MethodType &t);
             void defineProgram(const Program &p);
-            method_iterator methodPrototypesBegin();
-            method_iterator methodPrototypesEnd();
-            const Program *program();
+            
+            method_iterator methodPrototypesBegin() 
+                { return prototypes.begin(); }
+            
+            method_iterator methodPrototypesEnd()
+                { return prototypes.end(); }
+            
+            const Program *program() { return _program; }
             virtual ~GlobalScope();
         private:
             std::vector<const MethodType*> prototypes;

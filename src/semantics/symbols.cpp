@@ -92,6 +92,19 @@ ArrayType::ArrayType(const Type &valueType):
 
 }
 
+Variable::Variable(const string name, const Type& type):
+    Symbol(name),
+    _type(type)
+{
+}
+
+ostream& Variable::print(ostream &os) const {
+    return os << name() << " : " << type();
+}
+
+//
+// Scopes and scope symbols
+//
 Scope::Scope(Scope *parent):
     _parent(parent)
 {
@@ -135,21 +148,15 @@ unsigned int Scope::depth() const {
     return d;
 }
 
-Variable::Variable(const string name, const Type& type):
-    Symbol(name),
-    _type(type)
-{
-}
-
-ostream& Variable::print(ostream &os) const {
-    return os << name() << " : " << type();
-}
 
 ostream& ScopeContainer::print(ostream &os) const {
     printSignature(os);
     return os << this->scope();
 }
 
+//
+// Method
+//
 MethodArguments::MethodArguments(Scope *parentScope): 
     Scope(parentScope), 
     arguments() 
@@ -220,6 +227,9 @@ MethodType::MethodType(MethodArguments &arguments, const Type &returnType):
 {
 }
 
+//
+// Class
+//
 Class::Class(string name, Scope *parentScope):
     ReferenceType(name),
     ScopeContainer(),
@@ -253,6 +263,9 @@ const Symbol *ClassScope::resolveField(const string name) {
     return symbolTable[name];
 }
 
+//
+// Program
+//
 Program::Program(string name, Scope *parentScope): 
     ScopeContainer(),
     Symbol(name),
@@ -268,6 +281,82 @@ ostream& Program::print(ostream &os) const {
     return ScopeContainer::print(os);
 }
 
+//
+// Global Scope
+//
+GlobalScope::GlobalScope() : Scope(NULL), _program(NULL) {
+    const Type *mjInt = new Type("int");
+    const Type *mjChar = new Type("char");
+    const Type *mjArr = new AnyArrayType();
+    const Variable *mjEol = new Variable("eol", *mjChar);
+    const Variable *mjNull = new Variable("null", NULL_TYPE);
+
+    // ord method
+    MethodArguments *ordArgs = new MethodArguments(this);
+    ordArgs->define(*(new Variable("c", *mjChar)));
+
+    const MethodType *ordType = new MethodType(*ordArgs, *mjInt);
+    
+    Method *mjOrd = new Method("ord", *ordType);
+
+
+    // chr method
+    MethodArguments *chrArgs = new MethodArguments(this);
+    chrArgs->define(*(new Variable("i", *mjInt)));
+
+    const MethodType *chrType = new MethodType(*chrArgs, *mjChar);
+
+    Method *mjChr = new Method("chr", *chrType);
+
+
+    // len method
+    MethodArguments *lenArgs = new MethodArguments(this);
+    lenArgs->define(*(new Variable("arr", *mjArr)));
+
+    const MethodType *lenType = new MethodType(*lenArgs, *mjInt);
+
+    Method *mjLen = new Method("len", *lenType);
+
+    define(*mjInt);
+    define(*mjChar);
+    define(VOID_TYPE);
+    define(*mjEol);
+    define(NULL_TYPE);
+    define(*mjNull);
+    define(*ordType);
+    define(*mjOrd);
+    define(*chrType);
+    define(*mjChr);
+    define(*lenType);
+    define(*mjLen);
+}
+
+GlobalScope::~GlobalScope() {
+    symbolTable.erase(VOID_TYPE.name());
+    symbolTable.erase(NULL_TYPE.name());
+    prototypes.clear();
+}
+
+void GlobalScope::defineArrayAutoType(const ArrayType &t) {
+    Scope::define(t);
+}
+
+void GlobalScope::defineMethodAutoType(const MethodType &t) {
+    Scope::define(t);
+    prototypes.push_back(&t);
+}
+
+void GlobalScope::defineProgram(const Program &p) {
+    if (_program) {
+        throw runtime_error("Program already defined!" + _program->name());
+    }
+    Scope::define(p);
+    _program = &p;
+}
+
+//
+// Symbols facade class
+//
 Symbols::Symbols():
     scopes(stack<Scope*>())
 {
@@ -365,90 +454,5 @@ void Symbols::defineArray(const string name, const Type &t) {
 #endif
     }
     defineVariable(name, *at);
-}
-
-GlobalScope::GlobalScope() : Scope(NULL), _program(NULL) {
-    const Type *mjInt = new Type("int");
-    const Type *mjChar = new Type("char");
-    const Type *mjArr = new AnyArrayType();
-    const Variable *mjEol = new Variable("eol", *mjChar);
-    const Variable *mjNull = new Variable("null", NULL_TYPE);
-
-    // ord method
-    MethodArguments *ordArgs = new MethodArguments(this);
-    ordArgs->define(*(new Variable("c", *mjChar)));
-
-    const MethodType *ordType = new MethodType(*ordArgs, *mjInt);
-    
-    Method *mjOrd = new Method("ord", *ordType);
-
-
-    // chr method
-    MethodArguments *chrArgs = new MethodArguments(this);
-    chrArgs->define(*(new Variable("i", *mjInt)));
-
-    const MethodType *chrType = new MethodType(*chrArgs, *mjChar);
-
-    Method *mjChr = new Method("chr", *chrType);
-
-
-    // len method
-    MethodArguments *lenArgs = new MethodArguments(this);
-    lenArgs->define(*(new Variable("arr", *mjArr)));
-
-    const MethodType *lenType = new MethodType(*lenArgs, *mjInt);
-
-    Method *mjLen = new Method("len", *lenType);
-
-    define(*mjInt);
-    define(*mjChar);
-    define(VOID_TYPE);
-    define(*mjEol);
-    define(NULL_TYPE);
-    define(*mjNull);
-    define(*ordType);
-    define(*mjOrd);
-    define(*chrType);
-    define(*mjChr);
-    define(*lenType);
-    define(*mjLen);
-}
-
-GlobalScope::~GlobalScope() {
-    symbolTable.erase(VOID_TYPE.name());
-    symbolTable.erase(NULL_TYPE.name());
-    prototypes.clear();
-}
-
-void GlobalScope::defineArrayAutoType(const ArrayType &t) {
-#ifdef DEBUG
-    cout << "def arr type: " << t  << endl;
-#endif
-    Scope::define(t);
-}
-
-void GlobalScope::defineMethodAutoType(const MethodType &t) {
-    Scope::define(t);
-    prototypes.push_back(&t);
-}
-
-void GlobalScope::defineProgram(const Program &p) {
-    if (_program) {
-        throw runtime_error("Program already defined!" + _program->name());
-    }
-    Scope::define(p);
-    _program = &p;
-}
-
-method_iterator GlobalScope::methodPrototypesBegin() {
-    return prototypes.begin();
-}
-
-method_iterator GlobalScope::methodPrototypesEnd() {
-    return prototypes.end();
-}
-
-const Program *GlobalScope::program() {
-    return _program;
 }
 
