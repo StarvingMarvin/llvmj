@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <stdexcept>
+#include <sstream>
 
 #include "semantics.h"
 
@@ -155,6 +156,33 @@ void VarVisitor::operator()(AstWalker &walker) const {
     ni++;
     char *varName = tokenText(*ni);
     symbols.defineNamedValue(varName, *t);
+}
+
+void ConstVisitor::operator()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+    char *typeName = tokenText(*ni);
+    const Type *t = symbols.resolveType(typeName);
+    if (t == NULL) {
+        cerr << "ERROR! Unknown type: " << typeName << "!" << endl;
+        walker.printPosition(cerr)<< "!" << endl;
+        setDirty();
+        return;
+    }
+    
+    ni++;
+    char *varName = tokenText(*ni);
+
+    ni++;
+    char *valStr = tokenText(*ni);
+    int val = 0;
+
+    if (t->name() == "int") {
+        istringstream(valStr) >> val; 
+    } else {
+        val = valStr[0];
+    }
+
+    symbols.defineConstant(varName, *t, val);
 }
 
 void ArrVisitor::operator()(AstWalker &walker) const {
@@ -378,7 +406,7 @@ void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
     walker.addVisitor(MOD, iov);
 
     walker.addVisitor(DEFVAR, VarVisitor(symbolsTable));
-    walker.addVisitor(DEFCONST, VarVisitor(symbolsTable));
+    walker.addVisitor(DEFCONST, ConstVisitor(symbolsTable));
     walker.addVisitor(DEFARR, ArrVisitor(symbolsTable));
     walker.addVisitor(DEFFN, MethodVisitor(symbolsTable));
     walker.addVisitor(DEFCLASS, ClassVisitor(symbolsTable));

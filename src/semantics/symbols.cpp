@@ -92,6 +92,10 @@ ArrayType::ArrayType(const Type &valueType):
 
 }
 
+
+//
+// Vars and consts
+//
 NamedValue::NamedValue(const string name, const Type& type):
     Symbol(name),
     _type(type)
@@ -100,6 +104,32 @@ NamedValue::NamedValue(const string name, const Type& type):
 
 ostream& NamedValue::print(ostream &os) const {
     return os << name() << " : " << type();
+}
+
+string escape(char c) {
+    switch (c) {
+        case '\n':
+            return "\\n";
+        case '\r':
+            return "\\r";
+        case '\t':
+            return "\\t";
+        default:
+            char str[] = {c, 0};
+            return string(str);
+    }
+}
+
+ostream& Constant::print(ostream &os) const {
+    os << name() << " : " << type() << "("; 
+    
+    if (type().name() == "char") {
+        os << "'" << escape((char)_value) << "'";
+    } else {
+        os << _value;
+    }
+
+    return os << ")";
 }
 
 //
@@ -288,7 +318,7 @@ GlobalScope::GlobalScope() : Scope(NULL), _program(NULL) {
     const Type *mjInt = new Type("int");
     const Type *mjChar = new Type("char");
     const Type *mjArr = new AnyArrayType();
-    const NamedValue *mjEol = new NamedValue("eol", *mjChar);
+    const Constant *mjEol = new Constant("eol", *mjChar, 10);
     const NamedValue *mjNull = new NamedValue("null", NULL_TYPE);
 
     // ord method

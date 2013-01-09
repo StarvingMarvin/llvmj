@@ -83,6 +83,12 @@ namespace mj {
             virtual void operator()(AstWalker &walker) const;
     };
 
+    class ConstVisitor : public SemanticNodeVisitor {
+        public:
+            ConstVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
     class ArrVisitor : public SemanticNodeVisitor {
         public:
             ArrVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
