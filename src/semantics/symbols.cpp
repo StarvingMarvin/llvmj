@@ -92,13 +92,13 @@ ArrayType::ArrayType(const Type &valueType):
 
 }
 
-Variable::Variable(const string name, const Type& type):
+NamedValue::NamedValue(const string name, const Type& type):
     Symbol(name),
     _type(type)
 {
 }
 
-ostream& Variable::print(ostream &os) const {
+ostream& NamedValue::print(ostream &os) const {
     return os << name() << " : " << type();
 }
 
@@ -190,7 +190,7 @@ string MethodArguments::typeSignature() {
 }
 
 void MethodArguments::define(const Symbol &s) {
-    const Variable *v = dynamic_cast<const Variable*>(&s);
+    const NamedValue *v = dynamic_cast<const NamedValue*>(&s);
     if (v == NULL) {
         cerr << "ERROR! Expecting variable, got" << s;
         throw runtime_error("Illegal symbol");
@@ -202,13 +202,13 @@ void MethodArguments::define(const Symbol &s) {
 Method::Method(const string name, 
         const MethodType &type):
     ScopeContainer(),
-    Variable(name, type),
+    NamedValue(name, type),
     methodScope(new MethodScope(&type.arguments()))
 {
 }
 
 ostream& Method::printSignature(ostream &os) const {
-    return Variable::print(os);
+    return NamedValue::print(os);
 }
 
 ostream& Method::print(ostream &os) const {
@@ -288,12 +288,12 @@ GlobalScope::GlobalScope() : Scope(NULL), _program(NULL) {
     const Type *mjInt = new Type("int");
     const Type *mjChar = new Type("char");
     const Type *mjArr = new AnyArrayType();
-    const Variable *mjEol = new Variable("eol", *mjChar);
-    const Variable *mjNull = new Variable("null", NULL_TYPE);
+    const NamedValue *mjEol = new NamedValue("eol", *mjChar);
+    const NamedValue *mjNull = new NamedValue("null", NULL_TYPE);
 
     // ord method
     MethodArguments *ordArgs = new MethodArguments(this);
-    ordArgs->define(*(new Variable("c", *mjChar)));
+    ordArgs->define(*(new NamedValue("c", *mjChar)));
 
     const MethodType *ordType = new MethodType(*ordArgs, *mjInt);
     
@@ -302,7 +302,7 @@ GlobalScope::GlobalScope() : Scope(NULL), _program(NULL) {
 
     // chr method
     MethodArguments *chrArgs = new MethodArguments(this);
-    chrArgs->define(*(new Variable("i", *mjInt)));
+    chrArgs->define(*(new NamedValue("i", *mjInt)));
 
     const MethodType *chrType = new MethodType(*chrArgs, *mjChar);
 
@@ -311,7 +311,7 @@ GlobalScope::GlobalScope() : Scope(NULL), _program(NULL) {
 
     // len method
     MethodArguments *lenArgs = new MethodArguments(this);
-    lenArgs->define(*(new Variable("arr", *mjArr)));
+    lenArgs->define(*(new NamedValue("arr", *mjArr)));
 
     const MethodType *lenType = new MethodType(*lenArgs, *mjInt);
 
@@ -422,8 +422,8 @@ const Type* Symbols::resolveType(const string name) const {
     return dynamic_cast<const Type*>(resolve(name));
 }
 
-const Variable* Symbols::resolveVariable(const string name) const {
-    return dynamic_cast<const Variable*>(resolve(name));
+const NamedValue* Symbols::resolveNamedValue(const string name) const {
+    return dynamic_cast<const NamedValue*>(resolve(name));
 }
 
 const Method* Symbols::resolveMethod(const string name) const {
@@ -434,9 +434,14 @@ const Class* Symbols::resolveClass(const string name) const {
     return dynamic_cast<const Class*>(resolve(name));
 }
 
-void Symbols::defineVariable(const string name, const Type &t) {
-    Variable *v = new Variable(name, t);
+void Symbols::defineNamedValue(const string name, const Type &t) {
+    NamedValue *v = new NamedValue(name, t);
     define(*v);
+}
+
+void Symbols::defineConstant(const string name, const Type &t, int val) {
+    Constant *c = new Constant(name, t, val);
+    define(*c);
 }
 
 void Symbols::defineArray(const string name, const Type &t) {
@@ -453,6 +458,6 @@ void Symbols::defineArray(const string name, const Type &t) {
         cout << "new array type: " << *at << endl;
 #endif
     }
-    defineVariable(name, *at);
+    defineNamedValue(name, *at);
 }
 

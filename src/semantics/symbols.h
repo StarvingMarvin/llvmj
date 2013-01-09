@@ -42,13 +42,22 @@ namespace mj {
             virtual bool compatible(const Type &t) const;
     };
 
-    class Variable : public Symbol {
+    class NamedValue : public Symbol {
         public:
-            Variable(const std::string name, const Type& type);
+            NamedValue(const std::string name, const Type& type);
             const Type& type() const { return _type; }
             virtual std::ostream& print(std::ostream& os)const;
         private:
             const Type& _type;
+    };
+
+    class Constant : public NamedValue {
+        public:
+            Constant(const std::string name, const Type &type, int val):
+                NamedValue(name, type), _value(val) {}
+            int value() { return _value; }
+        private:
+            int _value;
     };
 
     typedef std::map<const std::string, const Symbol*> SymbolTable;
@@ -155,7 +164,7 @@ namespace mj {
             MethodArguments &_arguments;
     };
 
-    class Method : public ScopeContainer, public Variable {
+    class Method : public ScopeContainer, public NamedValue {
         friend class MethodScope;
         public:
             Method(const std::string name, 
@@ -227,11 +236,12 @@ namespace mj {
 
             const Symbol* resolve(const std::string name) const;
             const Type* resolveType(const std::string name) const;
-            const Variable* resolveVariable(const std::string name) const;
+            const NamedValue* resolveNamedValue(const std::string name) const;
             const Method* resolveMethod(const std::string name) const;
             const Class* resolveClass(const std::string name) const;
 
-            void defineVariable(const std::string name, const Type &t);
+            void defineNamedValue(const std::string name, const Type &t);
+            void defineConstant(const std::string name, const Type &t, int vac);
             void defineArray(const std::string name, const Type &t);
 
             Class& enterClassScope(const std::string name);

@@ -107,6 +107,21 @@ namespace mj {
             virtual void operator()(AstWalker &walker) const;
     };
 
+    class UnexpectedBreakVisitor : public SemanticNodeVisitor {
+        public:
+            UnexpectedBreakVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
+    class ReturnVisitor : public SemanticNodeVisitor {
+        public:
+            ReturnVisitor(Symbols &symbolTable, const Type &t):
+                SemanticNodeVisitor(symbolTable), type(t) {}
+            virtual void operator()(AstWalker &walker) const;
+        private:
+            const Type &type;
+    };
+
     class CallVisitor : public SemanticNodeVisitor {
         public:
             CallVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}

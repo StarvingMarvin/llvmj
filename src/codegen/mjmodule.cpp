@@ -48,7 +48,7 @@ static const Value* visitChild(AstWalker &walker, nodeiterator &ni) {
 void VarDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * ident = tokenText(*b);
-    const Variable *v = symbols().resolveVariable(ident);
+    const NamedValue *v = symbols().resolveNamedValue(ident);
     
 }
 

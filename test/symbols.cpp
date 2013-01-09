@@ -41,7 +41,7 @@ void testMethod() {
 
     // ord method
     MethodArguments *ordArgs = new MethodArguments(global);
-    ordArgs->define(*(new Variable("c", *mjChar)));
+    ordArgs->define(*(new NamedValue("c", *mjChar)));
 
     const MethodType *ordType = new MethodType(*ordArgs, *mjInt);
     assert(ordType->returnType() == *mjInt);
@@ -50,7 +50,7 @@ void testMethod() {
 
     // toUpper method
     MethodArguments *upperArgs = new MethodArguments(global);
-    upperArgs->define(*(new Variable("c", *mjChar)));
+    upperArgs->define(*(new NamedValue("c", *mjChar)));
 
     const MethodType *upperType = new MethodType(*upperArgs, *mjChar);
     assert(upperType->returnType() == *mjChar);
@@ -60,9 +60,9 @@ void testMethod() {
     global->define(*mjInt);
     global->define(*mjChar);
     global->define(*ordType);
-    global->define(*dynamic_cast<const Variable*>(mjOrd));
+    global->define(*dynamic_cast<const NamedValue*>(mjOrd));
     global->define(*upperType);
-    global->define(*dynamic_cast<const Variable*>(upper));
+    global->define(*dynamic_cast<const NamedValue*>(upper));
 
     const Symbol *ots = global->resolve(ordType->name());
     assert(std::string("(char)->int") == ots->name());
@@ -74,7 +74,7 @@ void testMethod() {
     assert(dynamic_cast<const MethodType*>(uts)->returnType() == *mjChar);
 
     const Symbol *upperSym = global->resolve("toUpper");
-    const Variable *upperVar = dynamic_cast<const Variable*>(upperSym);
+    const NamedValue *upperVar = dynamic_cast<const NamedValue*>(upperSym);
     const Type &upperVarType = upperVar->type();
     const MethodType &upperVarMethodType = dynamic_cast<const MethodType&>(upperVarType);
     assert(upperVarMethodType.returnType() == *mjChar);

@@ -109,7 +109,7 @@ namespace mj {
             }
         private:
             const NodeVisitor &_defaultVisitor;
-            std::map<uint32_t, NodeVisitor*> visitors;
+            std::map<uint32_t, const NodeVisitor*> visitors;
             std::vector<AST> stack;
     };
 

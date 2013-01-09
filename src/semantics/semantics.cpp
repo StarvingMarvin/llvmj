@@ -50,7 +50,7 @@ void CheckCompatibleVisitor::operator()(AstWalker &walker) const {
 void VarDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * ident = tokenText(*b);
-    const Variable *v = symbols.resolveVariable(ident);
+    const NamedValue *v = symbols.resolveNamedValue(ident);
     if (v == NULL) {
         cerr << "ERROR! Unknown variable '" << ident << "' at ";
         walker.printPosition(cerr)<< "!" << endl;
@@ -125,7 +125,10 @@ void MethodVisitor::operator()(AstWalker &walker) const {
 
     ni++;
     symbols.enterMethodScope(methodName, *returnType, arguments);
+    const NodeVisitor &nv = walker.getVisitor(RETURN);
+    walker.addVisitor(RETURN, ReturnVisitor(symbols, *returnType));
     visitChildren(walker, ni);
+    walker.addVisitor(RETURN, nv);
     symbols.leaveScope();
 }
 
@@ -151,7 +154,7 @@ void VarVisitor::operator()(AstWalker &walker) const {
 
     ni++;
     char *varName = tokenText(*ni);
-    symbols.defineVariable(varName, *t);
+    symbols.defineNamedValue(varName, *t);
 }
 
 void ArrVisitor::operator()(AstWalker &walker) const {
@@ -195,6 +198,41 @@ void ReadVisitor::operator()(AstWalker &walker) const {
     }
 }
 
+void LoopVisitor::operator()(AstWalker &walker) const {
+    const NodeVisitor &nv = walker.getVisitor(BREAK);
+
+    // NodeVisitor is noop
+    walker.addVisitor(BREAK, NodeVisitor());
+    nodeiterator ni = walker.firstChild();
+    visitChildren(walker, ni);
+    walker.addVisitor(BREAK, nv);
+}
+
+void UnexpectedBreakVisitor::operator()(AstWalker &walker) const {
+    cerr << "ERROR! break only valid within loops." << endl;
+    walker.printPosition(cerr) << "!" << endl;
+    setDirty();
+}
+
+
+void ReturnVisitor::operator()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+    if (ni == walker.lastChild()) {
+        if (type != VOID_TYPE) {
+            cerr << "ERROR! Method must return value of type " << type << endl;
+            walker.printPosition(cerr) << "!" << endl;
+            setDirty();
+        }
+    } else {
+        const Type &rt = visitChild(walker, ni);
+        if (!type.compatible(rt)) {
+            cerr << "ERROR! Method must return value of type " << type << endl;
+            walker.printPosition(cerr) << "!" << endl;
+            setDirty();
+        }
+    }
+}
+
 void CallVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
 
@@ -228,7 +266,7 @@ void FieldDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     char* name = tokenText(*ni);
     ni++;
-    const Variable *var = symbols.resolveVariable(name);
+    const NamedValue *var = symbols.resolveNamedValue(name);
     if (var == NULL) {
         cerr << "ERROR! Unknown variable: " << name << "!" << endl;
         walker.printPosition(cerr)<< "!" << endl;
@@ -238,7 +276,7 @@ void FieldDesVisitor::operator()(AstWalker &walker) const {
     const Class &clazz = dynamic_cast<const Class&>(var->type());
     char* fieldName = tokenText(*ni);
     const Symbol *fieldSymbol = clazz.scope().resolve(fieldName);
-    const Variable *field = dynamic_cast<const Variable*>(fieldSymbol);
+    const NamedValue *field = dynamic_cast<const NamedValue*>(fieldSymbol);
     if (field == NULL) {
         cerr << "ERROR! Unknown field: " << fieldName << " in class " 
             << name << "!" << endl;
@@ -254,7 +292,7 @@ void ArrDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     char* name = tokenText(*ni);
 
-    const Variable *arrVar = symbols.resolveVariable(name);
+    const NamedValue *arrVar = symbols.resolveNamedValue(name);
     if (arrVar == NULL) {
         cerr << "ERROR! Unknown variable: " << name << "!" << endl;
         walker.printPosition(cerr)<< "!" << endl;
@@ -329,14 +367,15 @@ void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
     walker.addVisitor(LIT_CHAR, CharLiteralVisitor(symbolsTable));
     walker.addVisitor(CALL, CallVisitor(symbolsTable));
 
+    walker.addVisitor(WHILE, LoopVisitor(symbolsTable));
+    walker.addVisitor(BREAK, UnexpectedBreakVisitor(symbolsTable));
+
     IntOpVisitor iov(symbolsTable);
     walker.addVisitor(PLUS, iov);
     walker.addVisitor(MINUS, iov);
     walker.addVisitor(MUL, iov);
     walker.addVisitor(DIV, iov);
     walker.addVisitor(MOD, iov);
-
-    walker.addVisitor(UNARY_MINUS, UnOpVisitor(symbolsTable));
 
     walker.addVisitor(DEFVAR, VarVisitor(symbolsTable));
     walker.addVisitor(DEFCONST, VarVisitor(symbolsTable));
@@ -358,6 +397,7 @@ void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
     UnOpVisitor uov(symbolsTable);
     walker.addVisitor(INC, uov);
     walker.addVisitor(DEC, uov);
+    walker.addVisitor(UNARY_MINUS, uov);
 
     walker.addVisitor(PRINT, PrintVisitor(symbolsTable));
     walker.addVisitor(READ, ReadVisitor(symbolsTable));

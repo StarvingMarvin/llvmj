@@ -131,7 +131,7 @@ AstWalker::AstWalker(AST ast, const NodeVisitor &defaultVisitor):
 }
 
 void AstWalker::addVisitor(uint32_t tokenType, const NodeVisitor &visitor) {
-    visitors[tokenType]=const_cast<NodeVisitor*>(&visitor);
+    visitors[tokenType]=&visitor;
 }
 
 const NodeVisitor& AstWalker::getVisitor(uint32_t tokenType) {
