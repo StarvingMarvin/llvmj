@@ -59,6 +59,34 @@ void VarDesVisitor::operator()(AstWalker &walker) const {
         return;
     }
 
+    if (dynamic_cast<const Constant*>(v)) {
+        cerr << "ERROR: '" << ident << "' is a constant and l-value is expected at ";
+        walker.printPosition(cerr)<< "!" << endl;
+        setDirty();
+        return;
+    }
+
+    setType(walker, v->type());
+}
+
+void SetVisitor::operator()(AstWalker &walker) const {
+    const NodeVisitor &nv = walker.getVisitor(VAR_DES);
+    walker.addVisitor(VAR_DES, VarDesVisitor(symbols));
+    CheckCompatibleVisitor::operator()(walker);
+    walker.addVisitor(VAR_DES, nv);
+}
+
+void NamedValueVisitor::operator()(AstWalker &walker) const {
+    nodeiterator b = walker.firstChild();
+    char * ident = tokenText(*b);
+    const NamedValue *v = symbols.resolveNamedValue(ident);
+    if (v == NULL) {
+        cerr << "ERROR! Unknown variable '" << ident << "' at ";
+        walker.printPosition(cerr)<< "!" << endl;
+        setDirty();
+        return;
+    }
+
     setType(walker, v->type());
 }
 
@@ -388,7 +416,7 @@ void ProgramVisitor::operator()(AstWalker &walker) const {
 void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
     AstWalker walker(ast,  VisitChildren());
 
-    walker.addVisitor(VAR_DES, VarDesVisitor(symbolsTable));
+    walker.addVisitor(VAR_DES, NamedValueVisitor(symbolsTable));
     walker.addVisitor(FIELD_DES, FieldDesVisitor(symbolsTable));
     walker.addVisitor(ARR_DES, ArrDesVisitor(symbolsTable));
     walker.addVisitor(LIT_INT, IntLiteralVisitor(symbolsTable));

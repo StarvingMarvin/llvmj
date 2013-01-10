@@ -115,8 +115,7 @@ string escape(char c) {
         case '\t':
             return "\\t";
         default:
-            char str[] = {c, 0};
-            return string(str);
+            return string(1, c);
     }
 }
 
@@ -293,13 +292,28 @@ const Symbol *ClassScope::resolveField(const string name) {
     return symbolTable[name];
 }
 
+void SplitScope::define(const Symbol &s) {
+    Scope::define(s);
+    const Symbol *sp = &s;
+    if (const Method *m = dynamic_cast<const Method*>(sp)) {
+        methods.push_back(m);
+    } else if (const Class *c = dynamic_cast<const Class*>(sp)) {
+        classes.push_back(c);
+    } else if (const Constant *cc = dynamic_cast<const Constant*>(sp)) {
+        constants.push_back(cc);
+    } else if (const NamedValue *v = dynamic_cast<const NamedValue*>(sp)) {
+        variables.push_back(v);
+    }
+
+}
+
 //
 // Program
 //
 Program::Program(string name, Scope *parentScope): 
     ScopeContainer(),
     Symbol(name),
-    _scope(*(new Scope(parentScope)))
+    _scope(*(new SplitScope(parentScope)))
 {
 }
 
@@ -314,12 +328,12 @@ ostream& Program::print(ostream &os) const {
 //
 // Global Scope
 //
-GlobalScope::GlobalScope() : Scope(NULL), _program(NULL) {
+GlobalScope::GlobalScope() : SplitScope(NULL), _program(NULL) {
     const Type *mjInt = new Type("int");
     const Type *mjChar = new Type("char");
     const Type *mjArr = new AnyArrayType();
     const Constant *mjEol = new Constant("eol", *mjChar, 10);
-    const NamedValue *mjNull = new NamedValue("null", NULL_TYPE);
+    const Constant *mjNull = new Constant("null", NULL_TYPE, 0);
 
     // ord method
     MethodArguments *ordArgs = new MethodArguments(this);
@@ -368,11 +382,11 @@ GlobalScope::~GlobalScope() {
 }
 
 void GlobalScope::defineArrayAutoType(const ArrayType &t) {
-    Scope::define(t);
+    SplitScope::define(t);
 }
 
 void GlobalScope::defineMethodAutoType(const MethodType &t) {
-    Scope::define(t);
+    SplitScope::define(t);
     prototypes.push_back(&t);
 }
 

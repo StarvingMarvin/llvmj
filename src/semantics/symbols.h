@@ -198,6 +198,31 @@ namespace mj {
             ClassScope &classScope;
     };
 
+    typedef std::vector<const MethodType*>::iterator method_type_iterator;
+    typedef std::vector<const Method*>::iterator method_iterator;
+    typedef std::vector<const Constant*>::iterator constant_iterator;
+    typedef std::vector<const NamedValue*>::iterator variable_iterator;
+    typedef std::vector<const Class*>::iterator class_iterator;
+
+    class SplitScope : public Scope {
+        public:
+            SplitScope(Scope *parentScope) : Scope(parentScope){}
+            virtual void define(const Symbol &s); 
+            method_iterator methodBegin() { return methods.begin(); }
+            method_iterator methodEnd() { return methods.end(); }
+            constant_iterator constantBegin() { return constants.begin(); }
+            constant_iterator constantEnd() { return constants.end(); }
+            variable_iterator variableBegin() { return variables.begin(); }
+            variable_iterator variableEnd() { return variables.end(); }
+            class_iterator classBegin() { return classes.begin(); }
+            class_iterator classEnd() { return classes.end(); }
+        private:
+            std::vector<const Method*> methods;
+            std::vector<const NamedValue*> variables;
+            std::vector<const Constant*> constants;
+            std::vector<const Class*> classes;
+    };
+
     class Program : public ScopeContainer, public Symbol {
         public:
             Program(std::string name, Scope *parentScope);
@@ -206,22 +231,20 @@ namespace mj {
             virtual std::ostream& printSignature(std::ostream& os) const;
             virtual ~Program() { delete &_scope; }
         private:
-            Scope &_scope;
+            SplitScope &_scope;
     };
 
-    typedef std::vector<const MethodType*>::iterator method_iterator;
-
-    class GlobalScope : public Scope {
+    class GlobalScope : public SplitScope {
         public:
             GlobalScope();
             void defineArrayAutoType(const ArrayType &t);
             void defineMethodAutoType(const MethodType &t);
             void defineProgram(const Program &p);
             
-            method_iterator methodPrototypesBegin() 
+            method_type_iterator methodPrototypesBegin() 
                 { return prototypes.begin(); }
             
-            method_iterator methodPrototypesEnd()
+            method_type_iterator methodPrototypesEnd()
                 { return prototypes.end(); }
             
             const Program *program() { return _program; }

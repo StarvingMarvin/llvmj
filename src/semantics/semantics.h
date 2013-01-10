@@ -37,7 +37,19 @@ namespace mj {
 
     class VarDesVisitor : public SemanticNodeVisitor {
         public:
-            VarDesVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            VarDesVisitor(Symbols &symbolTable): SemanticNodeVisitor(symbolTable) {}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
+    class SetVisitor : public CheckCompatibleVisitor {
+        public:
+            SetVisitor(Symbols &symbolTable): CheckCompatibleVisitor (symbolTable) {}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
+    class NamedValueVisitor : public SemanticNodeVisitor {
+        public:
+            NamedValueVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
             virtual void operator()(AstWalker &walker) const;
     };
 
