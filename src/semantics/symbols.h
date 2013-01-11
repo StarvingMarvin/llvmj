@@ -198,24 +198,24 @@ namespace mj {
             ClassScope &classScope;
     };
 
-    typedef std::vector<const MethodType*>::iterator method_type_iterator;
-    typedef std::vector<const Method*>::iterator method_iterator;
-    typedef std::vector<const Constant*>::iterator constant_iterator;
-    typedef std::vector<const NamedValue*>::iterator variable_iterator;
-    typedef std::vector<const Class*>::iterator class_iterator;
+    typedef std::vector<const MethodType*>::const_iterator method_type_iterator;
+    typedef std::vector<const Method*>::const_iterator method_iterator;
+    typedef std::vector<const Constant*>::const_iterator constant_iterator;
+    typedef std::vector<const NamedValue*>::const_iterator variable_iterator;
+    typedef std::vector<const Class*>::const_iterator class_iterator;
 
     class SplitScope : public Scope {
         public:
             SplitScope(Scope *parentScope) : Scope(parentScope){}
             virtual void define(const Symbol &s); 
-            method_iterator methodBegin() { return methods.begin(); }
-            method_iterator methodEnd() { return methods.end(); }
-            constant_iterator constantBegin() { return constants.begin(); }
-            constant_iterator constantEnd() { return constants.end(); }
-            variable_iterator variableBegin() { return variables.begin(); }
-            variable_iterator variableEnd() { return variables.end(); }
-            class_iterator classBegin() { return classes.begin(); }
-            class_iterator classEnd() { return classes.end(); }
+            method_iterator methodBegin() const { return methods.begin(); }
+            method_iterator methodEnd() const { return methods.end(); }
+            constant_iterator constantBegin() const { return constants.begin(); }
+            constant_iterator constantEnd() const { return constants.end(); }
+            variable_iterator variableBegin() const { return variables.begin(); }
+            variable_iterator variableEnd() const { return variables.end(); }
+            class_iterator classBegin() const { return classes.begin(); }
+            class_iterator classEnd() const { return classes.end(); }
         private:
             std::vector<const Method*> methods;
             std::vector<const NamedValue*> variables;
@@ -241,13 +241,13 @@ namespace mj {
             void defineMethodAutoType(const MethodType &t);
             void defineProgram(const Program &p);
             
-            method_type_iterator methodPrototypesBegin() 
+            method_type_iterator methodPrototypesBegin() const
                 { return prototypes.begin(); }
             
-            method_type_iterator methodPrototypesEnd()
+            method_type_iterator methodPrototypesEnd() const
                 { return prototypes.end(); }
             
-            const Program *program() { return _program; }
+            const Program *program() const { return _program; }
             virtual ~GlobalScope();
         private:
             std::vector<const MethodType*> prototypes;

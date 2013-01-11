@@ -62,32 +62,32 @@ namespace mj {
     
     }
 
+    typedef std::map<const std::string, llvm::Value*> ValueTable;
+
+    class Values {
+        public:
+            Values(Values* parent): _parent(parent) {}
+            void define(const std::string &name, llvm::Value* v);
+            llvm::Value* resolve(const std::string &name);
+            ~Values();
+        private:
+            Values *_parent;
+            ValueTable values;
+    };
+
     class MjModule
     {
         public:
-            MjModule(const char* programName);
-            MjModule(mj::AST ast);
-            void operator=(MjModule &other);
-            ~MjModule();
-            void writeAsm(std::ostream &out);
-            void writeBc(std::ostream &out);
+            MjModule(AST ast, Symbols &s);
+            llvm::Module &module() { return _module; }
         private:
-            llvm::Module *module;
+            AST _ast;
+            Symbols &symbols;
+            llvm::Module _module;
 
-            llvm::Type *MJChar;
-            llvm::Type *MJInt;
-            llvm::Type *MJArray;
-
-            llvm::Function *mainWrap;
-            llvm::Function *ord;
-            llvm::Function *chr;
-            llvm::Function *len;
-
-            //Symbols &symbols;
-
+            Values values;
 
             void init();
-
 
     };
 

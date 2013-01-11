@@ -75,35 +75,41 @@ void AssignVisitor::operator()(AstWalker &walker) const {
     
 }
 
-MjModule::MjModule(AST ast)
+void Values::define(const string &name, Value *v) {
+    values[name] = v;
+}
+
+Value* Values::resolve(const string &name) {
+    ValueTable::const_iterator it = values.find(name);
+    if( it != values.end() ) {
+        return it->second;
+    }
+
+    if (_parent != NULL) {
+        return _parent->resolve(name);
+    }
+
+    return NULL;
+}
+
+Values::~Values() {
+    ValueTable::iterator it = values.begin();
+    for (; it != values.end(); it++) {
+        delete it->second;
+    }
+}
+
+MjModule::MjModule(AST ast, Symbols &s):
+    _ast(ast), 
+    symbols(s), 
+    _module(s.globalScope().program()->name(), llvm::getGlobalContext()),
+    values(Values(NULL))
 {
-    //module = new Module(programName, getGlobalContext());
-
 }
 
-
-
-MjModule::MjModule(const char* name) {
-
+void MjModule::init() {
+    const GlobalScope &gs = symbols.globalScope();
+    const Program *p = gs.program();
+    p->name();
 }
-
-void MjModule::writeAsm(std::ostream &out) {
-//  verifyModule(*module, PrintMessageAction);
-//  PassManager PM;
-//  raw_os_ostream ros(out);
-//  PM.add(createPrintModulePass(&ros));
-//  PM.run(*module);
-}
-
-void MjModule::writeBc(std::ostream &out) {
-//  verifyModule(*module, PrintMessageAction);
-//  PassManager PM;
-//  raw_os_ostream ros(out);
-//  PM.add(createPrintModulePass(&ros));
-//  PM.run(*module);
-}
-
-MjModule::~MjModule() {
-}
-
 

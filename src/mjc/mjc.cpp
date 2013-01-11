@@ -21,8 +21,6 @@
 using namespace mj;
 using namespace std;
 
-MjModule generateCode(AST ast, Symbols &global);
-
 int main(int argc, char** argv) {
 
     const char *filename = (argc < 2 || argv[1] == NULL)?
@@ -32,7 +30,7 @@ int main(int argc, char** argv) {
     AST ast = p.parse();
     Symbols symbols;
     checkSemantics(ast, symbols);
-    MjModule module = generateCode(ast, symbols);
+    MjModule module(ast, symbols);
     } catch (exception& e) {
         cerr << "Error occured: " << e.what() << endl;
         return 1;
@@ -44,7 +42,4 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-MjModule generateCode(AST ast, Symbols &symbols) {
-    return MjModule("");
-}
 
