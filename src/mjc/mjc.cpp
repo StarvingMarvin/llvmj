@@ -26,11 +26,11 @@ int main(int argc, char** argv) {
     const char *filename = (argc < 2 || argv[1] == NULL)?
                         "./input" : argv[1];
     try {
-    Parser p(filename);
-    AST ast = p.parse();
-    Symbols symbols;
-    checkSemantics(ast, symbols);
-    MjModule module(ast, symbols);
+        Parser p(filename);
+        AST ast = p.parse();
+        Symbols symbols;
+        checkSemantics(ast, symbols);
+        MjModule module(ast, symbols);
     } catch (exception& e) {
         cerr << "Error occured: " << e.what() << endl;
         return 1;

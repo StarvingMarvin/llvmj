@@ -21,32 +21,32 @@ namespace mj {
 
     class CodegenVisitor : public NodeVisitor {
         protected:
-            CodegenVisitor(llvm::Module *module, Symbols &symbols);
-            llvm::Module *module() const { return _module; }
+            CodegenVisitor(llvm::Module &module, Symbols &symbols);
+            llvm::Module &module() const { return _module; }
             Symbols& symbols() const { return _symbols; }
             static llvm::IRBuilder<> builder;
         private:
-            llvm::Module *_module;
+            llvm::Module &_module;
             Symbols &_symbols;
     };
 
     class VarDesVisitor : public CodegenVisitor{
         public:
-            VarDesVisitor(llvm::Module *module, Symbols &symbols): 
+            VarDesVisitor(llvm::Module &module, Symbols &symbols): 
                 CodegenVisitor(module, symbols){}
             virtual void operator()(AstWalker &walker) const;
     };
 
     class IntLiteralVisitor : public CodegenVisitor{
         public:
-            IntLiteralVisitor(llvm::Module *module, Symbols &symbols): 
+            IntLiteralVisitor(llvm::Module &module, Symbols &symbols): 
                 CodegenVisitor(module, symbols){}
             virtual void operator()(AstWalker &walker) const;
     };
 
     class BinopVisitor : public CodegenVisitor {
         public:
-            BinopVisitor(llvm::Module *module, Symbols &symbols):
+            BinopVisitor(llvm::Module &module, Symbols &symbols):
                 CodegenVisitor(module, symbols){}
             virtual void operator()(AstWalker &walker) const;
             virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const = 0;
@@ -54,28 +54,28 @@ namespace mj {
 
     class AddVisitor : public BinopVisitor {
         public:
-            AddVisitor(llvm::Module *module, Symbols &symbols): 
+            AddVisitor(llvm::Module &module, Symbols &symbols): 
                 BinopVisitor(module, symbols){}
             virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
     };
 
     class SubVisitor : public BinopVisitor {
         public:
-            SubVisitor(llvm::Module *module, Symbols &symbols): 
+            SubVisitor(llvm::Module &module, Symbols &symbols): 
                 BinopVisitor(module, symbols){}
             virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
     };
 
     class NegOpVisitor : public CodegenVisitor{
         public:
-            NegOpVisitor(llvm::Module *module, Symbols &symbols): 
+            NegOpVisitor(llvm::Module &module, Symbols &symbols): 
                 CodegenVisitor(module, symbols){}
             virtual void operator()(AstWalker &walker) const;
     };
 
     class AssignVisitor : public CodegenVisitor {
         public:
-            AssignVisitor(llvm::Module *module, Symbols &symbols): 
+            AssignVisitor(llvm::Module &module, Symbols &symbols): 
                 CodegenVisitor(module, symbols){}
             virtual void operator()(AstWalker &walker) const;
     };
@@ -106,8 +106,6 @@ namespace mj {
             llvm::Module _module;
 
             Values values;
-
-            void init();
 
     };
 

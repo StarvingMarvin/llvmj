@@ -29,7 +29,7 @@ using llvm::Value;
 
 IRBuilder<> CodegenVisitor::builder(llvm::getGlobalContext());
 
-CodegenVisitor::CodegenVisitor(llvm::Module *module, Symbols &symbols): 
+CodegenVisitor::CodegenVisitor(llvm::Module &module, Symbols &symbols): 
     _module(module),
     _symbols(symbols)
 {
@@ -113,11 +113,52 @@ MjModule::MjModule(AST ast, Symbols &s):
     _module(s.globalScope().program()->name(), llvm::getGlobalContext()),
     values(Values(NULL))
 {
-}
+    AstWalker walker(ast,  VisitChildren());
 
-void MjModule::init() {
-    const GlobalScope &gs = symbols.globalScope();
-    const Program *p = gs.program();
-    p->name();
+    walker.addVisitor(VAR_DES, VarDesVisitor(_module, symbols));
+    //walker.addVisitor(FIELD_DES, FieldDesVisitor(symbolsTable));
+    //walker.addVisitor(ARR_DES, ArrDesVisitor(symbolsTable));
+    walker.addVisitor(LIT_INT, IntLiteralVisitor(_module, symbols));
+    //walker.addVisitor(LIT_CHAR, CharLiteralVisitor(symbolsTable));
+    //walker.addVisitor(CALL, CallVisitor(symbolsTable));
+
+    //walker.addVisitor(WHILE, LoopVisitor(symbolsTable));
+    //walker.addVisitor(BREAK, UnexpectedBreakVisitor(symbolsTable));
+
+    //IntOpVisitor iov(symbolsTable);
+    walker.addVisitor(PLUS, AddVisitor(_module, symbols));
+    walker.addVisitor(MINUS, SubVisitor(_module, symbols));
+    //walker.addVisitor(MUL, iov);
+    //walker.addVisitor(DIV, iov);
+    //walker.addVisitor(MOD, iov);
+
+    //walker.addVisitor(DEFVAR, VarVisitor(symbolsTable));
+    //walker.addVisitor(DEFCONST, ConstVisitor(symbolsTable));
+    //walker.addVisitor(DEFARR, ArrVisitor(symbolsTable));
+    //walker.addVisitor(DEFFN, MethodVisitor(symbolsTable));
+    //walker.addVisitor(DEFCLASS, ClassVisitor(symbolsTable));
+    //walker.addVisitor(NEW, NewVisitor(symbolsTable));
+    //walker.addVisitor(NEW_ARR, NewArrVisitor(symbolsTable));
+
+    //CheckCompatibleVisitor ccv(symbolsTable);
+    //walker.addVisitor(SET, ccv);
+    //walker.addVisitor(EQL, ccv);
+    //walker.addVisitor(NEQ, ccv);
+    //walker.addVisitor(GRT, ccv);
+    //walker.addVisitor(GRE, ccv);
+    //walker.addVisitor(LST, ccv);
+    //walker.addVisitor(LSE, ccv);
+
+    //UnOpVisitor uov(symbolsTable);
+    //walker.addVisitor(INC, uov);
+    //walker.addVisitor(DEC, uov);
+    //walker.addVisitor(UNARY_MINUS, uov);
+
+    //walker.addVisitor(PRINT, PrintVisitor(symbolsTable));
+    //walker.addVisitor(READ, ReadVisitor(symbolsTable));
+
+    //walker.addVisitor(PROGRAM, ProgramVisitor(symbolsTable));
+
+    walker.walkTree();
 }
 
