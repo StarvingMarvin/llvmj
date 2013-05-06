@@ -35,18 +35,14 @@ CodegenVisitor::CodegenVisitor(llvm::Module *module, Symbols &symbols):
 {
 }
 
-static const Value* visitChild(AstWalker &walker, nodeiterator &ni) {
+static Value* visitChild(AstWalker &walker, nodeiterator &ni) {
     walker.visit(*ni);
-    const Value *v = getNodeData<const Value>(*ni);
+    Value *v = getNodeData<Value>(*ni);
     if (v == NULL) {
         // wut?
     }
     ni++;
     return v;
-}
-
-void setValue(AstWalker &walker, const Value* value) {
-   walker.setData(const_cast<Value*>(value));
 }
 
 void VarDesVisitor::operator()(AstWalker &walker) const {
@@ -65,17 +61,17 @@ void IntLiteralVisitor::operator()(AstWalker &walker) const {
 
 void BinopVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
-    const Value* lhs = visitChild(walker, ni);
-    const Value* rhs = visitChild(walker, ni);
-    const Value* result = op(lhs, rhs);
-    setValue(walker, result);
+    Value* lhs = visitChild(walker, ni);
+    Value* rhs = visitChild(walker, ni);
+    Value* result = op(lhs, rhs);
+    walker.setData(result);
 }
 
-const Value* AddVisitor::op(const Value* lhs, const Value* rhs) const {
+Value* AddVisitor::op(Value* lhs, Value* rhs) const {
    return builder.CreateAdd(lhs, rhs, "addtmp");
 }
 
-void SubVisitor::operator()(AstWalker &walker) const {
+Value* SubVisitor::op(Value* lhs, Value* rhs) const {
    return builder.CreateSub(lhs, rhs, "subtmp");
 }
 
