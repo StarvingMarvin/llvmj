@@ -26,7 +26,7 @@ link_directories(/usr/lib
                 "${PROJECT_BINARY_DIR}/src/parser")
 
 find_library(LLVM_LIB
-    NAMES LLVM LLVM-3.0 LLVM-3.1 libLLVM 
+    NAMES LLVM LLVM-3.0 LLVM-3.1 libLLVM libLLVM-3.0
     PATHS /usr/lib/llvm /usr/lib /usr/lib/llvm-3.0/lib /usr/lib/x86_64-linux-gnu)
 
 find_library(ANTLR_LIB
