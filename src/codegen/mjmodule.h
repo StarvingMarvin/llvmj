@@ -2,6 +2,18 @@
 #ifndef MJMODULE_H
 #define MJMODULE_H
 
+// Depends on:
+//  
+// <string>
+// <map>
+//
+// <llvm/DerivedTypes.h>
+// <llvm/Support/IRBuilder.h>
+// <llvm/Module.h>
+//
+// "parser/parser.h"
+// "semantics/semantics.h"
+//
 
 namespace mj {
 
@@ -32,18 +44,26 @@ namespace mj {
             virtual void operator()(AstWalker &walker) const;
     };
 
+    class BinopVisitor : public CodegenVisitor {
+        public:
+            BinopVisitor(llvm::Module *module, Symbols &symbols):
+                CodegenVisitor(module, symbols){}
+            virtual void operator()(AstWalker &walker) const;
+            virtual const llvm::Value* op(const llvm::Value* lhs, const llvm::Value rhs) const = 0;
+    };
+
     class AddVisitor : public CodegenVisitor{
         public:
             AddVisitor(llvm::Module *module, Symbols &symbols): 
-                CodegenVisitor(module, symbols){}
-            virtual void operator()(AstWalker &walker) const;
+                BinopVisitor(module, symbols){}
+            virtual const llvm::Value* op(const llvm::Value* lhs, const llvm::Value rhs) const;
     };
 
     class SubVisitor : public CodegenVisitor{
         public:
             SubVisitor(llvm::Module *module, Symbols &symbols): 
-                CodegenVisitor(module, symbols){}
-            virtual void operator()(AstWalker &walker) const;
+                BinopVisitor(module, symbols){}
+            virtual const llvm::Value* op(const llvm::Value* lhs, const llvm::Value rhs) const;
     };
 
     class NegOpVisitor : public CodegenVisitor{
@@ -91,7 +111,6 @@ namespace mj {
 
     };
 
-    //MjModule
 
 }
 

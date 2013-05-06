@@ -45,6 +45,10 @@ static const Value* visitChild(AstWalker &walker, nodeiterator &ni) {
     return v;
 }
 
+void setValue(AstWalker &walker, const Value* value) {
+   walker.setData(const_cast<Value*>(value));
+}
+
 void VarDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * ident = tokenText(*b);
@@ -59,12 +63,20 @@ void IntLiteralVisitor::operator()(AstWalker &walker) const {
                                 APInt(32, val, 10)));
 }
 
-void AddVisitor::operator()(AstWalker &walker) const {
-    
+void BinopVisitor::operator()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+    const Value* lhs = visitChild(walker, ni);
+    const Value* rhs = visitChild(walker, ni);
+    const Value* result = op(lhs, rhs);
+    setValue(walker, result);
+}
+
+const Value* AddVisitor::op(const Value* lhs, const Value* rhs) const {
+   return builder.CreateAdd(lhs, rhs, "addtmp");
 }
 
 void SubVisitor::operator()(AstWalker &walker) const {
-    
+   return builder.CreateSub(lhs, rhs, "subtmp");
 }
 
 void NegOpVisitor::operator()(AstWalker &walker) const {
