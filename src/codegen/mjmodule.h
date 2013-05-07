@@ -37,6 +37,20 @@ namespace mj {
             virtual void operator()(AstWalker &walker) const;
     };
 
+    class VarVisitor : public CodegenVisitor {
+        public:
+            VarVisitor(llvm::Module &module, Symbols &symbols): 
+                CodegenVisitor(module, symbols){}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
+    class MethodVisitor : public CodegenVisitor {
+        public:
+            MethodVisitor(llvm::Module &module, Symbols &symbols):
+                CodegenVisitor(module, symbols){}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
     class IntLiteralVisitor : public CodegenVisitor{
         public:
             IntLiteralVisitor(llvm::Module &module, Symbols &symbols): 

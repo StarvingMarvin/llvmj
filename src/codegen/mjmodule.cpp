@@ -51,6 +51,14 @@ void VarDesVisitor::operator()(AstWalker &walker) const {
     const NamedValue *v = symbols().resolveNamedValue(ident);
 }
 
+void VarVisitor::operator()(AstWalker &walker) const {
+
+}
+
+void MethodVisitor::operator()(AstWalker &walker) const {
+
+}
+
 void IntLiteralVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * val = tokenText(*b);
@@ -115,6 +123,8 @@ MjModule::MjModule(AST ast, Symbols &s):
     VisitChildren defVisitor;
 
     VarDesVisitor vdv(_module, symbols);
+    VarVisitor varv(_module, symbols);
+    MethodVisitor methodv(_module, symbols);
     IntLiteralVisitor ilv(_module, symbols);
     AddVisitor addv(_module, symbols);
     SubVisitor subv(_module, symbols);
@@ -138,10 +148,10 @@ MjModule::MjModule(AST ast, Symbols &s):
     //walker.addVisitor(DIV, iov);
     //walker.addVisitor(MOD, iov);
 
-    //walker.addVisitor(DEFVAR, VarVisitor(symbolsTable));
+    walker.addVisitor(DEFVAR, varv);
     //walker.addVisitor(DEFCONST, ConstVisitor(symbolsTable));
     //walker.addVisitor(DEFARR, ArrVisitor(symbolsTable));
-    //walker.addVisitor(DEFFN, MethodVisitor(symbolsTable));
+    walker.addVisitor(DEFFN, methodv);
     //walker.addVisitor(DEFCLASS, ClassVisitor(symbolsTable));
     //walker.addVisitor(NEW, NewVisitor(symbolsTable));
     //walker.addVisitor(NEW_ARR, NewArrVisitor(symbolsTable));
