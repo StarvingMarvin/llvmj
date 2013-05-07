@@ -88,12 +88,14 @@ int main(int argc, char** argv) {
     Parser p(filename);
     AST ast = p.parse();
 
-    AstWalker walker(ast, PrintVisitor());
+    PrintVisitor print;
+    AstWalker walker(print);
+    PrintSpecialVisitor special;
     for (size_t i = 0; i < SPECIAL_SIZE; i++) {
-        walker.addVisitor(special_tokens[i], PrintSpecialVisitor());
+        walker.addVisitor(special_tokens[i], special);
     }
     int indent = 0;
     setNodeData<int>(ast, &indent);
-    walker.walkTree();
+    walker.visit(ast);
 }
 

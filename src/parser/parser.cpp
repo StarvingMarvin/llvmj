@@ -123,11 +123,9 @@ nodeiterator mj::end(AST parent) {
 
 void NodeVisitor::operator()(AstWalker &walker) const {}
 
-AstWalker::AstWalker(AST ast, const NodeVisitor &defaultVisitor):
-    _defaultVisitor(defaultVisitor),
-    stack()
+AstWalker::AstWalker(const NodeVisitor &defaultVisitor):
+    _defaultVisitor(defaultVisitor)
 {
-    stack.push_back(ast);
 }
 
 void AstWalker::addVisitor(uint32_t tokenType, const NodeVisitor &visitor) {
@@ -183,9 +181,5 @@ nodeiterator AstWalker::lastChild() {
 
 AST AstWalker::currentNode() {
     return stack.back();
-}
-
-void AstWalker::walkTree() {
-    visit(stack.back());
 }
 

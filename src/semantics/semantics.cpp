@@ -414,34 +414,57 @@ void ProgramVisitor::operator()(AstWalker &walker) const {
 }
 
 void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
-    AstWalker walker(ast,  VisitChildren());
 
-    walker.addVisitor(VAR_DES, NamedValueVisitor(symbolsTable));
-    walker.addVisitor(FIELD_DES, FieldDesVisitor(symbolsTable));
-    walker.addVisitor(ARR_DES, ArrDesVisitor(symbolsTable));
-    walker.addVisitor(LIT_INT, IntLiteralVisitor(symbolsTable));
-    walker.addVisitor(LIT_CHAR, CharLiteralVisitor(symbolsTable));
-    walker.addVisitor(CALL, CallVisitor(symbolsTable));
+    VisitChildren defVisitor;
 
-    walker.addVisitor(WHILE, LoopVisitor(symbolsTable));
-    walker.addVisitor(BREAK, UnexpectedBreakVisitor(symbolsTable));
-
+    NamedValueVisitor nvv(symbolsTable);
+    FieldDesVisitor fdv(symbolsTable);
+    ArrDesVisitor adv(symbolsTable);
+    IntLiteralVisitor ilv(symbolsTable);
+    CharLiteralVisitor clv(symbolsTable);
+    CallVisitor callv(symbolsTable);
+    LoopVisitor loopv(symbolsTable);
+    UnexpectedBreakVisitor ubv(symbolsTable);
     IntOpVisitor iov(symbolsTable);
+    CheckCompatibleVisitor ccv(symbolsTable);
+    UnOpVisitor uov(symbolsTable);
+    VarVisitor varv(symbolsTable);
+    ConstVisitor constv(symbolsTable);
+    ArrVisitor arrv(symbolsTable);
+    MethodVisitor methodv(symbolsTable);
+    ClassVisitor classv(symbolsTable);
+    NewVisitor newv(symbolsTable);
+    NewArrVisitor nav(symbolsTable);
+    PrintVisitor printv(symbolsTable);
+    ReadVisitor readv(symbolsTable);
+    ProgramVisitor programv(symbolsTable);
+    
+    AstWalker walker(defVisitor);
+
+    walker.addVisitor(VAR_DES, nvv);
+    walker.addVisitor(FIELD_DES, fdv);
+    walker.addVisitor(ARR_DES, adv);
+    walker.addVisitor(LIT_INT, ilv);
+    walker.addVisitor(LIT_CHAR, clv);
+    walker.addVisitor(CALL, callv);
+
+    walker.addVisitor(WHILE, loopv);
+    walker.addVisitor(BREAK, ubv);
+
     walker.addVisitor(PLUS, iov);
     walker.addVisitor(MINUS, iov);
     walker.addVisitor(MUL, iov);
     walker.addVisitor(DIV, iov);
     walker.addVisitor(MOD, iov);
 
-    walker.addVisitor(DEFVAR, VarVisitor(symbolsTable));
-    walker.addVisitor(DEFCONST, ConstVisitor(symbolsTable));
-    walker.addVisitor(DEFARR, ArrVisitor(symbolsTable));
-    walker.addVisitor(DEFFN, MethodVisitor(symbolsTable));
-    walker.addVisitor(DEFCLASS, ClassVisitor(symbolsTable));
-    walker.addVisitor(NEW, NewVisitor(symbolsTable));
-    walker.addVisitor(NEW_ARR, NewArrVisitor(symbolsTable));
+    walker.addVisitor(DEFVAR, varv);
+    walker.addVisitor(DEFCONST, constv);
+    walker.addVisitor(DEFARR, arrv);
+    walker.addVisitor(DEFFN, methodv);
+    walker.addVisitor(DEFCLASS, classv);
+    walker.addVisitor(NEW, newv);
+    walker.addVisitor(NEW_ARR, nav);
 
-    CheckCompatibleVisitor ccv(symbolsTable);
     walker.addVisitor(SET, ccv);
     walker.addVisitor(EQL, ccv);
     walker.addVisitor(NEQ, ccv);
@@ -450,17 +473,16 @@ void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
     walker.addVisitor(LST, ccv);
     walker.addVisitor(LSE, ccv);
 
-    UnOpVisitor uov(symbolsTable);
     walker.addVisitor(INC, uov);
     walker.addVisitor(DEC, uov);
     walker.addVisitor(UNARY_MINUS, uov);
 
-    walker.addVisitor(PRINT, PrintVisitor(symbolsTable));
-    walker.addVisitor(READ, ReadVisitor(symbolsTable));
+    walker.addVisitor(PRINT, printv);
+    walker.addVisitor(READ, readv);
 
-    walker.addVisitor(PROGRAM, ProgramVisitor(symbolsTable));
+    walker.addVisitor(PROGRAM, programv);
 
-    walker.walkTree();
+    walker.visit(ast);
 
     if (SemanticNodeVisitor::dirty) {
         throw runtime_error("Semantic check failed!");

@@ -85,11 +85,10 @@ namespace mj {
 
     class AstWalker {
         public:
-            AstWalker(AST ast, const NodeVisitor& defaultVisitor = NodeVisitor());
+            AstWalker(const NodeVisitor& defaultVisitor = NodeVisitor());
             void addVisitor(uint32_t tokenType, const NodeVisitor& visitor);
             const NodeVisitor& getVisitor(uint32_t tokenType);
             void visit(AST ast);
-            void walkTree();
             uint32_t tokenType();
             char* tokenText();
             size_t childCount();

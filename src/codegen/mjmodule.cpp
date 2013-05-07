@@ -49,7 +49,6 @@ void VarDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * ident = tokenText(*b);
     const NamedValue *v = symbols().resolveNamedValue(ident);
-    
 }
 
 void IntLiteralVisitor::operator()(AstWalker &walker) const {
@@ -113,12 +112,19 @@ MjModule::MjModule(AST ast, Symbols &s):
     _module(s.globalScope().program()->name(), llvm::getGlobalContext()),
     values(Values(NULL))
 {
-    AstWalker walker(ast,  VisitChildren());
+    VisitChildren defVisitor;
 
-    walker.addVisitor(VAR_DES, VarDesVisitor(_module, symbols));
+    VarDesVisitor vdv(_module, symbols);
+    IntLiteralVisitor ilv(_module, symbols);
+    AddVisitor addv(_module, symbols);
+    SubVisitor subv(_module, symbols);
+
+    AstWalker walker(defVisitor);
+
+    walker.addVisitor(VAR_DES, vdv);
     //walker.addVisitor(FIELD_DES, FieldDesVisitor(symbolsTable));
     //walker.addVisitor(ARR_DES, ArrDesVisitor(symbolsTable));
-    walker.addVisitor(LIT_INT, IntLiteralVisitor(_module, symbols));
+    walker.addVisitor(LIT_INT, ilv);
     //walker.addVisitor(LIT_CHAR, CharLiteralVisitor(symbolsTable));
     //walker.addVisitor(CALL, CallVisitor(symbolsTable));
 
@@ -126,8 +132,8 @@ MjModule::MjModule(AST ast, Symbols &s):
     //walker.addVisitor(BREAK, UnexpectedBreakVisitor(symbolsTable));
 
     //IntOpVisitor iov(symbolsTable);
-    walker.addVisitor(PLUS, AddVisitor(_module, symbols));
-    walker.addVisitor(MINUS, SubVisitor(_module, symbols));
+    walker.addVisitor(PLUS, addv);
+    walker.addVisitor(MINUS, subv);
     //walker.addVisitor(MUL, iov);
     //walker.addVisitor(DIV, iov);
     //walker.addVisitor(MOD, iov);
@@ -159,6 +165,6 @@ MjModule::MjModule(AST ast, Symbols &s):
 
     //walker.addVisitor(PROGRAM, ProgramVisitor(symbolsTable));
 
-    walker.walkTree();
+    walker.visit(ast);
 }
 
