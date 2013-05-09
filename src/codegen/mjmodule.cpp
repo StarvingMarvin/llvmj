@@ -29,7 +29,7 @@ using llvm::Value;
 
 IRBuilder<> CodegenVisitor::builder(llvm::getGlobalContext());
 
-CodegenVisitor::CodegenVisitor(llvm::Module &module, Symbols &symbols): 
+CodegenVisitor::CodegenVisitor(llvm::Module &module, const Symbols &symbols):
     _module(module),
     _symbols(symbols)
 {
@@ -114,20 +114,43 @@ Values::~Values() {
     }
 }
 
-MjModule::MjModule(AST ast, Symbols &s):
+MjModule::MjModule(AST ast, const Symbols &symbols):
     _ast(ast), 
-    symbols(s), 
-    _module(s.globalScope().program()->name(), llvm::getGlobalContext()),
+    _symbols(symbols),
+    _module(symbols.globalScope().program()->name(), llvm::getGlobalContext()),
     values(Values(NULL))
 {
+    initModule();
+    walkTree();
+}
+
+void MjModule::initModule() {
+    const GlobalScope &global = _symbols.globalScope();
+    const Program *program = global.program();
+
+    type_iterator type_it = global.typesBegin();
+    type_iterator type_end = global.typesEnd();
+    for(; type_it < type_end; type_it++) {
+        const Type *t = *type_it;
+    }
+
+    constant_iterator const_it = global.constantBegin();
+    constant_iterator const_end = global.constantEnd();
+    for(;const_it < const_end; const_it++) {
+        const Constant *c = *const_it;
+    }
+
+}
+
+void MjModule::walkTree() {
     VisitChildren defVisitor;
 
-    VarDesVisitor vdv(_module, symbols);
-    VarVisitor varv(_module, symbols);
-    MethodVisitor methodv(_module, symbols);
-    IntLiteralVisitor ilv(_module, symbols);
-    AddVisitor addv(_module, symbols);
-    SubVisitor subv(_module, symbols);
+    VarDesVisitor vdv(_module, _symbols);
+    VarVisitor varv(_module, _symbols);
+    MethodVisitor methodv(_module, _symbols);
+    IntLiteralVisitor ilv(_module, _symbols);
+    AddVisitor addv(_module, _symbols);
+    SubVisitor subv(_module, _symbols);
 
     AstWalker walker(defVisitor);
 
@@ -175,6 +198,5 @@ MjModule::MjModule(AST ast, Symbols &s):
 
     //walker.addVisitor(PROGRAM, ProgramVisitor(symbolsTable));
 
-    walker.visit(ast);
+    walker.visit(_ast);
 }
-

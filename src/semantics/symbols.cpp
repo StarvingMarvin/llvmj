@@ -295,7 +295,9 @@ const Symbol *ClassScope::resolveField(const string name) {
 void SplitScope::define(const Symbol &s) {
     Scope::define(s);
     const Symbol *sp = &s;
-    if (const Method *m = dynamic_cast<const Method*>(sp)) {
+    if (const Type *t = dynamic_cast<const Type*>(sp)) {
+        types.push_back(t);
+    } else if (const Method *m = dynamic_cast<const Method*>(sp)) {
         methods.push_back(m);
     } else if (const Class *c = dynamic_cast<const Class*>(sp)) {
         classes.push_back(c);

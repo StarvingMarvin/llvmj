@@ -198,6 +198,7 @@ namespace mj {
             ClassScope &classScope;
     };
 
+    typedef std::vector<const Type*>::const_iterator type_iterator;
     typedef std::vector<const MethodType*>::const_iterator method_type_iterator;
     typedef std::vector<const Method*>::const_iterator method_iterator;
     typedef std::vector<const Constant*>::const_iterator constant_iterator;
@@ -208,6 +209,8 @@ namespace mj {
         public:
             SplitScope(Scope *parentScope) : Scope(parentScope){}
             virtual void define(const Symbol &s); 
+            type_iterator typesBegin() const { return types.begin(); }
+            type_iterator typesEnd() const { return types.end(); }
             method_iterator methodBegin() const { return methods.begin(); }
             method_iterator methodEnd() const { return methods.end(); }
             constant_iterator constantBegin() const { return constants.begin(); }
@@ -217,6 +220,7 @@ namespace mj {
             class_iterator classBegin() const { return classes.begin(); }
             class_iterator classEnd() const { return classes.end(); }
         private:
+            std::vector<const Type*> types;
             std::vector<const Method*> methods;
             std::vector<const NamedValue*> variables;
             std::vector<const Constant*> constants;
@@ -275,7 +279,7 @@ namespace mj {
                     MethodArguments &arguments);
             MethodArguments& enterMethodArgumentsScope();
             void leaveScope();
-            const GlobalScope &globalScope() { return global; }
+            const GlobalScope &globalScope() const { return global; }
             // no destructor as global will cleanup allocates symbols
 
             friend std::ostream& operator<<(std::ostream& os, const Symbols& s);

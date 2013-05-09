@@ -205,14 +205,6 @@ void testProgram (const char* filename){
     //
     MicroJavaParser_program_return	    langAST;
 
-
-    // The tree nodes are managed by a tree adaptor, which doles
-    // out the nodes upon request. You can make your own tree types and adaptors
-    // and override the built in versions. See runtime source for details and
-    // eventually the wiki entry for the C target.
-    //
-    pANTLR3_COMMON_TREE_NODE_STREAM	nodes;
-
     // Finally, when the parser runs, it will produce an AST that can be traversed by the 
     // the tree parser: c.f. LangDumpDecl.g3t
     //
@@ -288,8 +280,6 @@ void testProgram (const char* filename){
     }
     else
     {
-        nodes	= antlr3CommonTreeNodeStreamNewTree(langAST.tree, ANTLR3_SIZE_HINT); // sIZE HINT WILL SOON BE DEPRECATED!!
-
         printf("Nodes: %s\n", langAST.tree->toStringTree(langAST.tree)->chars);
 
         // Tree parsers are given a common tree node stream (or your override)
