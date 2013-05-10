@@ -9,6 +9,9 @@
 
 using namespace mj;
 
+namespace mj {
+namespace test {
+
 void testTypes() {
     // Simple types
     Type my_int("int");
@@ -80,6 +83,11 @@ void testMethod() {
     assert(upperVarMethodType.returnType() == *mjChar);
 
 }
+
+}
+}
+
+using namespace mj::test;
 
 int main (int argc, char** argv) {
     testTypes();

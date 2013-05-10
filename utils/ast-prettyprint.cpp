@@ -6,6 +6,7 @@
 
 using namespace mj;
 
+namespace mj {
 
 class PrintVisitor : public NodeVisitor {
     public:
@@ -79,6 +80,8 @@ class PrintSpecialVisitor : public NodeVisitor {
 const uint32_t special_tokens[] = 
     {PROGRAM, DEFFN, DEFVAR, DEFCLASS, DEFARR, DEFCONST, IF, WHILE, BLOCK};
 const size_t SPECIAL_SIZE = sizeof(special_tokens) / sizeof(uint32_t);
+
+}
 
 int main(int argc, char** argv) {
 

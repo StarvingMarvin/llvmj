@@ -97,16 +97,16 @@ namespace mj {
     }
 
     typedef std::map<const std::string, llvm::Value*> ValueTable;
+    typedef std::map<const std::string, llvm::Type*> TypeTable;
 
-    class Values {
+    class Globals {
         public:
-            Values(Values* parent): _parent(parent) {}
+            Globals() {}
             void define(const std::string &name, llvm::Value* v);
             llvm::Value* resolve(const std::string &name);
-            ~Values();
         private:
-            Values *_parent;
             ValueTable values;
+            TypeTable types;
     };
 
     class MjModule
@@ -120,7 +120,7 @@ namespace mj {
             llvm::Module _module;
             void walkTree();
             void initModule();
-            Values values;
+            Globals values;
 
     };
 

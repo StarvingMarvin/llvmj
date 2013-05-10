@@ -4,6 +4,9 @@
 #include <cassert>
 #include <cstring>
 
+namespace mj {
+namespace test {
+
 
 class TestParser {
 public:
@@ -301,7 +304,13 @@ void testProgram (const char* filename){
 
 }
 
-int main (int argc, char *argv[]) {
+
+}
+}
+
+using namespace mj::test;
+
+int main (int argc, char **argv) {
 
     testDesignator();
     testExpression();
@@ -314,4 +323,3 @@ int main (int argc, char *argv[]) {
     testProgram(fName);
     return 0;
 }
-

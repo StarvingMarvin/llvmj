@@ -42,6 +42,19 @@ namespace mj {
         os << "}\n";
         return os;
     }
+
+    string escape(char c) {
+        switch (c) {
+            case '\n':
+                return "\\n";
+            case '\r':
+                return "\\r";
+            case '\t':
+                return "\\t";
+            default:
+                return string(1, c);
+        }
+    }
 }
 //
 // Basic types
@@ -104,19 +117,6 @@ NamedValue::NamedValue(const string name, const Type& type):
 
 ostream& NamedValue::print(ostream &os) const {
     return os << name() << " : " << type();
-}
-
-string escape(char c) {
-    switch (c) {
-        case '\n':
-            return "\\n";
-        case '\r':
-            return "\\r";
-        case '\t':
-            return "\\t";
-        default:
-            return string(1, c);
-    }
 }
 
 ostream& Constant::print(ostream &os) const {

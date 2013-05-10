@@ -13,6 +13,10 @@ using namespace mj;
 using namespace mj::semantics;
 using namespace std;
 
+namespace mj {
+namespace semantics {
+
+
 bool SemanticNodeVisitor::dirty = false;
 const Type UNKNOWN_TYPE("mj.unknown");
 
@@ -34,6 +38,9 @@ void visitChildren(AstWalker &walker, nodeiterator &ni) {
     for(; ni < walker.lastChild(); ni++) {
         walker.visit(*ni);
     }
+}
+
+}
 }
 
 void CheckCompatibleVisitor::operator()(AstWalker &walker) const {

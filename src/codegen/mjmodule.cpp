@@ -35,6 +35,10 @@ CodegenVisitor::CodegenVisitor(llvm::Module &module, const Symbols &symbols):
 {
 }
 
+namespace mj {
+namespace codegen {
+
+
 static Value* visitChild(AstWalker &walker, nodeiterator &ni) {
     walker.visit(*ni);
     Value *v = getNodeData<Value>(*ni);
@@ -44,6 +48,10 @@ static Value* visitChild(AstWalker &walker, nodeiterator &ni) {
     ni++;
     return v;
 }
+
+}
+}
+
 
 void VarDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
@@ -90,35 +98,23 @@ void AssignVisitor::operator()(AstWalker &walker) const {
     
 }
 
-void Values::define(const string &name, Value *v) {
+void Globals::define(const string &name, Value *v) {
     values[name] = v;
 }
 
-Value* Values::resolve(const string &name) {
+Value* Globals::resolve(const string &name) {
     ValueTable::const_iterator it = values.find(name);
     if( it != values.end() ) {
         return it->second;
     }
 
-    if (_parent != NULL) {
-        return _parent->resolve(name);
-    }
-
     return NULL;
-}
-
-Values::~Values() {
-    ValueTable::iterator it = values.begin();
-    for (; it != values.end(); it++) {
-        delete it->second;
-    }
 }
 
 MjModule::MjModule(AST ast, const Symbols &symbols):
     _ast(ast), 
     _symbols(symbols),
-    _module(symbols.globalScope().program()->name(), llvm::getGlobalContext()),
-    values(Values(NULL))
+    _module(symbols.globalScope().program()->name(), llvm::getGlobalContext())
 {
     initModule();
     walkTree();
