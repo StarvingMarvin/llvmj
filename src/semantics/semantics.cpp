@@ -1,11 +1,11 @@
 
-#include <string>
 #include <iostream>
-#include <stack>
 #include <map>
-#include <vector>
+#include <stack>
+#include <string>
 #include <stdexcept>
 #include <sstream>
+#include <vector>
 
 #include "semantics.h"
 
@@ -492,6 +492,6 @@ void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
     walker.visit(ast);
 
     if (SemanticNodeVisitor::dirty) {
-        throw runtime_error("Semantic check failed!");
+        throw new runtime_error("Semantic check failed!");
     }
 }

@@ -1,11 +1,12 @@
 
 #include "llvmjConfig.h"
 
-#include <string>
 #include <iostream>
-#include <stack>
-#include <vector>
 #include <map>
+#include <stack>
+#include <string>
+#include <stdexcept>
+#include <vector>
 
 #include <llvm/DerivedTypes.h>
 #include <llvm/Support/IRBuilder.h>
@@ -59,10 +60,6 @@ void VarDesVisitor::operator()(AstWalker &walker) const {
     const NamedValue *v = symbols().resolveNamedValue(ident);
 }
 
-void VarVisitor::operator()(AstWalker &walker) const {
-
-}
-
 void MethodVisitor::operator()(AstWalker &walker) const {
 
 }
@@ -98,30 +95,8 @@ void AssignVisitor::operator()(AstWalker &walker) const {
     
 }
 
-void Globals::define(const string &name, Value *v) {
-    values[name] = v;
-}
-
-Value* Globals::resolve(const string &name) {
-    ValueTable::const_iterator it = values.find(name);
-    if( it != values.end() ) {
-        return it->second;
-    }
-
-    return NULL;
-}
-
-MjModule::MjModule(AST ast, const Symbols &symbols):
-    _ast(ast), 
-    _symbols(symbols),
-    _module(symbols.globalScope().program()->name(), llvm::getGlobalContext())
-{
-    initModule();
-    walkTree();
-}
-
-void MjModule::initModule() {
-    const GlobalScope &global = _symbols.globalScope();
+Values::Values(llvm::Module *module, const Symbols &symbols) {
+    const GlobalScope &global = symbols.globalScope();
     const Program *program = global.program();
 
     type_iterator type_it = global.typesBegin();
@@ -135,14 +110,63 @@ void MjModule::initModule() {
     for(;const_it < const_end; const_it++) {
         const Constant *c = *const_it;
     }
+}
 
+llvm::Value* Values::value(const string &name) const {
+
+    Value* ret = NULL;
+
+    if (currentScope == NULL) {
+        LocalValues::const_iterator scope_it = localValues.find(*currentScope);
+        if (scope_it == localValues.end()) {
+            throw new runtime_error("Invalid scope name: " + (*currentScope));
+        }
+        ValueTable *local = scope_it->second;
+        ValueTable::const_iterator local_it = local->find(name);
+        if (local_it != local->end()) {
+            ret = local_it->second;
+        }
+    }
+
+    if (ret != NULL) {
+        ValueTable::const_iterator global_it = globalValues.find(name);
+        if( global_it != globalValues.end() ) {
+            ret = global_it->second;
+        }
+    }
+
+    return ret;
+}
+
+llvm::Type* Values::type(const string &name) const {
+    TypeTable::const_iterator it = types.find(name);
+    if (it != types.end()) {
+        return it->second;
+    }
+    return NULL;
+}
+
+void Values::enterScope(const string &name) {
+    currentScope = &name;
+}
+
+void Values::leaveScope() {
+    currentScope = NULL;
+}
+
+MjModule::MjModule(AST ast, const Symbols &symbols):
+    _ast(ast), 
+    _symbols(symbols),
+    _module(symbols.globalScope().program()->name(), llvm::getGlobalContext()),
+    values(&_module, _symbols)
+{
+    walkTree();
 }
 
 void MjModule::walkTree() {
     VisitChildren defVisitor;
 
     VarDesVisitor vdv(_module, _symbols);
-    VarVisitor varv(_module, _symbols);
     MethodVisitor methodv(_module, _symbols);
     IntLiteralVisitor ilv(_module, _symbols);
     AddVisitor addv(_module, _symbols);
@@ -158,6 +182,7 @@ void MjModule::walkTree() {
     //walker.addVisitor(CALL, CallVisitor(symbolsTable));
 
     //walker.addVisitor(WHILE, LoopVisitor(symbolsTable));
+    //walker.addVisitor(IF, LoopVisitor(symbolsTable));
     //walker.addVisitor(BREAK, UnexpectedBreakVisitor(symbolsTable));
 
     //IntOpVisitor iov(symbolsTable);
@@ -167,11 +192,7 @@ void MjModule::walkTree() {
     //walker.addVisitor(DIV, iov);
     //walker.addVisitor(MOD, iov);
 
-    walker.addVisitor(DEFVAR, varv);
-    //walker.addVisitor(DEFCONST, ConstVisitor(symbolsTable));
-    //walker.addVisitor(DEFARR, ArrVisitor(symbolsTable));
     walker.addVisitor(DEFFN, methodv);
-    //walker.addVisitor(DEFCLASS, ClassVisitor(symbolsTable));
     //walker.addVisitor(NEW, NewVisitor(symbolsTable));
     //walker.addVisitor(NEW_ARR, NewArrVisitor(symbolsTable));
 

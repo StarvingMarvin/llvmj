@@ -37,13 +37,6 @@ namespace mj {
             virtual void operator()(AstWalker &walker) const;
     };
 
-    class VarVisitor : public CodegenVisitor {
-        public:
-            VarVisitor(llvm::Module &module, const Symbols &symbols):
-                CodegenVisitor(module, symbols){}
-            virtual void operator()(AstWalker &walker) const;
-    };
-
     class MethodVisitor : public CodegenVisitor {
         public:
             MethodVisitor(llvm::Module &module, const Symbols &symbols):
@@ -98,14 +91,19 @@ namespace mj {
 
     typedef std::map<const std::string, llvm::Value*> ValueTable;
     typedef std::map<const std::string, llvm::Type*> TypeTable;
+    typedef std::map<const std::string, ValueTable*> LocalValues;
 
-    class Globals {
+    class Values {
         public:
-            Globals() {}
-            void define(const std::string &name, llvm::Value* v);
-            llvm::Value* resolve(const std::string &name);
+            Values(llvm::Module* module, const mj::Symbols &symbols);
+            llvm::Value* value(const std::string &name) const;
+            llvm::Type* type(const std::string &name) const;
+            void enterScope(const std::string &name);
+            void leaveScope();
         private:
-            ValueTable values;
+            ValueTable globalValues;
+            LocalValues localValues;
+            const std::string *currentScope;
             TypeTable types;
     };
 
@@ -118,10 +116,8 @@ namespace mj {
             AST _ast;
             const Symbols &_symbols;
             llvm::Module _module;
+            Values values;
             void walkTree();
-            void initModule();
-            Globals values;
-
     };
 
 
