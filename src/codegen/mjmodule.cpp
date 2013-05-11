@@ -27,12 +27,13 @@ using llvm::IRBuilder;
 using llvm::ConstantInt;
 using llvm::APInt;
 using llvm::Value;
+using llvm::FunctionType;
 
 IRBuilder<> CodegenVisitor::builder(llvm::getGlobalContext());
 
-CodegenVisitor::CodegenVisitor(llvm::Module &module, const Symbols &symbols):
+CodegenVisitor::CodegenVisitor(llvm::Module &module, Values &values):
     _module(module),
-    _symbols(symbols)
+    _values(values)
 {
 }
 
@@ -57,7 +58,8 @@ static Value* visitChild(AstWalker &walker, nodeiterator &ni) {
 void VarDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * ident = tokenText(*b);
-    const NamedValue *v = symbols().resolveNamedValue(ident);
+    Value* result = builder.CreateLoad(values().value(ident), ident);
+    walker.setData(result);
 }
 
 void MethodVisitor::operator()(AstWalker &walker) const {
@@ -97,19 +99,50 @@ void AssignVisitor::operator()(AstWalker &walker) const {
 
 Values::Values(llvm::Module *module, const Symbols &symbols) {
     const GlobalScope &global = symbols.globalScope();
+
+
+//    type_iterator type_it = global.typesBegin();
+//    type_iterator type_end = global.typesEnd();
+//    for(; type_it != type_end; type_it++) {
+//        const mj::Type *t = *type_it;
+
+//    }
+
+    types["int"] = llvm::IntegerType::getInt32Ty(module->getContext());
+    types["char"] = llvm::IntegerType::getInt8Ty(module->getContext());
+
+    //array_t
+
+    method_type_iterator prototype_it = global.methodPrototypesBegin();
+    for (; prototype_it != global.methodPrototypesEnd(); prototype_it++) {
+        const MethodType * prototype = *prototype_it;
+        vector<llvm::Type*> args;
+        MethodArguments &arguments = prototype->arguments();
+        ArgumentTypes::const_iterator arg_it = arguments.begin();
+        for (; arg_it != arguments.end(); arg_it++) {
+            args.push_back(types[(*arg_it)->name()]);
+        }
+        FunctionType* ft = FunctionType::get(types[prototype->returnType().name()], args, false);
+        types[arguments.typeSignature()] = ft;
+    }
+
     const Program *program = global.program();
 
-    type_iterator type_it = global.typesBegin();
-    type_iterator type_end = global.typesEnd();
-    for(; type_it < type_end; type_it++) {
-        const Type *t = *type_it;
+    SplitScope &ps = dynamic_cast<SplitScope&>(program->scope());
+    method_iterator method_it = ps.methodBegin();
+    for (; method_it != ps.methodEnd(); method_it++) {
+
+// add local scope
+// populate local scope
     }
 
-    constant_iterator const_it = global.constantBegin();
-    constant_iterator const_end = global.constantEnd();
-    for(;const_it < const_end; const_it++) {
-        const Constant *c = *const_it;
-    }
+
+
+//    constant_iterator const_it = global.constantBegin();
+//    constant_iterator const_end = global.constantEnd();
+//    for(;const_it != const_end; const_it++) {
+//        const Constant *c = *const_it;
+//    }
 }
 
 llvm::Value* Values::value(const string &name) const {
@@ -166,11 +199,11 @@ MjModule::MjModule(AST ast, const Symbols &symbols):
 void MjModule::walkTree() {
     VisitChildren defVisitor;
 
-    VarDesVisitor vdv(_module, _symbols);
-    MethodVisitor methodv(_module, _symbols);
-    IntLiteralVisitor ilv(_module, _symbols);
-    AddVisitor addv(_module, _symbols);
-    SubVisitor subv(_module, _symbols);
+    VarDesVisitor vdv(_module, values);
+    MethodVisitor methodv(_module, values);
+    IntLiteralVisitor ilv(_module, values);
+    AddVisitor addv(_module, values);
+    SubVisitor subv(_module, values);
 
     AstWalker walker(defVisitor);
 

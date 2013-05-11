@@ -141,6 +141,8 @@ namespace mj {
             virtual void define(const Symbol &s);
             bool matchArguments(ArgumentTypes argumentTypes);
             std::string typeSignature();
+            ArgumentTypes::const_iterator begin() const { return arguments.begin();}
+            ArgumentTypes::const_iterator end() const {return arguments.end();}
         private:
             ArgumentTypes arguments;
     };
