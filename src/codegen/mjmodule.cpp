@@ -63,14 +63,38 @@ void VarDesVisitor::operator()(AstWalker &walker) const {
 }
 
 void MethodVisitor::operator()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+    ni++; // skipping type name
+    char * ident = tokenText(*ni);
+
+    const Program *program = symbols.globalScope().program();
+    const Symbol* symMeth = program->scope().resolve(ident);
+    const Method* meth = dynamic_cast<const Method*>(symMeth);
+    Scope &methodScope = meth->scope();
+
+    Scope::iterator sym_it = methodScope.begin();
+    ValueTable local;
+    for (; sym_it != methodScope.end(); sym_it++) {
+        const Symbol &s = *sym_it;
+        const NamedValue &nv = dynamic_cast<const NamedValue&>(s);
+        llvm::Type *t = values().type(nv.type().name());
+        local[nv.name()] = builder.CreateAlloca(t, 0, nv.name());
+    }
+    values().enterScope(local);
+
+    for (nodeiterator ni = walker.firstChild(); ni != walker.lastChild(); ni++) {
+        walker.visit(*ni);
+    }
+
+    values().leaveScope();
 
 }
 
 void IntLiteralVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * val = tokenText(*b);
-    walker.setData(ConstantInt::get(llvm::getGlobalContext(), 
-                                APInt(32, val, 10)));
+    walker.setData(ConstantInt::get(llvm::getGlobalContext(),
+                                    APInt(32, val, 10)));
 }
 
 void BinopVisitor::operator()(AstWalker &walker) const {
@@ -82,18 +106,18 @@ void BinopVisitor::operator()(AstWalker &walker) const {
 }
 
 Value* AddVisitor::op(Value* lhs, Value* rhs) const {
-   return builder.CreateAdd(lhs, rhs, "addtmp");
+    return builder.CreateAdd(lhs, rhs, "addtmp");
 }
 
 Value* SubVisitor::op(Value* lhs, Value* rhs) const {
-   return builder.CreateSub(lhs, rhs, "subtmp");
+    return builder.CreateSub(lhs, rhs, "subtmp");
+}
+
+Value* AssignVisitor::op(Value* lhs, Value* rhs) const {
+    return builder.CreateStore(rhs, lhs);
 }
 
 void NegOpVisitor::operator()(AstWalker &walker) const {
-    
-}
-
-void AssignVisitor::operator()(AstWalker &walker) const {
     
 }
 
@@ -101,15 +125,16 @@ Values::Values(llvm::Module *module, const Symbols &symbols) {
     const GlobalScope &global = symbols.globalScope();
 
 
-//    type_iterator type_it = global.typesBegin();
-//    type_iterator type_end = global.typesEnd();
-//    for(; type_it != type_end; type_it++) {
-//        const mj::Type *t = *type_it;
+    //    type_iterator type_it = global.typesBegin();
+    //    type_iterator type_end = global.typesEnd();
+    //    for(; type_it != type_end; type_it++) {
+    //        const mj::Type *t = *type_it;
 
-//    }
+    //    }
 
     types["int"] = llvm::IntegerType::getInt32Ty(module->getContext());
     types["char"] = llvm::IntegerType::getInt8Ty(module->getContext());
+    types["void"] = llvm::Type::getVoidTy(module->getContext());
 
     //array_t
 
@@ -126,37 +151,29 @@ Values::Values(llvm::Module *module, const Symbols &symbols) {
         types[arguments.typeSignature()] = ft;
     }
 
+    //    constant_iterator const_it = global.constantBegin();
+    //    constant_iterator const_end = global.constantEnd();
+    //    for(;const_it != const_end; const_it++) {
+    //        const Constant *c = *const_it;
+    //    }
+
     const Program *program = global.program();
 
     SplitScope &ps = dynamic_cast<SplitScope&>(program->scope());
-    method_iterator method_it = ps.methodBegin();
-    for (; method_it != ps.methodEnd(); method_it++) {
+    class_iterator class_it = ps.classBegin();
+    for (; class_it != ps.classEnd(); class_it++) {
 
-// add local scope
-// populate local scope
     }
 
-
-
-//    constant_iterator const_it = global.constantBegin();
-//    constant_iterator const_end = global.constantEnd();
-//    for(;const_it != const_end; const_it++) {
-//        const Constant *c = *const_it;
-//    }
 }
 
 llvm::Value* Values::value(const string &name) const {
 
     Value* ret = NULL;
 
-    if (currentScope == NULL) {
-        LocalValues::const_iterator scope_it = localValues.find(*currentScope);
-        if (scope_it == localValues.end()) {
-            throw new runtime_error("Invalid scope name: " + (*currentScope));
-        }
-        ValueTable *local = scope_it->second;
-        ValueTable::const_iterator local_it = local->find(name);
-        if (local_it != local->end()) {
+    if (localScope != NULL) {
+        ValueTable::const_iterator local_it = localScope->find(name);
+        if (local_it != localScope->end()) {
             ret = local_it->second;
         }
     }
@@ -179,16 +196,16 @@ llvm::Type* Values::type(const string &name) const {
     return NULL;
 }
 
-void Values::enterScope(const string &name) {
-    currentScope = &name;
+void Values::enterScope(ValueTable &local) {
+    localScope = &local;
 }
 
 void Values::leaveScope() {
-    currentScope = NULL;
+    localScope = NULL;
 }
 
 MjModule::MjModule(AST ast, const Symbols &symbols):
-    _ast(ast), 
+    _ast(ast),
     _symbols(symbols),
     _module(symbols.globalScope().program()->name(), llvm::getGlobalContext()),
     values(&_module, _symbols)
@@ -200,7 +217,7 @@ void MjModule::walkTree() {
     VisitChildren defVisitor;
 
     VarDesVisitor vdv(_module, values);
-    MethodVisitor methodv(_module, values);
+    MethodVisitor methodv(_module, values, _symbols);
     IntLiteralVisitor ilv(_module, values);
     AddVisitor addv(_module, values);
     SubVisitor subv(_module, values);
