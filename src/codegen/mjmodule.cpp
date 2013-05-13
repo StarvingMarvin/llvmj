@@ -8,8 +8,10 @@
 #include <stdexcept>
 #include <vector>
 
+#include <llvm/Analysis/Verifier.h>
 #include <llvm/DerivedTypes.h>
 #include <llvm/Support/IRBuilder.h>
+#include <llvm/Support/TypeBuilder.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 
@@ -22,12 +24,23 @@ using namespace std;
 using namespace mj;
 using namespace mj::codegen;
 
-using llvm::Module;
-using llvm::IRBuilder;
-using llvm::ConstantInt;
 using llvm::APInt;
-using llvm::Value;
+using llvm::BasicBlock;
+//using llvm::CallingConv;
+using llvm::ConstantInt;
+using llvm::dyn_cast;
+using llvm::Function;
 using llvm::FunctionType;
+using llvm::GlobalValue;
+using llvm::IntegerType;
+using llvm::isa;
+using llvm::IRBuilder;
+using llvm::LLVMContext;
+using llvm::Module;
+using llvm::PointerType;
+using llvm::StructType;
+using llvm::TypeBuilder;
+using llvm::Value;
 
 IRBuilder<> CodegenVisitor::builder(llvm::getGlobalContext());
 
@@ -58,8 +71,8 @@ static Value* visitChild(AstWalker &walker, nodeiterator &ni) {
 void VarDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * ident = tokenText(*b);
-    Value* result = builder.CreateLoad(values().value(ident), ident);
-    walker.setData(result);
+    //Value* result = builder.CreateLoad(values().value(ident), ident);
+    walker.setData(values().value(ident));
 }
 
 void MethodVisitor::operator()(AstWalker &walker) const {
@@ -70,8 +83,16 @@ void MethodVisitor::operator()(AstWalker &walker) const {
     const Program *program = symbols.globalScope().program();
     const Symbol* symMeth = program->scope().resolve(ident);
     const Method* meth = dynamic_cast<const Method*>(symMeth);
+
+    llvm::Type *t = values().type(meth->methodType().name());
+    FunctionType *ft = dyn_cast<FunctionType>(t);
+    string name = program->name() + "::" + meth->name();
+    Function *f = Function::Create(ft, Function::InternalLinkage, name, &module());
+
     Scope &methodScope = meth->scope();
 
+    BasicBlock *bb = BasicBlock::Create(module().getContext(), "entry", f);
+    builder.SetInsertPoint(bb);
     Scope::iterator sym_it = methodScope.begin();
     ValueTable local;
     for (; sym_it != methodScope.end(); sym_it++) {
@@ -82,25 +103,37 @@ void MethodVisitor::operator()(AstWalker &walker) const {
     }
     values().enterScope(local);
 
-    for (nodeiterator ni = walker.firstChild(); ni != walker.lastChild(); ni++) {
-        walker.visit(*ni);
+    while ( ni != walker.lastChild()) {
+        visitChild(walker, ni);
     }
 
+    builder.CreateRetVoid();
+
     values().leaveScope();
+
+    llvm::verifyFunction(*f);
 
 }
 
 void IntLiteralVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * val = tokenText(*b);
-    walker.setData(ConstantInt::get(llvm::getGlobalContext(),
+    walker.setData(ConstantInt::get(module().getContext(),
                                     APInt(32, val, 10)));
 }
 
 void BinopVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
+
     Value* lhs = visitChild(walker, ni);
+    if (isa<PointerType>(lhs->getType())) {
+        lhs = builder.CreateLoad(lhs, false, lhs->getName());
+    }
+
     Value* rhs = visitChild(walker, ni);
+    if (isa<PointerType>(rhs->getType())) {
+        rhs = builder.CreateLoad(rhs, false, rhs->getName());
+    }
     Value* result = op(lhs, rhs);
     walker.setData(result);
 }
@@ -113,17 +146,43 @@ Value* SubVisitor::op(Value* lhs, Value* rhs) const {
     return builder.CreateSub(lhs, rhs, "subtmp");
 }
 
-Value* AssignVisitor::op(Value* lhs, Value* rhs) const {
-    return builder.CreateStore(rhs, lhs);
+void AssignVisitor::operator()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+    Value* var = visitChild(walker, ni);
+    Value* rhs = visitChild(walker, ni);
+    walker.setData(builder.CreateStore(rhs, var));
 }
 
 void NegOpVisitor::operator()(AstWalker &walker) const {
     
 }
 
+void FieldDesVisitor::operator()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+    char* name = tokenText(*ni);
+    ni++;
+    Value *var = values().value(name);
+    if (var == NULL) {
+        cerr << "ERROR! Unknown variable: " << name << "!" << endl;
+        walker.printPosition(cerr)<< "!" << endl;
+        return;
+    }
+
+    char* fieldName = tokenText(*ni);
+
+    int idx = values().index(name, fieldName);
+    Value *idxVal = ConstantInt::get(module().getContext(), APInt(32, idx, true));
+
+    walker.setData(builder.CreateGEP(var, idxVal));
+}
+
+void NewVisitor::operator()(AstWalker &walker) const {
+
+}
+
 Values::Values(llvm::Module *module, const Symbols &symbols) {
     const GlobalScope &global = symbols.globalScope();
-
+    LLVMContext &ctx = module->getContext();
 
     //    type_iterator type_it = global.typesBegin();
     //    type_iterator type_end = global.typesEnd();
@@ -132,9 +191,9 @@ Values::Values(llvm::Module *module, const Symbols &symbols) {
 
     //    }
 
-    types["int"] = llvm::IntegerType::getInt32Ty(module->getContext());
-    types["char"] = llvm::IntegerType::getInt8Ty(module->getContext());
-    types["void"] = llvm::Type::getVoidTy(module->getContext());
+    types["int"] = IntegerType::getInt32Ty(ctx);
+    types["char"] = IntegerType::getInt8Ty(ctx);
+    types["void"] = llvm::Type::getVoidTy(ctx);
 
     //array_t
 
@@ -148,8 +207,15 @@ Values::Values(llvm::Module *module, const Symbols &symbols) {
             args.push_back(types[(*arg_it)->name()]);
         }
         FunctionType* ft = FunctionType::get(types[prototype->returnType().name()], args, false);
-        types[arguments.typeSignature()] = ft;
+        types[prototype->name()] = ft;
     }
+
+    FunctionType *malloc_type = TypeBuilder<llvm::types::i<8>*(), true>::get(ctx);
+    Function* func_malloc = Function::Create(
+     /*Type=*/malloc_type,
+     /*Linkage=*/GlobalValue::ExternalLinkage,
+     /*Name=*/"malloc", module); // (external, no body)
+    func_malloc->setCallingConv(llvm::CallingConv::C);
 
     //    constant_iterator const_it = global.constantBegin();
     //    constant_iterator const_end = global.constantEnd();
@@ -162,7 +228,20 @@ Values::Values(llvm::Module *module, const Symbols &symbols) {
     SplitScope &ps = dynamic_cast<SplitScope&>(program->scope());
     class_iterator class_it = ps.classBegin();
     for (; class_it != ps.classEnd(); class_it++) {
-
+        const Class *c = *class_it;
+        StructType *st = StructType::create(ctx, program->name() + "::" + c->name());
+        types[c->name()] = st;
+        Scope::iterator csit = c->scope().begin();
+        vector<llvm::Type*> classBody;
+        int idx = 0;
+        for (; csit != c->scope().end(); csit++) {
+            const Symbol &fieldSymbol = *csit;
+            const NamedValue &classField = dynamic_cast<const NamedValue&>(fieldSymbol);
+            classBody.push_back(types[classField.type().name()]);
+            fieldIndices[c->name()+"."+classField.name()] = idx;
+            idx++;
+        }
+        st->setBody(classBody);
     }
 
 }
@@ -196,6 +275,15 @@ llvm::Type* Values::type(const string &name) const {
     return NULL;
 }
 
+int Values::index(const std::string &structName, const std::string &fieldName) const {
+    string qualified = structName + "." + fieldName;
+    IndexTable::const_iterator it = fieldIndices.find(qualified);
+    if (it != fieldIndices.end()) {
+        return it->second;
+    }
+    return -1;
+}
+
 void Values::enterScope(ValueTable &local) {
     localScope = &local;
 }
@@ -216,16 +304,20 @@ MjModule::MjModule(AST ast, const Symbols &symbols):
 void MjModule::walkTree() {
     VisitChildren defVisitor;
 
-    VarDesVisitor vdv(_module, values);
-    MethodVisitor methodv(_module, values, _symbols);
-    IntLiteralVisitor ilv(_module, values);
     AddVisitor addv(_module, values);
+    AssignVisitor assignv(_module, values);
+    FieldDesVisitor fdv(_module, values);
+    IntLiteralVisitor ilv(_module, values);
+    MethodVisitor methodv(_module, values, _symbols);
+    NewVisitor newv(_module, values);
     SubVisitor subv(_module, values);
+    VarDesVisitor vdv(_module, values);
+
 
     AstWalker walker(defVisitor);
 
     walker.addVisitor(VAR_DES, vdv);
-    //walker.addVisitor(FIELD_DES, FieldDesVisitor(symbolsTable));
+    walker.addVisitor(FIELD_DES, fdv);
     //walker.addVisitor(ARR_DES, ArrDesVisitor(symbolsTable));
     walker.addVisitor(LIT_INT, ilv);
     //walker.addVisitor(LIT_CHAR, CharLiteralVisitor(symbolsTable));
@@ -243,11 +335,11 @@ void MjModule::walkTree() {
     //walker.addVisitor(MOD, iov);
 
     walker.addVisitor(DEFFN, methodv);
-    //walker.addVisitor(NEW, NewVisitor(symbolsTable));
+    walker.addVisitor(NEW, newv);
     //walker.addVisitor(NEW_ARR, NewArrVisitor(symbolsTable));
 
     //CheckCompatibleVisitor ccv(symbolsTable);
-    //walker.addVisitor(SET, ccv);
+    walker.addVisitor(SET, assignv);
     //walker.addVisitor(EQL, ccv);
     //walker.addVisitor(NEQ, ccv);
     //walker.addVisitor(GRT, ccv);

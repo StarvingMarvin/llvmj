@@ -211,8 +211,8 @@ namespace mj {
         public:
             SplitScope(Scope *parentScope) : Scope(parentScope){}
             virtual void define(const Symbol &s); 
-            type_iterator typesBegin() const { return types.begin(); }
-            type_iterator typesEnd() const { return types.end(); }
+//            type_iterator typesBegin() const { return types.begin(); }
+//            type_iterator typesEnd() const { return types.end(); }
             method_iterator methodBegin() const { return methods.begin(); }
             method_iterator methodEnd() const { return methods.end(); }
             constant_iterator constantBegin() const { return constants.begin(); }
@@ -222,7 +222,7 @@ namespace mj {
             class_iterator classBegin() const { return classes.begin(); }
             class_iterator classEnd() const { return classes.end(); }
         private:
-            std::vector<const Type*> types;
+//            std::vector<const Type*> types;
             std::vector<const Method*> methods;
             std::vector<const NamedValue*> variables;
             std::vector<const Constant*> constants;

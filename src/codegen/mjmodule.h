@@ -19,18 +19,21 @@ namespace mj {
 
 typedef std::map<const std::string, llvm::Value*> ValueTable;
 typedef std::map<const std::string, llvm::Type*> TypeTable;
+typedef std::map<const std::string, int> IndexTable;
 
 class Values {
 public:
     Values(llvm::Module* module, const mj::Symbols &symbols);
     llvm::Value* value(const std::string &name) const;
     llvm::Type* type(const std::string &name) const;
+    int index(const std::string &structName, const std::string &fieldName) const;
     void enterScope(ValueTable &local);
     void leaveScope();
 private:
     ValueTable globalValues;
     ValueTable *localScope;
     TypeTable types;
+    IndexTable fieldIndices;
 };
 
 namespace codegen {
@@ -53,6 +56,13 @@ public:
     virtual void operator()(AstWalker &walker) const;
 };
 
+class FieldDesVisitor : public CodegenVisitor{
+public:
+    FieldDesVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
+
 class MethodVisitor : public CodegenVisitor {
 public:
     MethodVisitor(llvm::Module &module, Values &values, const Symbols &symbols):
@@ -60,6 +70,13 @@ public:
     virtual void operator()(AstWalker &walker) const;
 private:
     const Symbols &symbols;
+};
+
+class NewVisitor : public CodegenVisitor {
+public:
+    NewVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values) {}
+    virtual void operator()(AstWalker &walker) const;
 };
 
 class IntLiteralVisitor : public CodegenVisitor{
@@ -91,11 +108,11 @@ public:
     virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
 };
 
-class AssignVisitor : public BinopVisitor {
+class AssignVisitor : public CodegenVisitor {
 public:
     AssignVisitor(llvm::Module &module, Values &values):
-        BinopVisitor(module, values){}
-    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
 };
 
 class NegOpVisitor : public CodegenVisitor{

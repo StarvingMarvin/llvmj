@@ -1,9 +1,14 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 
 struct MJArray {
   void *begin, *end;
   int size;
+};
+
+struct A {
+    int val;
 };
 
 int ord(char c) {
@@ -27,6 +32,12 @@ void mj_main() {
   arr.end = a + 4;
   arr.size = sizeof(int);
   puts("size: "+len(arr));
+
+
+  struct A* sa = malloc(sizeof(struct A));
+  sa->val = 5;
+  puts("val: " + sa->val);
+  free(sa);
 }
 
 int main(int argc, char **argv) {

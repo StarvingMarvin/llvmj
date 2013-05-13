@@ -1,0 +1,10 @@
+class Array
+{
+    void main()
+        int a[];
+    {
+        a = new int[2];
+        a[1] = 5;
+        a[2] = a[1];
+    }
+}

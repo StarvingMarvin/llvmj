@@ -6,7 +6,7 @@ configure_file (
     "${PROJECT_BINARY_DIR}/llvmjConfig.h"
     )
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-unused-parameter -Werror")
 
 include_directories("${PROJECT_BINARY_DIR}" 
                     "${PROJECT_BINARY_DIR}/src"  

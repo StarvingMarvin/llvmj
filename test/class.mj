@@ -1,0 +1,14 @@
+class Class
+    class Simple {
+        int val;
+    }
+{
+    void main()
+        Simple s;
+        int i;
+    {
+        s = new Simple;
+        s.val = 5;
+        i = s.val;
+    }
+}
