@@ -176,6 +176,7 @@ namespace mj {
             virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
             const MethodType& methodType() const { return dynamic_cast<const MethodType&>(type()); }
+            virtual ~Method() { delete methodScope; }
         private:
             MethodScope *methodScope;
     };

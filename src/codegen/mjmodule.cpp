@@ -26,7 +26,6 @@ using namespace mj::codegen;
 
 using llvm::APInt;
 using llvm::BasicBlock;
-//using llvm::CallingConv;
 using llvm::ConstantInt;
 using llvm::dyn_cast;
 using llvm::Function;
