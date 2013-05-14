@@ -1,0 +1,15 @@
+class Globals
+    const int SIZE = 100;
+    int size;
+    char c;
+{
+    void main()
+        int i;
+    {
+        c = eol;
+        size=SIZE;
+        i = size;
+        size = 15;
+    }
+
+}
