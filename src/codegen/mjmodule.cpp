@@ -10,6 +10,7 @@
 
 #include <llvm/Analysis/Verifier.h>
 #include <llvm/DerivedTypes.h>
+#include <llvm/Target/TargetData.h>
 #include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/TypeBuilder.h>
 #include <llvm/LLVMContext.h>
@@ -38,6 +39,7 @@ using llvm::LLVMContext;
 using llvm::Module;
 using llvm::PointerType;
 using llvm::StructType;
+using llvm::TargetData;
 using llvm::TypeBuilder;
 using llvm::Value;
 
@@ -85,6 +87,7 @@ void MethodVisitor::operator()(AstWalker &walker) const {
 
     llvm::Type *t = values().type(meth->methodType().name());
     FunctionType *ft = dyn_cast<FunctionType>(t);
+
     string name = program->name() + "::" + meth->name();
     Function *f = Function::Create(ft, Function::InternalLinkage, name, &module());
 
@@ -110,7 +113,7 @@ void MethodVisitor::operator()(AstWalker &walker) const {
 
     values().leaveScope();
 
-    llvm::verifyFunction(*f);
+    //llvm::verifyFunction(*f);
 
 }
 
@@ -171,12 +174,24 @@ void FieldDesVisitor::operator()(AstWalker &walker) const {
 
     int idx = values().index(name, fieldName);
     Value *idxVal = ConstantInt::get(module().getContext(), APInt(32, idx, true));
-
-    walker.setData(builder.CreateGEP(var, idxVal));
+    Value *structVal = builder.CreateLoad(var, false, "struct_deref");
+    walker.setData(builder.CreateGEP(structVal, idxVal));
 }
 
 void NewVisitor::operator()(AstWalker &walker) const {
-
+    nodeiterator ni = walker.firstChild();
+    char* typeName = tokenText(*ni);
+    llvm::Type *ptype = values().type(typeName);
+    llvm::Type *stype = ptype->getContainedType(0);
+    StructType *s = dyn_cast<StructType>(stype);
+    TargetData td (&module());
+    uint64_t size = td.getTypeAllocSize(s);
+    vector<Value*> args;
+    args.push_back(ConstantInt::get(module().getContext(), APInt(64, size, 10)));
+    Value* vMalloc = module().getFunction("malloc");
+    Value* voidPtr = builder.CreateCall(vMalloc, args, s->getName() + "_voidptr");
+    Value* structPtr = builder.CreateBitCast(voidPtr, ptype, s->getName() + "_ptr");
+    walker.setData(structPtr);
 }
 
 Values::Values(llvm::Module *module, const Symbols &symbols) {
@@ -199,17 +214,17 @@ Values::Values(llvm::Module *module, const Symbols &symbols) {
     method_type_iterator prototype_it = global.methodPrototypesBegin();
     for (; prototype_it != global.methodPrototypesEnd(); prototype_it++) {
         const MethodType * prototype = *prototype_it;
-        vector<llvm::Type*> args;
+        vector<llvm::Type*> *args = new vector<llvm::Type*>();
         MethodArguments &arguments = prototype->arguments();
         ArgumentTypes::const_iterator arg_it = arguments.begin();
         for (; arg_it != arguments.end(); arg_it++) {
-            args.push_back(types[(*arg_it)->name()]);
+            args->push_back(types[(*arg_it)->name()]);
         }
-        FunctionType* ft = FunctionType::get(types[prototype->returnType().name()], args, false);
+        FunctionType* ft = FunctionType::get(types[prototype->returnType().name()], *args, false);
         types[prototype->name()] = ft;
     }
 
-    FunctionType *malloc_type = TypeBuilder<llvm::types::i<8>*(), true>::get(ctx);
+    FunctionType *malloc_type = TypeBuilder<llvm::types::i<8>*(llvm::types::i<64>), true>::get(ctx);
     Function* func_malloc = Function::Create(
      /*Type=*/malloc_type,
      /*Linkage=*/GlobalValue::ExternalLinkage,
@@ -227,20 +242,26 @@ Values::Values(llvm::Module *module, const Symbols &symbols) {
     SplitScope &ps = dynamic_cast<SplitScope&>(program->scope());
     class_iterator class_it = ps.classBegin();
     for (; class_it != ps.classEnd(); class_it++) {
+
         const Class *c = *class_it;
+
+        cout << *c << endl;
+
         StructType *st = StructType::create(ctx, program->name() + "::" + c->name());
-        types[c->name()] = st;
+        PointerType *spt = PointerType::get(st, 0);
+
+        types[c->name()] = spt;
         Scope::iterator csit = c->scope().begin();
-        vector<llvm::Type*> classBody;
+        vector<llvm::Type*> *classBody = new vector<llvm::Type*>();
         int idx = 0;
         for (; csit != c->scope().end(); csit++) {
             const Symbol &fieldSymbol = *csit;
             const NamedValue &classField = dynamic_cast<const NamedValue&>(fieldSymbol);
-            classBody.push_back(types[classField.type().name()]);
+            classBody->push_back(types[classField.type().name()]);
             fieldIndices[c->name()+"."+classField.name()] = idx;
             idx++;
         }
-        st->setBody(classBody);
+        st->setBody(*classBody);
     }
 
 }
