@@ -23,6 +23,7 @@ tokens {
     FIELD_DES;
     ARR_DES;
     UNARY_MINUS;
+    DEREF;
 
     CLASS   = 'class';
     NEW     = 'new';
@@ -147,7 +148,7 @@ expr    :   term (addop^ term)*
 term    : factor (mulop^ factor)*;
 
 factor  : designator ('(' actual_params? ')' -> ^(CALL designator actual_params?) 
-                        | -> designator)
+                        | -> ^(DEREF designator))
         | literal
         | NEW type ('['expr']'-> ^(NEW_ARR type expr) | -> ^(NEW type))
         |   '('! expr ')'!;

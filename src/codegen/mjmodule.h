@@ -122,8 +122,14 @@ public:
     virtual void operator()(AstWalker &walker) const;
 };
 
-}
+class DerefVisitor : public CodegenVisitor{
+public:
+    DerefVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
 
+}
 
 class MjModule
 {

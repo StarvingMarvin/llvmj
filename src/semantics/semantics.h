@@ -176,6 +176,12 @@ namespace mj {
             virtual void operator()(AstWalker &walker) const;
     };
 
+    class DerefVisitor : public SemanticNodeVisitor {
+        public:
+            DerefVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
     }
 
     void checkSemantics(AST ast, Symbols &symbols);

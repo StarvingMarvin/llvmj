@@ -113,7 +113,7 @@ void MethodVisitor::operator()(AstWalker &walker) const {
 
     values().leaveScope();
 
-    //llvm::verifyFunction(*f);
+    llvm::verifyFunction(*f);
 
 }
 
@@ -128,14 +128,7 @@ void BinopVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
 
     Value* lhs = visitChild(walker, ni);
-    if (isa<PointerType>(lhs->getType())) {
-        lhs = builder.CreateLoad(lhs, false, lhs->getName());
-    }
-
     Value* rhs = visitChild(walker, ni);
-    if (isa<PointerType>(rhs->getType())) {
-        rhs = builder.CreateLoad(rhs, false, rhs->getName());
-    }
     Value* result = op(lhs, rhs);
     walker.setData(result);
 }
@@ -172,10 +165,18 @@ void FieldDesVisitor::operator()(AstWalker &walker) const {
 
     char* fieldName = tokenText(*ni);
 
-    int idx = values().index(name, fieldName);
+    llvm::Type *sppt = var->getType();
+    llvm::Type *spt = sppt->getContainedType(0);
+    StructType *st = dyn_cast<StructType>(spt->getContainedType(0));
+
+    int idx = values().index(st->getName().str(), fieldName);
     Value *idxVal = ConstantInt::get(module().getContext(), APInt(32, idx, true));
-    Value *structVal = builder.CreateLoad(var, false, "struct_deref");
-    walker.setData(builder.CreateGEP(structVal, idxVal));
+    Value *ptrDeref = ConstantInt::get(module().getContext(), APInt(32, 0, true));
+    vector<Value*> indexes;
+    indexes.push_back(ptrDeref);
+    indexes.push_back(idxVal);
+    Value *structPtrVal = builder.CreateLoad(var, false, "struct_deref");
+    walker.setData(builder.CreateGEP(structPtrVal, indexes));
 }
 
 void NewVisitor::operator()(AstWalker &walker) const {
@@ -192,6 +193,13 @@ void NewVisitor::operator()(AstWalker &walker) const {
     Value* voidPtr = builder.CreateCall(vMalloc, args, s->getName() + "_voidptr");
     Value* structPtr = builder.CreateBitCast(voidPtr, ptype, s->getName() + "_ptr");
     walker.setData(structPtr);
+}
+
+void DerefVisitor::operator ()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+    Value *ref = visitChild(walker, ni);
+    Value *val = builder.CreateLoad(ref, false, ref->getName());
+    walker.setData(val);
 }
 
 Values::Values(llvm::Module *module, const Symbols &symbols) {
@@ -258,7 +266,8 @@ Values::Values(llvm::Module *module, const Symbols &symbols) {
             const Symbol &fieldSymbol = *csit;
             const NamedValue &classField = dynamic_cast<const NamedValue&>(fieldSymbol);
             classBody->push_back(types[classField.type().name()]);
-            fieldIndices[c->name()+"."+classField.name()] = idx;
+            llvm::Twine fullName = st->getName() + "." + classField.name();
+            fieldIndices[fullName.str()] = idx;
             idx++;
         }
         st->setBody(*classBody);
@@ -332,7 +341,7 @@ void MjModule::walkTree() {
     NewVisitor newv(_module, values);
     SubVisitor subv(_module, values);
     VarDesVisitor vdv(_module, values);
-
+    DerefVisitor derefv(_module, values);
 
     AstWalker walker(defVisitor);
 
@@ -374,6 +383,8 @@ void MjModule::walkTree() {
 
     //walker.addVisitor(PRINT, PrintVisitor(symbolsTable));
     //walker.addVisitor(READ, ReadVisitor(symbolsTable));
+
+    walker.addVisitor(DEREF, derefv);
 
     //walker.addVisitor(PROGRAM, ProgramVisitor(symbolsTable));
 

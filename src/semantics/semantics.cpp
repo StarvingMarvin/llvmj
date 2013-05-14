@@ -420,6 +420,11 @@ void ProgramVisitor::operator()(AstWalker &walker) const {
     symbols.leaveScope();
 }
 
+void DerefVisitor::operator ()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+    setType(walker, visitChild(walker, ni));
+}
+
 void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
 
     VisitChildren defVisitor;
@@ -444,6 +449,7 @@ void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
     NewArrVisitor nav(symbolsTable);
     PrintVisitor printv(symbolsTable);
     ReadVisitor readv(symbolsTable);
+    DerefVisitor derefv(symbolsTable);
     ProgramVisitor programv(symbolsTable);
     
     AstWalker walker(defVisitor);
@@ -486,6 +492,7 @@ void mj::checkSemantics(AST ast, Symbols &symbolsTable) {
 
     walker.addVisitor(PRINT, printv);
     walker.addVisitor(READ, readv);
+    walker.addVisitor(DEREF, derefv);
 
     walker.addVisitor(PROGRAM, programv);
 
