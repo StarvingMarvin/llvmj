@@ -385,6 +385,7 @@ GlobalScope::~GlobalScope() {
 
 void GlobalScope::defineArrayAutoType(const ArrayType &t) {
     SplitScope::define(t);
+    arrayTypes.push_back(&t);
 }
 
 void GlobalScope::defineMethodAutoType(const MethodType &t) {

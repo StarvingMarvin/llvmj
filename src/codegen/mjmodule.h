@@ -29,7 +29,16 @@ public:
     int index(const std::string &structName, const std::string &fieldName) const;
     void enterScope(ValueTable &local);
     void leaveScope();
+
 private:
+
+    void initPrimitives(const mj::GlobalScope &global);
+    void initStructs(const mj::GlobalScope &global);
+    void initGlobals(const mj::GlobalScope &global);
+    void initMethods(const mj::GlobalScope &global);
+
+    llvm::Module* _module;
+
     ValueTable globalValues;
     ValueTable *localScope;
     TypeTable types;
@@ -44,6 +53,10 @@ protected:
     llvm::Module &module() const { return _module; }
     Values &values() const { return _values; }
     static llvm::IRBuilder<> builder;
+    uint64_t sizeOf(llvm::Type* t) const;
+    llvm::Type* arrayType(llvm::Type *t) const;
+    llvm::Value* callMalloc(uint64_t size) const;
+    llvm::Value* structPtrField(llvm::Value *structPtr, int idx) const;
 private:
     llvm::Module &_module;
     Values &_values;
@@ -63,9 +76,25 @@ public:
     virtual void operator()(AstWalker &walker) const;
 };
 
+class ArrDesVisitor : public CodegenVisitor{
+public:
+    ArrDesVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
+
 class MethodVisitor : public CodegenVisitor {
 public:
     MethodVisitor(llvm::Module &module, Values &values, const Symbols &symbols):
+        CodegenVisitor(module, values), symbols(symbols){}
+    virtual void operator()(AstWalker &walker) const;
+private:
+    const Symbols &symbols;
+};
+
+class CallVisitor : public CodegenVisitor {
+public:
+    CallVisitor(llvm::Module &module, Values &values, const Symbols &symbols):
         CodegenVisitor(module, values), symbols(symbols){}
     virtual void operator()(AstWalker &walker) const;
 private:
@@ -79,9 +108,23 @@ public:
     virtual void operator()(AstWalker &walker) const;
 };
 
+class NewArrVisitor : public CodegenVisitor {
+public:
+    NewArrVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values) {}
+    virtual void operator()(AstWalker &walker) const;
+};
+
 class IntLiteralVisitor : public CodegenVisitor{
 public:
     IntLiteralVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
+
+class CharLiteralVisitor : public CodegenVisitor{
+public:
+    CharLiteralVisitor(llvm::Module &module, Values &values):
         CodegenVisitor(module, values){}
     virtual void operator()(AstWalker &walker) const;
 };
@@ -108,9 +151,44 @@ public:
     virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
 };
 
+class MulVisitor : public BinopVisitor {
+public:
+    MulVisitor(llvm::Module &module, Values &values):
+        BinopVisitor(module, values){}
+    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+};
+
+class DivVisitor : public BinopVisitor {
+public:
+    DivVisitor(llvm::Module &module, Values &values):
+        BinopVisitor(module, values){}
+    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+};
+
+class ModVisitor : public BinopVisitor {
+public:
+    ModVisitor(llvm::Module &module, Values &values):
+        BinopVisitor(module, values){}
+    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+};
+
 class AssignVisitor : public CodegenVisitor {
 public:
     AssignVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
+
+class IncVisitor : public CodegenVisitor{
+public:
+    IncVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
+
+class DecVisitor : public CodegenVisitor{
+public:
+    DecVisitor(llvm::Module &module, Values &values):
         CodegenVisitor(module, values){}
     virtual void operator()(AstWalker &walker) const;
 };
