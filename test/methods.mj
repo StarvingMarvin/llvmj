@@ -17,7 +17,12 @@ class Methods
         i = x;
     }
 
-    void main() {
+    void main()
+        int r;
+    {
+        r = rnd();
+        r = add(r, r);
+        doNothing(r);
     }
 
 }

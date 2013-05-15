@@ -26,6 +26,7 @@ public:
     Values(llvm::Module* module, const mj::Symbols &symbols);
     llvm::Value* value(const std::string &name) const;
     llvm::Type* type(const std::string &name) const;
+    void define(std::string name, llvm::Value *value);
     int index(const std::string &structName, const std::string &fieldName) const;
     void enterScope(ValueTable &local);
     void leaveScope();
@@ -200,6 +201,13 @@ public:
     virtual void operator()(AstWalker &walker) const;
 };
 
+class RetVisitor : public CodegenVisitor{
+public:
+    RetVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
+
 class DerefVisitor : public CodegenVisitor{
 public:
     DerefVisitor(llvm::Module &module, Values &values):
@@ -220,6 +228,7 @@ private:
     llvm::Module _module;
     Values values;
     void walkTree();
+    void makeMain();
 };
 
 

@@ -91,26 +91,43 @@ void MethodVisitor::operator()(AstWalker &walker) const {
 
     string name = program->name() + "::" + meth->name();
     Function *f = Function::Create(ft, Function::InternalLinkage, name, &module());
-
-    Scope &methodScope = meth->scope();
+    values().define(meth->name(), f);
 
     BasicBlock *bb = BasicBlock::Create(module().getContext(), "entry", f);
     builder.SetInsertPoint(bb);
-    Scope::iterator sym_it = methodScope.begin();
+
     ValueTable local;
+
+    const Type &mt = meth->type();
+    const MethodType &methodType = dynamic_cast<const MethodType&>(mt);
+    Scope::iterator sym_it = methodType.arguments().begin();
+
+    for (; sym_it != methodType.arguments().end(); sym_it++) {
+        const Symbol &s = *sym_it;
+        const NamedValue &nv = dynamic_cast<const NamedValue&>(s);
+        llvm::Type *t = values().type(nv.type().name());
+        local[nv.name()] = builder.CreateAlloca(t, 0, nv.name());
+    }
+
+    Scope &methodScope = meth->scope();
+    sym_it = methodScope.begin();
+
     for (; sym_it != methodScope.end(); sym_it++) {
         const Symbol &s = *sym_it;
         const NamedValue &nv = dynamic_cast<const NamedValue&>(s);
         llvm::Type *t = values().type(nv.type().name());
         local[nv.name()] = builder.CreateAlloca(t, 0, nv.name());
     }
+
     values().enterScope(local);
 
     while ( ni != walker.lastChild()) {
         visitChild(walker, ni);
     }
 
-    builder.CreateRetVoid();
+    if (!bb->getTerminator()) {
+        builder.CreateRetVoid();
+    }
 
     values().leaveScope();
 
@@ -119,6 +136,26 @@ void MethodVisitor::operator()(AstWalker &walker) const {
 }
 
 void CallVisitor::operator ()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+
+    Value *funcVal = visitChild(walker, ni);
+
+    vector<Value*> args;
+
+    while(ni < walker.lastChild()) {
+        args.push_back(visitChild(walker, ni));
+    }
+
+    string retName = "";
+
+    Function *func = dyn_cast<Function>(funcVal);
+    FunctionType *ft = func->getFunctionType();
+
+    if (!ft->getReturnType()->isVoidTy()) {
+        retName = "calltmp";
+    }
+
+    walker.setData(builder.CreateCall(func, args, retName));
 
 }
 
@@ -176,7 +213,7 @@ void IncVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     Value* val = visitChild(walker, ni);
     walker.setData(builder.CreateAdd(val,
-            ConstantInt::get(module().getContext(),APInt(32, 1, 10)),
+            ConstantInt::get(module().getContext(),APInt(32, 1, true)),
             "inctmp"));
 }
 
@@ -184,7 +221,7 @@ void DecVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     Value* val = visitChild(walker, ni);
     walker.setData(builder.CreateSub(val,
-            ConstantInt::get(module().getContext(),APInt(32, 1, 10)),
+            ConstantInt::get(module().getContext(),APInt(32, 1, true)),
             "dectmp"));
 }
 
@@ -194,6 +231,12 @@ void NegOpVisitor::operator()(AstWalker &walker) const {
     walker.setData(builder.CreateNeg(val, "negtmp"));
 }
 
+
+void RetVisitor::operator()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+    Value* val = visitChild(walker, ni);
+    walker.setData(builder.CreateRet(val));
+}
 void FieldDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     char* name = tokenText(*ni);
@@ -258,7 +301,7 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
 
 
     Value *aSizePtr = structPtrField(arrayStruct, 0);
-    builder.CreateStore(ConstantInt::get(module().getContext(), APInt(64, arrSize, 10)), aSizePtr);
+    builder.CreateStore(ConstantInt::get(module().getContext(), APInt(64, arrSize, false)), aSizePtr);
 
     Value *aDataPtr = structPtrField(arrayStruct, 1);
     builder.CreateStore(arrayData, aDataPtr);
@@ -290,6 +333,8 @@ Values::Values(llvm::Module *module, const Symbols &symbols):
      /*Linkage=*/GlobalValue::ExternalLinkage,
      /*Name=*/"malloc", module); // (external, no body)
     func_malloc->setCallingConv(llvm::CallingConv::C);
+
+
 
 }
 
@@ -340,8 +385,8 @@ void Values::initMethods(const GlobalScope &global) {
         const MethodType * prototype = *prototype_it;
         vector<llvm::Type*> args;
         MethodArguments &arguments = prototype->arguments();
-        ArgumentTypes::const_iterator arg_it = arguments.begin();
-        for (; arg_it != arguments.end(); arg_it++) {
+        ArgumentTypes::const_iterator arg_it = arguments.typesBegin();
+        for (; arg_it != arguments.typesEnd(); arg_it++) {
             args.push_back(types[(*arg_it)->name()]);
         }
         FunctionType* ft = FunctionType::get(types[prototype->returnType().name()], args, false);
@@ -362,7 +407,7 @@ llvm::Value* Values::value(const string &name) const {
         }
     }
 
-    if (ret != NULL) {
+    if (ret == NULL) {
         ValueTable::const_iterator global_it = globalValues.find(name);
         if( global_it != globalValues.end() ) {
             ret = global_it->second;
@@ -389,6 +434,10 @@ int Values::index(const std::string &structName, const std::string &fieldName) c
     return -1;
 }
 
+void Values::define(std::string name, llvm::Value *value) {
+    globalValues[name] = value;
+}
+
 uint64_t CodegenVisitor::sizeOf(llvm::Type* t) const {
     TargetData td (&_module);
     return td.getTypeAllocSize(t);
@@ -404,14 +453,14 @@ llvm::Type* CodegenVisitor::arrayType(llvm::Type *ptype) const {
 
 llvm::Value* CodegenVisitor::callMalloc(uint64_t size) const {
     vector<Value*> args;
-    args.push_back(ConstantInt::get(_module.getContext(), APInt(64, size, 10)));
+    args.push_back(ConstantInt::get(_module.getContext(), APInt(64, size, false)));
     Value* vMalloc = _module.getFunction("malloc");
     return builder.CreateCall(vMalloc, args, "voidptr");
 }
 
 llvm::Value* CodegenVisitor::structPtrField(llvm::Value *structPtr, int idx) const {
-    Value *idxVal = ConstantInt::get(_module.getContext(), APInt(32, idx, true));
-    Value *ptrDeref = ConstantInt::get(_module.getContext(), APInt(32, 0, true));
+    Value *idxVal = ConstantInt::get(_module.getContext(), APInt(32, idx, false));
+    Value *ptrDeref = ConstantInt::get(_module.getContext(), APInt(32, 0, false));
     vector<Value*> indexes;
     indexes.push_back(ptrDeref);
     indexes.push_back(idxVal);
@@ -433,6 +482,25 @@ MjModule::MjModule(AST ast, const Symbols &symbols):
     values(&_module, _symbols)
 {
     walkTree();
+    makeMain();
+
+}
+
+void MjModule::makeMain() {
+    FunctionType *main_type = TypeBuilder<llvm::types::i<32>(), true>::get(_module.getContext());
+    Function* func_main = Function::Create(
+     /*Type=*/main_type,
+     /*Linkage=*/GlobalValue::ExternalLinkage,
+     /*Name=*/"main", &_module); // (external, no body)
+    func_main->setCallingConv(llvm::CallingConv::C);
+
+    BasicBlock *bb = BasicBlock::Create(_module.getContext(), "entry", func_main);
+    IRBuilder<> builder(_module.getContext());
+    builder.SetInsertPoint(bb);
+
+    Value *mjMain = values.value("main");
+    builder.CreateCall(mjMain);
+    builder.CreateRet(ConstantInt::get(_module.getContext(), APInt(32, 0)));
 }
 
 void MjModule::walkTree() {
@@ -457,6 +525,7 @@ void MjModule::walkTree() {
     DecVisitor decv(_module, values);
     VarDesVisitor vdv(_module, values);
     DerefVisitor derefv(_module, values);
+    RetVisitor retv(_module, values);
 
     AstWalker walker(defVisitor);
 
@@ -498,6 +567,7 @@ void MjModule::walkTree() {
     //walker.addVisitor(READ, ReadVisitor(symbolsTable));
 
     walker.addVisitor(DEREF, derefv);
+    walker.addVisitor(RETURN, retv);
 
     walker.visit(_ast);
 }

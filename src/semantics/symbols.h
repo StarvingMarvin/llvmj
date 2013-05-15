@@ -95,8 +95,8 @@ namespace mj {
                     SymbolTable::const_iterator _it;
             };
 
-            iterator begin() const { return iterator(symbolTable.begin()); }
-            iterator end() const { return iterator(symbolTable.end()); }
+            virtual iterator begin() const { return iterator(symbolTable.begin()); }
+            virtual iterator end() const { return iterator(symbolTable.end()); }
 
         protected:
             virtual unsigned int depth() const;
@@ -141,8 +141,8 @@ namespace mj {
             virtual void define(const Symbol &s);
             bool matchArguments(ArgumentTypes argumentTypes);
             std::string typeSignature();
-            ArgumentTypes::const_iterator begin() const { return arguments.begin();}
-            ArgumentTypes::const_iterator end() const {return arguments.end();}
+            ArgumentTypes::const_iterator typesBegin() const { return arguments.begin();}
+            ArgumentTypes::const_iterator typesEnd() const {return arguments.end();}
         private:
             ArgumentTypes arguments;
     };
