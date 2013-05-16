@@ -2,8 +2,6 @@
 #ifndef _SYMBOLS_H_
 #define _SYMBOLS_H_
 
-#include "llvmjConfig.h"
-
 namespace mj {
 
     class Printable {

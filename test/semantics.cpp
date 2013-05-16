@@ -4,6 +4,8 @@
 #include <stack>
 #include <vector>
 #include <map>
+#include "parser/parser.h"
+#include "semantics/symbols.h"
 #include "semantics/semantics.h"
 
 using namespace mj;

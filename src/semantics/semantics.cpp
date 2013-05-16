@@ -7,7 +7,10 @@
 #include <stdexcept>
 #include <vector>
 
-#include "semantics.h"
+#include "parser/parser.h"
+#include "semantics/symbols.h"
+
+#include "semantics/semantics.h"
 
 using namespace mj;
 using namespace mj::semantics;

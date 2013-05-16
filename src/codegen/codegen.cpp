@@ -13,6 +13,7 @@
 #include <llvm/Module.h>
 
 #include "parser/parser.h"
+#include "semantics/symbols.h"
 #include "semantics/semantics.h"
 #include "codegen/codegen.h"
 
