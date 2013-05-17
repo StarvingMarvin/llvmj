@@ -100,8 +100,7 @@ void MethodVisitor::operator()(AstWalker &walker) const {
 
     ValueTable local;
 
-    const Type &mt = meth->type();
-    const MethodType &methodType = dynamic_cast<const MethodType&>(mt);
+    const MethodType &methodType = meth->methodType();
     Scope::iterator sym_it = methodType.arguments().begin();
 
     for (; sym_it != methodType.arguments().end(); sym_it++) {

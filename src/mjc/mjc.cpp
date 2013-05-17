@@ -13,8 +13,8 @@
 #include <llvm/Module.h>
 
 #include "llvmjConfig.h"
-#include "semantics/symbols.h"
 #include "parser/parser.h"
+#include "semantics/symbols.h"
 #include "semantics/semantics.h"
 #include "codegen/values.h"
 #include "codegen/mjmodule.h"

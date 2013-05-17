@@ -341,8 +341,7 @@ void FieldDesVisitor::operator()(AstWalker &walker) const {
     }
     const Class &clazz = dynamic_cast<const Class&>(var->type());
     char* fieldName = tokenText(*ni);
-    const Symbol *fieldSymbol = clazz.scope().resolve(fieldName);
-    const NamedValue *field = dynamic_cast<const NamedValue*>(fieldSymbol);
+    const NamedValue *field = clazz.classScope().resolveField(fieldName);
     if (field == NULL) {
         cerr << "ERROR! Unknown field: " << fieldName << " in class " 
             << name << "!" << endl;

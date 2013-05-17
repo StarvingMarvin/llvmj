@@ -229,10 +229,11 @@ void MethodArguments::define(const Symbol &s) {
 }
 
 Method::Method(const string name, 
-        const MethodType &type):
+               const MethodType &type):
     ScopeContainer(),
     NamedValue(name, type),
-    methodScope(new MethodScope(&type.arguments()))
+    _methodScope(*(new MethodScope(&type.arguments()))),
+    _methodType(type)
 {
 }
 
@@ -262,7 +263,7 @@ MethodType::MethodType(MethodArguments &arguments, const Type &returnType):
 Class::Class(string name, Scope *parentScope):
     ReferenceType(name),
     ScopeContainer(),
-    classScope(*(new ClassScope(parentScope, this)))
+    _classScope(*(new ClassScope(parentScope, this)))
 {
 }
 
@@ -287,9 +288,9 @@ const Symbol *ClassScope::resolve(const string name) {
     return Scope::resolve(name);
 }
 
-const Symbol *ClassScope::resolveField(const string name) {
+const NamedValue *ClassScope::resolveField(const string name) {
     // don't look in parent scopes
-    return symbolTable[name];
+    return dynamic_cast<const NamedValue*>(symbolTable[name]);
 }
 
 void SplitScope::define(const Symbol &s) {
@@ -315,7 +316,7 @@ void SplitScope::define(const Symbol &s) {
 Program::Program(string name, Scope *parentScope): 
     ScopeContainer(),
     Symbol(name),
-    _scope(*(new SplitScope(parentScope)))
+    _scope(*( new SplitScope(parentScope)))
 {
 }
 

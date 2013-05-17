@@ -147,7 +147,7 @@ namespace mj {
 
     class MethodScope: public Scope {
         public:
-            MethodScope(Scope *parent);
+            explicit MethodScope(Scope *parent);
         protected:
             virtual unsigned int depth() const { return Scope::depth() - 1; }
             /* virtual void define(Symbol *s);
@@ -170,20 +170,22 @@ namespace mj {
         public:
             Method(const std::string name, 
                     const MethodType &methodType);
-            virtual Scope& scope() const {return *methodScope;}
+            virtual Scope& scope() const {return _methodScope;}
+            MethodScope& methodScope() const {return _methodScope;}
             virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
-            const MethodType& methodType() const { return dynamic_cast<const MethodType&>(type()); }
-            virtual ~Method() { delete methodScope; }
+            const MethodType& methodType() const { return _methodType; }
+            virtual ~Method() { delete &_methodScope; };
         private:
-            MethodScope *methodScope;
+            MethodScope &_methodScope;
+            const MethodType &_methodType;
     };
 
     class ClassScope : public Scope {
         public:
             ClassScope(Scope *parent, Type * c);
             virtual const Symbol *resolve(const std::string name);
-            const Symbol *resolveField(const std::string name);
+            const NamedValue *resolveField(const std::string name);
         private:
             Type *_c;
     };
@@ -191,12 +193,12 @@ namespace mj {
     class Class : public ReferenceType, ScopeContainer {
         public:
             Class(std::string name, Scope *parentScope);
-            virtual Scope& scope() const {return classScope;}
+            virtual Scope& scope() const {return _classScope;}
+            virtual ClassScope& classScope() const {return _classScope;}
             virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
-            virtual ~Class() { delete &classScope; }
         private:
-            ClassScope &classScope;
+            ClassScope &_classScope;
     };
 
     typedef std::vector<const MethodType*>::const_iterator method_type_iterator;
@@ -229,6 +231,7 @@ namespace mj {
         public:
             Program(std::string name, Scope *parentScope);
             virtual Scope& scope() const {return _scope;}
+            virtual SplitScope& programScope() const {return _scope;}
             virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
             virtual ~Program() { delete &_scope; }
