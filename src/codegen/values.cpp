@@ -74,34 +74,54 @@ void Values::initTypes(const GlobalScope &global) {
     const Program *program = global.program();
 
     SplitScope &ps = dynamic_cast<SplitScope&>(program->scope());
+    array_type_iterator arr_it = global.arrayTypesBegin();
     class_iterator class_it = ps.classBegin();
-    for (; class_it != ps.classEnd(); class_it++) {
+
+    while (class_it != ps.classEnd() && arr_it != global.arrayTypesEnd()) {
 
         const Class *c = *class_it;
+        llvm::Type * classType = initClass(*c);
 
-        cout << *c << endl;
 
-        StructType *st = StructType::create(_module->getContext(), program->name() + "::" + c->name());
-        PointerType *spt = PointerType::get(st, 0);
+        if (classType != null) {
+            types[c->name()] = classType;
+            class_it++;
+        } else {
 
-        types[c->name()] = spt;
-        Scope::iterator csit = c->scope().begin();
-        vector<llvm::Type*> classBody;
-        int idx = 0;
-        for (; csit != c->scope().end(); csit++) {
-            const Symbol &fieldSymbol = *csit;
-            const NamedValue &classField = dynamic_cast<const NamedValue&>(fieldSymbol);
-            classBody.push_back(types[classField.type().name()]);
-            llvm::Twine fullName = st->getName() + "." + classField.name();
-            fieldIndices[fullName.str()] = idx;
-            idx++;
         }
-        st->setBody(classBody);
+
     }
 }
 
 llvm::Type *initClass(const mj::Class &c) {
-    return NULL;
+    StructType *st = StructType::create(_module->getContext(), _module-> + "::" + c.name());
+    PointerType *spt = PointerType::get(st, 0);
+
+
+    //types[c->name()] = spt;
+    Scope::iterator csit = c.classScope().begin();
+    vector<llvm::Type*> classBody;
+    int idx = 0;
+    for (; csit != c.classScope().end(); csit++) {
+        const Symbol &fieldSymbol = *csit;
+        const NamedValue &classField = dynamic_cast<const NamedValue&>(fieldSymbol);
+        const string fieldTypeName = classField.type().name();
+
+        Type *fieldType = (fieldTypeName == c.name())?
+            spt :
+            types[fieldTypeName];
+
+
+        if (fieldType == NULL) {
+            return NULL;
+        }
+        classBody.push_back(fieldType);
+        llvm::Twine fullName = st->getName() + "." + classField.name();
+        fieldIndices[fullName.str()] = idx;
+        idx++;
+    }
+    st->setBody(classBody);
+    return spt;
 }
 
 llvm::Type *initArrayType(const mj::ArrayType &at) {
