@@ -76,8 +76,15 @@ void Values::initTypes(const GlobalScope &global) {
     SplitScope &ps = dynamic_cast<SplitScope&>(program->scope());
     array_type_iterator arr_it = global.arrayTypesBegin();
     class_iterator class_it = ps.classBegin();
+    llvm::Type *arrayType = NULL;
 
-    while (class_it != ps.classEnd() && arr_it != global.arrayTypesEnd()) {
+    while (class_it != ps.classEnd()) {
+
+        while (arr_it != global.arrayTypesEnd()
+               && (arrayType = initArrayType(**arr_it)) != NULL) {
+            types[(*arr_it)->name()] = arrayType;
+            arr_it++;
+        }
 
         const Class *c = *class_it;
         llvm::Type * classType = initClass(*c);
@@ -86,15 +93,26 @@ void Values::initTypes(const GlobalScope &global) {
         if (classType != NULL) {
             types[c->name()] = classType;
             class_it++;
-        } else {
-
         }
 
+    }
+
+    while (arr_it != global.arrayTypesEnd()) {
+        types[(*arr_it)->name()] = initArrayType(**arr_it);
+        arr_it++;
     }
 }
 
 llvm::Type *Values::initClass(const mj::Class &c) {
-    StructType *st = StructType::create(_module->getContext(), _module->getModuleIdentifier() + "::" + c.name());
+
+    string moduleId = _module->getModuleIdentifier();
+    string structName = moduleId + "::" + c.name();
+
+    StructType *st = _module->getTypeByName(structName);
+
+    if (st == NULL) {
+        st = StructType::create(_module->getContext(), structName);
+    }
     PointerType *spt = PointerType::get(st, 0);
 
 
@@ -125,7 +143,16 @@ llvm::Type *Values::initClass(const mj::Class &c) {
 }
 
 llvm::Type *Values::initArrayType(const mj::ArrayType &at) {
-    return NULL;
+    llvm::Type *type = types[at.valueType().name()];
+    if (type == NULL) {
+        return NULL;
+    }
+    llvm::Type *ptype = PointerType::get(type, 0);
+    LLVMContext &ctx = _module->getContext();
+    vector<llvm::Type*> fields;
+    fields.push_back(IntegerType::get(ctx, 64));
+    fields.push_back(ptype);
+    return StructType::get(ctx, fields);
 }
 
 void Values::initGlobals(const GlobalScope &global) {

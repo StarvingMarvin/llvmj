@@ -132,7 +132,7 @@ void MethodVisitor::operator()(AstWalker &walker) const {
 
     values().leaveScope();
 
-    llvm::verifyFunction(*f);
+//    llvm::verifyFunction(*f);
 
 }
 
@@ -263,9 +263,18 @@ void FieldDesVisitor::operator()(AstWalker &walker) const {
 
 void ArrDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
+    ni++;
     char* name = tokenText(*ni);
-    values().value(name);
-
+    Value *var = values().value(name);
+    Value *index = visitChild(walker, ni);
+    Value *val = builder.CreateLoad(var, "array_tmp");
+    LLVMContext &ctx = module().getContext();
+    vector<Value*> idx;
+    idx.push_back(ConstantInt::get(ctx, APInt(32, 0, true)));
+    idx.push_back(ConstantInt::get(ctx, APInt(32, 1, true)));
+    idx.push_back(index);
+    Value *result = builder.CreateGEP(val, idx, "array_field");
+    walker.setData(result);
 }
 
 void NewVisitor::operator()(AstWalker &walker) const {
@@ -284,16 +293,18 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     char* typeName = tokenText(*ni);
     ni++;
-    char* sizeStr = tokenText(*ni);
-    int arrSize;
-    istringstream(sizeStr) >> arrSize;
+    Value *arrSize = visitChild(walker, ni);
 
     llvm::Type *type = values().type(typeName);
     llvm::Type *ptype = PointerType::get(type, 0);
     llvm::Type *atype = arrayType(ptype);
 
     uint64_t typeSize = sizeOf(type);
-    Value *voidPtr = callMalloc(typeSize * arrSize);
+    Value *typeSizeVal = ConstantInt::get(module().getContext(), APInt(32, typeSize, true));
+
+    Value *dataSize = builder.CreateMul(typeSizeVal, arrSize, "data_size_tmp");
+
+    Value *voidPtr = callMalloc(dataSize);
     Value *arrayData = builder.CreateBitCast(voidPtr, ptype, "array_data_ptr");
 
     uint64_t structSize = sizeOf(atype);
@@ -302,7 +313,7 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
 
 
     Value *aSizePtr = structPtrField(arrayStruct, 0);
-    builder.CreateStore(ConstantInt::get(module().getContext(), APInt(64, arrSize, false)), aSizePtr);
+    builder.CreateStore(arrSize, aSizePtr);
 
     Value *aDataPtr = structPtrField(arrayStruct, 1);
     builder.CreateStore(arrayData, aDataPtr);
@@ -333,8 +344,12 @@ llvm::Type* CodegenVisitor::arrayType(llvm::Type *ptype) const {
 }
 
 llvm::Value* CodegenVisitor::callMalloc(uint64_t size) const {
+    return callMalloc(ConstantInt::get(_module.getContext(), APInt(64, size, false)));
+}
+
+llvm::Value* CodegenVisitor::callMalloc(Value *size) const {
     vector<Value*> args;
-    args.push_back(ConstantInt::get(_module.getContext(), APInt(64, size, false)));
+    args.push_back(size);
     Value* vMalloc = _module.getFunction("malloc");
     return builder.CreateCall(vMalloc, args, "voidptr");
 }

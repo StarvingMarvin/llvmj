@@ -29,6 +29,7 @@ protected:
     uint64_t sizeOf(llvm::Type* t) const;
     llvm::Type* arrayType(llvm::Type *t) const;
     llvm::Value* callMalloc(uint64_t size) const;
+    llvm::Value* callMalloc(llvm::Value* size) const;
     llvm::Value* structPtrField(llvm::Value *structPtr, int idx) const;
 private:
     llvm::Module &_module;
