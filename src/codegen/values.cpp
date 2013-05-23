@@ -83,7 +83,7 @@ void Values::initTypes(const GlobalScope &global) {
         llvm::Type * classType = initClass(*c);
 
 
-        if (classType != null) {
+        if (classType != NULL) {
             types[c->name()] = classType;
             class_it++;
         } else {
@@ -93,8 +93,8 @@ void Values::initTypes(const GlobalScope &global) {
     }
 }
 
-llvm::Type *initClass(const mj::Class &c) {
-    StructType *st = StructType::create(_module->getContext(), _module-> + "::" + c.name());
+llvm::Type *Values::initClass(const mj::Class &c) {
+    StructType *st = StructType::create(_module->getContext(), _module->getModuleIdentifier() + "::" + c.name());
     PointerType *spt = PointerType::get(st, 0);
 
 
@@ -107,7 +107,7 @@ llvm::Type *initClass(const mj::Class &c) {
         const NamedValue &classField = dynamic_cast<const NamedValue&>(fieldSymbol);
         const string fieldTypeName = classField.type().name();
 
-        Type *fieldType = (fieldTypeName == c.name())?
+        llvm::Type *fieldType = (fieldTypeName == c.name())?
             spt :
             types[fieldTypeName];
 
@@ -124,7 +124,7 @@ llvm::Type *initClass(const mj::Class &c) {
     return spt;
 }
 
-llvm::Type *initArrayType(const mj::ArrayType &at) {
+llvm::Type *Values::initArrayType(const mj::ArrayType &at) {
     return NULL;
 }
 
