@@ -144,6 +144,62 @@ public:
     virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
 };
 
+class EqlVisitor : public BinopVisitor {
+public:
+    EqlVisitor(llvm::Module &module, Values &values):
+        BinopVisitor(module, values){}
+    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+};
+
+class NeqVisitor : public BinopVisitor {
+public:
+    NeqVisitor(llvm::Module &module, Values &values):
+        BinopVisitor(module, values){}
+    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+};
+
+class GrtVisitor : public BinopVisitor {
+public:
+    GrtVisitor(llvm::Module &module, Values &values):
+        BinopVisitor(module, values){}
+    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+};
+
+class GreVisitor : public BinopVisitor {
+public:
+    GreVisitor(llvm::Module &module, Values &values):
+        BinopVisitor(module, values){}
+    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+};
+
+class LstVisitor : public BinopVisitor {
+public:
+    LstVisitor(llvm::Module &module, Values &values):
+        BinopVisitor(module, values){}
+    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+};
+
+class LseVisitor : public BinopVisitor {
+public:
+    LseVisitor(llvm::Module &module, Values &values):
+        BinopVisitor(module, values){}
+    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+};
+
+class AndVisitor : public BinopVisitor {
+public:
+    AndVisitor(llvm::Module &module, Values &values):
+        BinopVisitor(module, values){}
+    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+};
+
+class OrVisitor : public BinopVisitor {
+public:
+    OrVisitor(llvm::Module &module, Values &values):
+        BinopVisitor(module, values){}
+    virtual llvm::Value* op(llvm::Value* lhs, llvm::Value* rhs) const;
+};
+
 class AssignVisitor : public CodegenVisitor {
 public:
     AssignVisitor(llvm::Module &module, Values &values):
@@ -168,6 +224,27 @@ public:
 class NegOpVisitor : public CodegenVisitor{
 public:
     NegOpVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
+
+class WhileVisitor : public CodegenVisitor{
+public:
+    WhileVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
+
+class IfVisitor : public CodegenVisitor{
+public:
+    IfVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
+
+class BreakVisitor : public CodegenVisitor{
+public:
+    BreakVisitor(llvm::Module &module, Values &values):
         CodegenVisitor(module, values){}
     virtual void operator()(AstWalker &walker) const;
 };

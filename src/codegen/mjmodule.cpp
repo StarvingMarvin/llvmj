@@ -184,23 +184,55 @@ void BinopVisitor::operator()(AstWalker &walker) const {
 }
 
 Value* AddVisitor::op(Value* lhs, Value* rhs) const {
-    return builder.CreateAdd(lhs, rhs, "addtmp");
+    return builder.CreateAdd(lhs, rhs, "add_tmp");
 }
 
 Value* SubVisitor::op(Value* lhs, Value* rhs) const {
-    return builder.CreateSub(lhs, rhs, "subtmp");
+    return builder.CreateSub(lhs, rhs, "sub_tmp");
 }
 
 Value* MulVisitor::op(Value* lhs, Value* rhs) const {
-    return builder.CreateMul(lhs, rhs, "multmp");
+    return builder.CreateMul(lhs, rhs, "mul_tmp");
 }
 
 Value* DivVisitor::op(Value* lhs, Value* rhs) const {
-    return builder.CreateSDiv(lhs, rhs, "divtmp");
+    return builder.CreateSDiv(lhs, rhs, "div_tmp");
 }
 
 Value* ModVisitor::op(Value* lhs, Value* rhs) const {
-    return builder.CreateSRem(lhs, rhs, "modtmp");
+    return builder.CreateSRem(lhs, rhs, "mod_tmp");
+}
+
+Value* EqlVisitor::op(Value* lhs, Value* rhs) const {
+    return builder.CreateICmpEQ(lhs, rhs, "eq_tmp");
+}
+
+Value* NeqVisitor::op(Value* lhs, Value* rhs) const {
+    return builder.CreateICmpNE(lhs, rhs, "ne_dtmp");
+}
+
+Value* GrtVisitor::op(Value* lhs, Value* rhs) const {
+    return builder.CreateICmpSGT(lhs, rhs, "gt_tmp");
+}
+
+Value* GreVisitor::op(Value* lhs, Value* rhs) const {
+    return builder.CreateICmpSGE(lhs, rhs, "ge_tmp");
+}
+
+Value* LstVisitor::op(Value* lhs, Value* rhs) const {
+    return builder.CreateICmpSLT(lhs, rhs, "lt_tmp");
+}
+
+Value* LseVisitor::op(Value* lhs, Value* rhs) const {
+    return builder.CreateICmpSLE(lhs, rhs, "le_tmp");
+}
+
+Value* AndVisitor::op(Value* lhs, Value* rhs) const {
+    return builder.CreateAnd(lhs, rhs, "and_tmp");
+}
+
+Value* OrVisitor::op(Value* lhs, Value* rhs) const {
+    return builder.CreateOr(lhs, rhs, "or_tmp");
 }
 
 void AssignVisitor::operator()(AstWalker &walker) const {
@@ -215,7 +247,7 @@ void IncVisitor::operator()(AstWalker &walker) const {
     Value* val = visitChild(walker, ni);
     walker.setData(builder.CreateAdd(val,
             ConstantInt::get(module().getContext(),APInt(32, 1, true)),
-            "inctmp"));
+            "inc_tmp"));
 }
 
 void DecVisitor::operator()(AstWalker &walker) const {
@@ -223,21 +255,34 @@ void DecVisitor::operator()(AstWalker &walker) const {
     Value* val = visitChild(walker, ni);
     walker.setData(builder.CreateSub(val,
             ConstantInt::get(module().getContext(),APInt(32, 1, true)),
-            "dectmp"));
+            "dec_tmp"));
 }
 
 void NegOpVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     Value* val = visitChild(walker, ni);
-    walker.setData(builder.CreateNeg(val, "negtmp"));
+    walker.setData(builder.CreateNeg(val, "neg_tmp"));
 }
 
+
+void WhileVisitor::operator()(AstWalker &walker) const {
+
+}
+
+void IfVisitor::operator()(AstWalker &walker) const {
+
+}
+
+void BreakVisitor::operator()(AstWalker &walker) const {
+
+}
 
 void RetVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     Value* val = visitChild(walker, ni);
     walker.setData(builder.CreateRet(val));
 }
+
 void FieldDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     char* name = tokenText(*ni);
@@ -413,13 +458,30 @@ void MjModule::walkTree() {
     CallVisitor callv(_module, values);
     NewVisitor newv(_module, values);
     NewArrVisitor nav(_module, values);
+
     SubVisitor subv(_module, values);
     MulVisitor mulv(_module, values);
     DivVisitor divv(_module, values);
     ModVisitor modv(_module, values);
+
+    EqlVisitor eqlv(_module, values);
+    NeqVisitor neqv(_module, values);
+    GrtVisitor grtv(_module, values);
+    GreVisitor grev(_module, values);
+    LstVisitor lstv(_module, values);
+    LseVisitor lsev(_module, values);
+
+    AndVisitor andv(_module, values);
+    AndVisitor orv(_module, values);
+
+    WhileVisitor whilev(_module, values);
+    IfVisitor ifv(_module, values);
+    BreakVisitor breakv(_module, values);
+
     NegOpVisitor negv(_module, values);
     IncVisitor incv(_module, values);
     DecVisitor decv(_module, values);
+
     VarDesVisitor vdv(_module, values);
     DerefVisitor derefv(_module, values);
     RetVisitor retv(_module, values);
@@ -433,9 +495,9 @@ void MjModule::walkTree() {
     walker.addVisitor(LIT_CHAR, clv);
     walker.addVisitor(CALL, callv);
 
-    //walker.addVisitor(WHILE, LoopVisitor(symbolsTable));
-    //walker.addVisitor(IF, LoopVisitor(symbolsTable));
-    //walker.addVisitor(BREAK, UnexpectedBreakVisitor(symbolsTable));
+    walker.addVisitor(WHILE, whilev);
+    walker.addVisitor(IF, ifv);
+    walker.addVisitor(BREAK, breakv);
 
     walker.addVisitor(PLUS, addv);
     walker.addVisitor(MINUS, subv);
@@ -448,14 +510,17 @@ void MjModule::walkTree() {
     walker.addVisitor(NEW_ARR, nav);
 
     walker.addVisitor(SET, assignv);
-//    walker.addVisitor(EQL, ccv);
-//    walker.addVisitor(NEQ, ccv);
-//    walker.addVisitor(GRT, ccv);
-//    walker.addVisitor(GRE, ccv);
-//    walker.addVisitor(LST, ccv);
-//    walker.addVisitor(LSE, ccv);
 
-    //UnOpVisitor uov(symbolsTable);
+    walker.addVisitor(EQL, eqlv);
+    walker.addVisitor(NEQ, neqv);
+    walker.addVisitor(GRT, grtv);
+    walker.addVisitor(GRE, grev);
+    walker.addVisitor(LST, lstv);
+    walker.addVisitor(LSE, lsev);
+
+    walker.addVisitor(AND, andv);
+    walker.addVisitor(OR, orv);
+
     walker.addVisitor(INC, incv);
     walker.addVisitor(DEC, decv);
     walker.addVisitor(UNARY_MINUS, negv);
