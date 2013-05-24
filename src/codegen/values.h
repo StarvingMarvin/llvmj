@@ -19,7 +19,7 @@ public:
 
 private:
 
-    void initPrimitives(const mj::GlobalScope &global);
+    void initPrimitives();
     void initTypes(const mj::GlobalScope &global);
     llvm::Type *initClass(const mj::Class &c);
     llvm::Type *initArrayType(const mj::ArrayType &at);

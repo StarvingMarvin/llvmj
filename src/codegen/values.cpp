@@ -8,12 +8,18 @@
 #include <vector>
 
 #include <llvm/Analysis/Verifier.h>
+#include <llvm/Constants.h>
 #include <llvm/DerivedTypes.h>
-#include <llvm/Target/TargetData.h>
-#include <llvm/Support/IRBuilder.h>
-#include <llvm/Support/TypeBuilder.h>
+#include <llvm/Function.h>
+#include <llvm/GlobalVariable.h>
+#include <llvm/Instructions.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
+#include <llvm/Support/IRBuilder.h>
+#include <llvm/Support/TypeBuilder.h>
+#include <llvm/Target/TargetData.h>
+#include <llvm/Type.h>
+#include <llvm/Value.h>
 
 #include "parser/parser.h"
 #include "semantics/symbols.h"
@@ -49,7 +55,7 @@ Values::Values(llvm::Module *module, const Symbols &symbols):
 {
 
     const GlobalScope &global = symbols.globalScope();
-    initPrimitives(global);
+    initPrimitives();
     initTypes(global);
     initGlobals(global);
     initMethods(global);
@@ -63,11 +69,12 @@ Values::Values(llvm::Module *module, const Symbols &symbols):
 
 }
 
-void Values::initPrimitives(const GlobalScope &global) {
+void Values::initPrimitives() {
     LLVMContext &ctx = _module->getContext();
     types["int"] = IntegerType::getInt32Ty(ctx);
     types["char"] = IntegerType::getInt8Ty(ctx);
     types["void"] = llvm::Type::getVoidTy(ctx);
+    types["mj.null"] = PointerType::get(IntegerType::getInt8Ty(ctx), 0);
 }
 
 void Values::initTypes(const GlobalScope &global) {
@@ -156,11 +163,16 @@ llvm::Type *Values::initArrayType(const mj::ArrayType &at) {
 }
 
 void Values::initGlobals(const GlobalScope &global) {
-//    IRBuilder<> builder(_module->getContext());
-    //    constant_iterator const_it = global.constantBegin();
-//    for (; const_it < global.constantEnd(); const_it++) {
-//        GlobalVariable::get()
-//    }
+    //IRBuilder<> builder(_module->getContext());
+    constant_iterator const_it = global.constantBegin();
+    for (; const_it < global.constantEnd(); const_it++) {
+        const Constant *c = *const_it;
+        llvm::Type *t = types[c->type().name()];
+        llvm::Type *pt = PointerType::get(t, 0);
+        GlobalVariable *gv = new GlobalVariable(*_module, pt, true,
+                                     GlobalValue::ExternalLinkage, 0, c->name());
+        gv->setInitializer(ConstantInt::get(t, c->value(), true));
+    }
 }
 
 void Values::initMethods(const GlobalScope &global) {

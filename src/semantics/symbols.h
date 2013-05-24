@@ -53,7 +53,7 @@ namespace mj {
         public:
             Constant(const std::string name, const Type &type, int val):
                 NamedValue(name, type), _value(val) {}
-            int value() { return _value; }
+            int value() const { return _value; }
             virtual std::ostream& print(std::ostream& os)const;
         private:
             int _value;
