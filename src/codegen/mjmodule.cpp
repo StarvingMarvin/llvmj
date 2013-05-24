@@ -126,6 +126,8 @@ void MethodVisitor::operator()(AstWalker &walker) const {
         visitChild(walker, ni);
     }
 
+    bb = builder.GetInsertBlock();
+
     if (!bb->getTerminator()) {
         builder.CreateRetVoid();
     }
@@ -208,7 +210,7 @@ Value* EqlVisitor::op(Value* lhs, Value* rhs) const {
 }
 
 Value* NeqVisitor::op(Value* lhs, Value* rhs) const {
-    return builder.CreateICmpNE(lhs, rhs, "ne_dtmp");
+    return builder.CreateICmpNE(lhs, rhs, "ne_tmp");
 }
 
 Value* GrtVisitor::op(Value* lhs, Value* rhs) const {
@@ -244,7 +246,8 @@ void AssignVisitor::operator()(AstWalker &walker) const {
 
 void IncVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
-    Value* val = visitChild(walker, ni);
+    Value* var = visitChild(walker, ni);
+    Value *val = builder.CreateLoad(var, false, "inc_tmp");
     walker.setData(builder.CreateAdd(val,
             ConstantInt::get(module().getContext(),APInt(32, 1, true)),
             "inc_tmp"));
@@ -252,7 +255,8 @@ void IncVisitor::operator()(AstWalker &walker) const {
 
 void DecVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
-    Value* val = visitChild(walker, ni);
+    Value* var = visitChild(walker, ni);
+    Value *val = builder.CreateLoad(var, false, "dec_tmp");
     walker.setData(builder.CreateSub(val,
             ConstantInt::get(module().getContext(),APInt(32, 1, true)),
             "dec_tmp"));
@@ -260,7 +264,8 @@ void DecVisitor::operator()(AstWalker &walker) const {
 
 void NegOpVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
-    Value* val = visitChild(walker, ni);
+    Value* var = visitChild(walker, ni);
+    Value *val = builder.CreateLoad(var, false, "neg_tmp");
     walker.setData(builder.CreateNeg(val, "neg_tmp"));
 }
 
@@ -270,6 +275,38 @@ void WhileVisitor::operator()(AstWalker &walker) const {
 }
 
 void IfVisitor::operator()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+    Value *cond = visitChild(walker, ni);
+
+    Function *f = builder.GetInsertBlock()->getParent();
+    LLVMContext &ctx = module().getContext();
+
+    BasicBlock *thenBlock = BasicBlock::Create(ctx, "then", f);
+    BasicBlock *elseBlock = BasicBlock::Create(ctx, "else");
+    BasicBlock *mergeBlock = BasicBlock::Create(ctx, "ifcont");
+
+    builder.CreateCondBr(cond, thenBlock, elseBlock);
+
+    builder.SetInsertPoint(thenBlock);
+
+    visitChild(walker, ni);
+
+    builder.CreateBr(mergeBlock);
+    thenBlock = builder.GetInsertBlock();
+
+
+    f->getBasicBlockList().push_back(elseBlock);
+    builder.SetInsertPoint(elseBlock);
+
+    if (ni != walker.lastChild()) {
+        visitChild(walker, ni);
+    }
+
+    builder.CreateBr(mergeBlock);
+    elseBlock = builder.GetInsertBlock();
+
+    f->getBasicBlockList().push_back(mergeBlock);
+    builder.SetInsertPoint(mergeBlock);
 
 }
 

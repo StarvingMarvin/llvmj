@@ -1,0 +1,27 @@
+class If
+{
+    void main()
+        int i;
+        int j;
+        int k;
+    {
+        i = 1;
+        j = 2;
+        k = 3;
+        if (i < j) {
+            k++;
+        } else {
+            k--;
+        }
+
+        if (k <= j) {
+            j++;
+        }
+
+        if (i != k) {
+            if (j!=k) {
+                i++;
+            }
+        }
+    }
+}
