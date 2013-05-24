@@ -132,7 +132,7 @@ void MethodVisitor::operator()(AstWalker &walker) const {
 
     values().leaveScope();
 
-//    llvm::verifyFunction(*f);
+    llvm::verifyFunction(*f);
 
 }
 
@@ -263,17 +263,21 @@ void FieldDesVisitor::operator()(AstWalker &walker) const {
 
 void ArrDesVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
-    ni++;
     char* name = tokenText(*ni);
     Value *var = values().value(name);
+
+    ni++;
     Value *index = visitChild(walker, ni);
-    Value *val = builder.CreateLoad(var, "array_tmp");
     LLVMContext &ctx = module().getContext();
+
     vector<Value*> idx;
     idx.push_back(ConstantInt::get(ctx, APInt(32, 0, true)));
     idx.push_back(ConstantInt::get(ctx, APInt(32, 1, true)));
-    idx.push_back(index);
-    Value *result = builder.CreateGEP(val, idx, "array_field");
+    Value *arrayDataPtr = builder.CreateGEP(var, idx, "array_data_ptr");
+
+    Value *arrayData = builder.CreateLoad(arrayDataPtr, "array_data");
+
+    Value *result = builder.CreateGEP(arrayData, index, "elem_ptr");
     walker.setData(result);
 }
 
@@ -298,9 +302,12 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
     llvm::Type *type = values().type(typeName);
     llvm::Type *ptype = PointerType::get(type, 0);
     llvm::Type *atype = arrayType(ptype);
+    llvm::Type *patype = PointerType::get(atype, 0);
+
+    LLVMContext &ctx = module().getContext();
 
     uint64_t typeSize = sizeOf(type);
-    Value *typeSizeVal = ConstantInt::get(module().getContext(), APInt(32, typeSize, true));
+    Value *typeSizeVal = ConstantInt::get(ctx, APInt(64, typeSize, true));
 
     Value *dataSize = builder.CreateMul(typeSizeVal, arrSize, "data_size_tmp");
 
@@ -309,16 +316,16 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
 
     uint64_t structSize = sizeOf(atype);
     voidPtr = callMalloc(structSize);
-    Value *arrayStruct = builder.CreateBitCast(voidPtr, atype, "array_ptr");
+    Value *arrayStructPtr = builder.CreateBitCast(voidPtr, patype, "array_ptr");
 
+    Value *aSizePtr = structPtrField(arrayStructPtr, 0);
+    Value *arrSizeL = builder.CreateSExt(arrSize, IntegerType::get(ctx, 64));
+    builder.CreateStore(arrSizeL, aSizePtr);
 
-    Value *aSizePtr = structPtrField(arrayStruct, 0);
-    builder.CreateStore(arrSize, aSizePtr);
-
-    Value *aDataPtr = structPtrField(arrayStruct, 1);
+    Value *aDataPtr = structPtrField(arrayStructPtr, 1);
     builder.CreateStore(arrayData, aDataPtr);
 
-    walker.setData(arrayStruct);
+    walker.setData(builder.CreateLoad(arrayStructPtr, "array"));
 
 }
 
