@@ -215,7 +215,7 @@ void ConstVisitor::operator()(AstWalker &walker) const {
     int val = 0;
 
     if (t->name() == "int") {
-        istringstream(valStr) >> val; 
+        istringstream(valStr) >> val;
     } else {
         val = valStr[0];
     }

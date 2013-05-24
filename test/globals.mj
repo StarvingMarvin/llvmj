@@ -1,5 +1,5 @@
 class Globals
-    const int SIZE = 100;
+    final int SIZE = 123;
     int size;
     char c;
 {

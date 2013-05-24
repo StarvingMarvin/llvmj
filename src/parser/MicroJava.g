@@ -70,8 +70,8 @@ program : CLASS IDENT (const_decl|var_decl|class_decl)* '{' method_decl* '}'
             -> ^(PROGRAM IDENT const_decl* class_decl* var_decl* method_decl*);
 
 const_decl
-    :   FINAL type IDENT '=' literal ';' 
-        -> ^(DEFCONST type IDENT literal);
+    :   FINAL type IDENT '=' (val=NUMBER | val=CHAR) ';'
+        -> ^(DEFCONST type IDENT $val);
 
 literal : NUMBER -> ^(LIT_INT NUMBER)
         | CHAR -> ^(LIT_CHAR CHAR);

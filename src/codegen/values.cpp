@@ -163,16 +163,43 @@ llvm::Type *Values::initArrayType(const mj::ArrayType &at) {
 }
 
 void Values::initGlobals(const GlobalScope &global) {
-    //IRBuilder<> builder(_module->getContext());
     constant_iterator const_it = global.constantBegin();
-    for (; const_it < global.constantEnd(); const_it++) {
+    for (; const_it != global.constantEnd(); const_it++) {
         const Constant *c = *const_it;
         llvm::Type *t = types[c->type().name()];
-        llvm::Type *pt = PointerType::get(t, 0);
-        GlobalVariable *gv = new GlobalVariable(*_module, pt, true,
+        GlobalVariable *gv = new GlobalVariable(*_module, t, true,
                                      GlobalValue::ExternalLinkage, 0, c->name());
         gv->setInitializer(ConstantInt::get(t, c->value(), true));
+        globalValues[c->name()] = gv;
     }
+
+    const Program *p = global.program();
+    const_it = p->programScope().constantBegin();
+    for (; const_it != p->programScope().constantEnd(); const_it++) {
+        const Constant *c = *const_it;
+        llvm::Type *t = types[c->type().name()];
+
+        string name = p->name() + "::" + c->name();
+        GlobalVariable *gv = new GlobalVariable(*_module, t, true,
+                                     GlobalValue::ExternalLinkage, 0, name);
+
+        gv->setInitializer(ConstantInt::get(t, c->value(), true));
+        globalValues[c->name()] = gv;
+    }
+
+    variable_iterator var_it = p->programScope().variableBegin();
+    for (; var_it != p->programScope().variableEnd(); var_it++) {
+        const NamedValue *v = *var_it;
+        llvm::Type *t = types[v->type().name()];
+
+        string name = p->name() + "::" + v->name();
+        GlobalVariable *gv = new GlobalVariable(*_module, t, false,
+                                     GlobalValue::ExternalLinkage, 0, name);
+
+        gv->setInitializer(ConstantInt::get(t, 0, true));
+        globalValues[v->name()] = gv;
+    }
+
 }
 
 void Values::initMethods(const GlobalScope &global) {
