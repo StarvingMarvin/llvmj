@@ -271,6 +271,37 @@ void NegOpVisitor::operator()(AstWalker &walker) const {
 
 
 void WhileVisitor::operator()(AstWalker &walker) const {
+    nodeiterator ni = walker.firstChild();
+
+
+    Function *f = builder.GetInsertBlock()->getParent();
+    LLVMContext &ctx = module().getContext();
+
+    BasicBlock *condBlock = BasicBlock::Create(ctx, "while");
+    builder.CreateBr(condBlock);
+    f->getBasicBlockList().push_back(condBlock);
+    builder.SetInsertPoint(condBlock);
+
+    Value *cond = visitChild(walker, ni);
+
+    BasicBlock *loopBlock = BasicBlock::Create(ctx, "loop");
+    BasicBlock *mergeBlock = BasicBlock::Create(ctx, "whilecont");
+    builder.CreateCondBr(cond, loopBlock, mergeBlock);
+
+    values().breakPoints().push_back(mergeBlock);
+
+    f->getBasicBlockList().push_back(loopBlock);
+    builder.SetInsertPoint(loopBlock);
+
+    visitChild(walker, ni);
+
+    builder.CreateBr(condBlock);
+
+
+    values().breakPoints().pop_back();
+
+    f->getBasicBlockList().push_back(mergeBlock);
+    builder.SetInsertPoint(mergeBlock);
 
 }
 
@@ -311,7 +342,8 @@ void IfVisitor::operator()(AstWalker &walker) const {
 }
 
 void BreakVisitor::operator()(AstWalker &walker) const {
-
+    BasicBlock *breakPoint = values().breakPoints().back();
+    builder.CreateBr(breakPoint);
 }
 
 void RetVisitor::operator()(AstWalker &walker) const {

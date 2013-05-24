@@ -16,7 +16,7 @@ public:
     int index(const std::string &structName, const std::string &fieldName) const;
     void enterScope(ValueTable &local);
     void leaveScope();
-
+    std::vector<llvm::BasicBlock*> breakPoints() const { return _breakPoints; }
 private:
 
     void initPrimitives();
@@ -32,6 +32,7 @@ private:
     ValueTable *localScope;
     TypeTable types;
     IndexTable fieldIndices;
+    std::vector<llvm::BasicBlock*> _breakPoints;
 };
 
 }
