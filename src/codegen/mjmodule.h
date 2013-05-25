@@ -31,6 +31,7 @@ protected:
     llvm::Value* callMalloc(uint64_t size) const;
     llvm::Value* callMalloc(llvm::Value* size) const;
     llvm::Value* structPtrField(llvm::Value *structPtr, int idx) const;
+    llvm::Value* cast(llvm::Value* val, llvm::Type* type) const;
 private:
     llvm::Module &_module;
     Values &_values;
@@ -276,6 +277,7 @@ private:
     llvm::Module _module;
     Values values;
     void walkTree();
+    void makeStdLib();
     void makeMain();
 };
 

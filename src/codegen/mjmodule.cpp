@@ -103,6 +103,13 @@ void MethodVisitor::operator()(AstWalker &walker) const {
     const MethodType &methodType = meth->methodType();
     Scope::iterator sym_it = methodType.arguments().begin();
 
+
+    Value *ret = NULL;
+    llvm::Type *rt = ft->getReturnType();
+    if (!rt->isVoidTy()) {
+        ret = builder.CreateAlloca(rt);
+    }
+
     for (; sym_it != methodType.arguments().end(); sym_it++) {
         const Symbol &s = *sym_it;
         const NamedValue &nv = dynamic_cast<const NamedValue&>(s);
@@ -129,7 +136,12 @@ void MethodVisitor::operator()(AstWalker &walker) const {
     bb = builder.GetInsertBlock();
 
     if (!bb->getTerminator()) {
-        builder.CreateRetVoid();
+        if (rt->isVoidTy()) {
+            builder.CreateRetVoid();
+        } else {
+            Value *rv = builder.CreateLoad(ret);
+            builder.CreateRet(rv);
+        }
     }
 
     values().leaveScope();
@@ -145,17 +157,22 @@ void CallVisitor::operator ()(AstWalker &walker) const {
 
     vector<Value*> args;
 
+    Function *func = dyn_cast<Function>(funcVal);
+    FunctionType *ft = func->getFunctionType();
+
+    FunctionType::param_iterator pi = ft->param_begin();
+
     while(ni < walker.lastChild()) {
-        args.push_back(visitChild(walker, ni));
+        Value *arg = visitChild(walker, ni);
+        llvm::Type *at = *pi;
+        args.push_back(cast(arg, at));
+        pi++;
     }
 
     string retName = "";
 
-    Function *func = dyn_cast<Function>(funcVal);
-    FunctionType *ft = func->getFunctionType();
-
     if (!ft->getReturnType()->isVoidTy()) {
-        retName = "calltmp";
+        retName = "call_tmp";
     }
 
     walker.setData(builder.CreateCall(func, args, retName));
@@ -181,7 +198,8 @@ void BinopVisitor::operator()(AstWalker &walker) const {
 
     Value* lhs = visitChild(walker, ni);
     Value* rhs = visitChild(walker, ni);
-    Value* result = op(lhs, rhs);
+    Value* casted = cast(rhs, lhs->getType());
+    Value* result = op(lhs, casted);
     walker.setData(result);
 }
 
@@ -241,7 +259,10 @@ void AssignVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     Value* var = visitChild(walker, ni);
     Value* rhs = visitChild(walker, ni);
-    walker.setData(builder.CreateStore(rhs, var));
+    PointerType *pt = dyn_cast<PointerType>(var->getType());
+    llvm::Type *t = pt->getElementType();
+    Value *casted = cast(rhs, t);
+    walker.setData(builder.CreateStore(casted, var));
 }
 
 void IncVisitor::operator()(AstWalker &walker) const {
@@ -295,8 +316,9 @@ void WhileVisitor::operator()(AstWalker &walker) const {
 
     visitChild(walker, ni);
 
-    builder.CreateBr(condBlock);
-
+    if (!loopBlock->getTerminator()) {
+        builder.CreateBr(condBlock);
+    }
 
     values().breakPoints().pop_back();
 
@@ -322,7 +344,10 @@ void IfVisitor::operator()(AstWalker &walker) const {
 
     visitChild(walker, ni);
 
-    builder.CreateBr(mergeBlock);
+    if (!thenBlock->getTerminator()) {
+        builder.CreateBr(mergeBlock);
+    }
+
     thenBlock = builder.GetInsertBlock();
 
 
@@ -333,7 +358,9 @@ void IfVisitor::operator()(AstWalker &walker) const {
         visitChild(walker, ni);
     }
 
-    builder.CreateBr(mergeBlock);
+    if (!elseBlock->getTerminator()) {
+        builder.CreateBr(mergeBlock);
+    }
     elseBlock = builder.GetInsertBlock();
 
     f->getBasicBlockList().push_back(mergeBlock);
@@ -484,6 +511,13 @@ llvm::Value* CodegenVisitor::structPtrField(llvm::Value *structPtr, int idx) con
     return builder.CreateGEP(structPtr, indexes);
 }
 
+llvm::Value* CodegenVisitor::cast(llvm::Value* val, llvm::Type* type) const {
+    if (val->getType() == type) {
+        return val;
+    }
+    return builder.CreateBitCast(val, type, "cast_tmp");
+}
+
 
 
 MjModule::MjModule(AST ast, const Symbols &symbols):
@@ -492,8 +526,13 @@ MjModule::MjModule(AST ast, const Symbols &symbols):
     _module(symbols.globalScope().program()->name(), llvm::getGlobalContext()),
     values(&_module, _symbols)
 {
+    makeStdLib();
     walkTree();
     makeMain();
+
+}
+
+void MjModule::makeStdLib() {
 
 }
 
@@ -512,6 +551,8 @@ void MjModule::makeMain() {
     Value *mjMain = values.value("main");
     builder.CreateCall(mjMain);
     builder.CreateRet(ConstantInt::get(_module.getContext(), APInt(32, 0)));
+
+
 }
 
 void MjModule::walkTree() {
