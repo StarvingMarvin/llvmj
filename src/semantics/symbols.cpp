@@ -188,17 +188,17 @@ ostream& ScopeContainer::print(ostream &os) const {
 //
 MethodArguments::MethodArguments(Scope *parentScope): 
     Scope(parentScope), 
-    arguments() 
+    _argumentTypes()
 {
 }
 
 bool MethodArguments::matchArguments(ArgumentTypes argumentTypes) {
-    ArgumentTypes::size_type size = arguments.size();
+    ArgumentTypes::size_type size = _argumentTypes.size();
     if (size != argumentTypes.size()) {
         return false;
     }
     for (unsigned int i = 0; i < size; i++) {
-        if (! arguments[i]->compatible(*argumentTypes[i])) {
+        if (! _argumentTypes[i]->compatible(*argumentTypes[i])) {
             return false;
         }
     }
@@ -208,8 +208,8 @@ bool MethodArguments::matchArguments(ArgumentTypes argumentTypes) {
 string MethodArguments::typeSignature() {
     string sig = "(";
     string sep = "";
-    for (ArgumentTypes::iterator it = arguments.begin(); 
-            it != arguments.end(); ++it) {
+    for (ArgumentTypes::iterator it = _argumentTypes.begin();
+            it != _argumentTypes.end(); ++it) {
         sig += sep;
         sig += (*it)->name();
         sep = ",";
@@ -225,7 +225,8 @@ void MethodArguments::define(const Symbol &s) {
         throw runtime_error("Illegal symbol");
     }
     Scope::define(*v);
-    arguments.push_back(&v->type());
+    _argumentTypes.push_back(&v->type());
+    arguments.push_back(v);
 }
 
 Method::Method(const string name, 

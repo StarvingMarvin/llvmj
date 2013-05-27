@@ -74,7 +74,17 @@ void Values::initPrimitives() {
     types["int"] = IntegerType::getInt32Ty(ctx);
     types["char"] = IntegerType::getInt8Ty(ctx);
     types["void"] = llvm::Type::getVoidTy(ctx);
-    types["mj.null"] = PointerType::get(IntegerType::getInt8Ty(ctx), 0);
+
+    llvm::Type *void_ptr = PointerType::get(IntegerType::getInt8Ty(ctx), 0);
+    types["mj.null"] = void_ptr;
+    types["void*"] = void_ptr;
+
+    TargetData td (_module);
+    unsigned int ptr_size = td.getPointerSizeInBits();
+    llvm::Type *size_type = IntegerType::get(ctx, ptr_size);
+    types["size_t"] = size_type;
+
+    types["mj.array"] = StructType::get(size_type, void_ptr, NULL);
 }
 
 void Values::initTypes(const GlobalScope &global) {
@@ -208,9 +218,9 @@ void Values::initMethods(const GlobalScope &global) {
         const MethodType * prototype = *prototype_it;
         vector<llvm::Type*> args;
         MethodArguments &arguments = prototype->arguments();
-        ArgumentTypes::const_iterator arg_it = arguments.typesBegin();
-        for (; arg_it != arguments.typesEnd(); arg_it++) {
-            args.push_back(types[(*arg_it)->name()]);
+        arguments_iterator arg_it = arguments.argumentsBegin();
+        for (; arg_it != arguments.argumentsEnd(); arg_it++) {
+            args.push_back(types[(*arg_it)->type().name()]);
         }
         FunctionType* ft = FunctionType::get(types[prototype->returnType().name()], args, false);
         types[prototype->name()] = ft;
@@ -257,14 +267,17 @@ int Values::index(const std::string &structName, const std::string &fieldName) c
     return -1;
 }
 
-void Values::define(std::string name, llvm::Value *value) {
-    globalValues[name] = value;
+//void Values::define(std::string name, llvm::Value *value) {
+//    globalValues[name] = value;
+//}
+
+void Values::enterFunction(std::string name, llvm::Function *f, ValueTable *local) {
+    globalValues[name] = f;
+    localScope = local;
+    _returnType = f->getFunctionType()->getReturnType();
 }
 
-void Values::enterScope(ValueTable &local) {
-    localScope = &local;
-}
-
-void Values::leaveScope() {
+void Values::leaveFunction() {
     localScope = NULL;
+    _returnType = NULL;
 }

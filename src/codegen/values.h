@@ -12,11 +12,11 @@ public:
     Values(llvm::Module* module, const mj::Symbols &symbols);
     llvm::Value* value(const std::string &name) const;
     llvm::Type* type(const std::string &name) const;
-    void define(std::string name, llvm::Value *value);
     int index(const std::string &structName, const std::string &fieldName) const;
-    void enterScope(ValueTable &local);
-    void leaveScope();
-    std::vector<llvm::BasicBlock*> breakPoints() const { return _breakPoints; }
+    void enterFunction(std::string name, llvm::Function *f, ValueTable *local);
+    void leaveFunction();
+    llvm::Type *returnType() const { return _returnType; }
+    std::vector<llvm::BasicBlock*> &breakPoints() { return _breakPoints; }
 private:
 
     void initPrimitives();
@@ -33,6 +33,7 @@ private:
     TypeTable types;
     IndexTable fieldIndices;
     std::vector<llvm::BasicBlock*> _breakPoints;
+    llvm::Type *_returnType;
 };
 
 }

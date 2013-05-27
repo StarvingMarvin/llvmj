@@ -264,6 +264,20 @@ public:
     virtual void operator()(AstWalker &walker) const;
 };
 
+class PrintVisitor : public CodegenVisitor{
+public:
+    PrintVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
+
+class ReadVisitor : public CodegenVisitor{
+public:
+    ReadVisitor(llvm::Module &module, Values &values):
+        CodegenVisitor(module, values){}
+    virtual void operator()(AstWalker &walker) const;
+};
+
 }
 
 class MjModule

@@ -132,6 +132,8 @@ namespace mj {
     };
 
     typedef std::vector<const Type*> ArgumentTypes;
+    typedef std::vector<const NamedValue*> Arguments;
+    typedef Arguments::const_iterator arguments_iterator;
     
     class MethodArguments: public Scope {
         public:
@@ -139,10 +141,11 @@ namespace mj {
             virtual void define(const Symbol &s);
             bool matchArguments(ArgumentTypes argumentTypes);
             std::string typeSignature();
-            ArgumentTypes::const_iterator typesBegin() const { return arguments.begin();}
-            ArgumentTypes::const_iterator typesEnd() const {return arguments.end();}
+            arguments_iterator argumentsBegin() const { return arguments.begin(); }
+            arguments_iterator argumentsEnd() const { return arguments.end(); }
         private:
-            ArgumentTypes arguments;
+            ArgumentTypes _argumentTypes;
+            Arguments arguments;
     };
 
     class MethodScope: public Scope {
