@@ -82,7 +82,7 @@ void Values::initPrimitives() {
     TargetData td (_module);
     unsigned int ptr_size = td.getPointerSizeInBits();
     llvm::Type *size_type = IntegerType::get(ctx, ptr_size);
-    types["size_t"] = size_type;
+    types["mj.size_t"] = size_type;
 
     types["mj.array"] = StructType::get(size_type, void_ptr, NULL);
 }
@@ -173,6 +173,18 @@ llvm::Type *Values::initArrayType(const mj::ArrayType &at) {
 }
 
 void Values::initGlobals(const GlobalScope &global) {
+
+    // internal constants
+    llvm::ArrayType *dec_fmt_array = llvm::ArrayType::get(IntegerType::get(_module->getContext(), 8), 3);
+    GlobalVariable* dec_fmt =
+            new GlobalVariable(*_module, dec_fmt_array, true, GlobalValue::PrivateLinkage,0, "dec_fmt");
+     dec_fmt->setAlignment(1);
+
+     // Constant Definitions
+    llvm::Constant* dec_fmt_val = llvm::ConstantArray::get(_module->getContext(), "%d", true);
+    dec_fmt->setInitializer(dec_fmt_val);
+
+    // global constants
     constant_iterator const_it = global.constantBegin();
     for (; const_it != global.constantEnd(); const_it++) {
         const Constant *c = *const_it;
@@ -183,6 +195,7 @@ void Values::initGlobals(const GlobalScope &global) {
         globalValues[c->name()] = gv;
     }
 
+    // program constants
     const Program *p = global.program();
     const_it = p->programScope().constantBegin();
     for (; const_it != p->programScope().constantEnd(); const_it++) {
@@ -197,6 +210,7 @@ void Values::initGlobals(const GlobalScope &global) {
         globalValues[c->name()] = gv;
     }
 
+    // program variables
     variable_iterator var_it = p->programScope().variableBegin();
     for (; var_it != p->programScope().variableEnd(); var_it++) {
         const NamedValue *v = *var_it;

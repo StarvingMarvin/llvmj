@@ -649,6 +649,8 @@ void MjModule::makeStdLib() {
     builder.CreateRet(len);
     values.leaveFunction();
 
+    // print(int)
+
 
 }
 
