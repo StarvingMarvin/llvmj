@@ -135,8 +135,13 @@ class Example
                 head = cons(v, head);
             }
             cur = head;
-            while (v > cur.tail.val) {
-                cur = cur.tail;
+
+            while (cur.tail != null) {
+                if (v > cur.tail.val) {
+                    cur = cur.tail;
+                } else {
+                    break;
+                }
             }
             insertAfter(cur, v);
             i = i +1;
@@ -156,6 +161,7 @@ class Example
         while(cur != null) {
             print(cur.val);
             print(',', 2);
+            cur = cur.tail;
         }
         print(eol);
     }

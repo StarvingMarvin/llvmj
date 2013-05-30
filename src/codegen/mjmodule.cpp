@@ -292,24 +292,24 @@ void IncVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     Value* var = visitChild(walker, ni);
     Value *val = builder.CreateLoad(var, false, "inc_tmp");
-    walker.setData(builder.CreateAdd(val,
-            ConstantInt::get(module().getContext(),APInt(32, 1, true)),
-            "inc_tmp"));
+    Value *inc = builder.CreateAdd(val, values().constInt(1), "add_tmp");
+    builder.CreateStore(inc, var);
+    walker.setData(val);
 }
 
 void DecVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
     Value* var = visitChild(walker, ni);
     Value *val = builder.CreateLoad(var, false, "dec_tmp");
-    walker.setData(builder.CreateSub(val,
-            ConstantInt::get(module().getContext(),APInt(32, 1, true)),
-            "dec_tmp"));
+    Value *dec = builder.CreateSub(val, values().constInt(1), "sub_tmp");
+    builder.CreateStore(dec, var);
+    walker.setData(val);
 }
 
 void NegOpVisitor::operator()(AstWalker &walker) const {
     nodeiterator ni = walker.firstChild();
-    Value* var = visitChild(walker, ni);
-    Value *val = builder.CreateLoad(var, false, "neg_tmp");
+    Value* val = visitChild(walker, ni);
+    //Value *val = builder.CreateLoad(var, false, "neg_tmp");
     walker.setData(builder.CreateNeg(val, "neg_tmp"));
 }
 
@@ -525,7 +525,27 @@ void PrintVisitor::operator ()(AstWalker &walker) const {
 }
 
 void ReadVisitor::operator ()(AstWalker &walker) const {
-
+    nodeiterator ni = walker.firstChild();
+    Value *var = visitChild(walker, ni);
+    PointerType *pt = dyn_cast<PointerType>(var->getType());
+    IntegerType *it = dyn_cast<IntegerType>(pt->getElementType());
+    if (it->getBitWidth() == 8) {
+        Value *getchar = module().getFunction("getchar");
+        Value *char_tmp = builder.CreateCall(getchar, "char_tmp");
+        Value *c = builder.CreateTrunc(char_tmp, values().type("char"));
+        builder.CreateStore(c, var);
+    } else {
+        Value* scanf = module().getFunction("__isoc99_scanf");
+        Value *fmtVar = values().value("mj.dec_fmt");
+        vector<Value*> idx;
+        idx.push_back(ConstantInt::get(values().type("int"), 0));
+        idx.push_back(ConstantInt::get(values().type("int"), 0));
+        Value *fmt = builder.CreateGEP(fmtVar, idx, "fmt");
+        vector<Value*> args;
+        args.push_back(fmt);
+        args.push_back(var);
+        builder.CreateCall(scanf, args);
+    }
 }
 
 uint64_t CodegenVisitor::sizeOf(llvm::Type* t) const {
