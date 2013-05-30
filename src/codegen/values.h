@@ -14,6 +14,7 @@ public:
     llvm::Type* type(const std::string &name) const;
     int index(const std::string &structName, const std::string &fieldName) const;
     llvm::Value* constInt(int val) const;
+    llvm::Value* constInt(std::string val) const;
     void enterFunction(std::string name, llvm::Function *f, ValueTable *local);
     void leaveFunction();
     llvm::Type *returnType() const { return _returnType; }

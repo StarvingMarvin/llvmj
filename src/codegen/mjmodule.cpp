@@ -117,7 +117,7 @@ void MethodVisitor::operator()(AstWalker &walker) const {
 
     Function::arg_iterator arg_it = f->arg_begin();
 
-    cout << "Function: " << f->getName().str() << "(";
+    //cout << "Function: " << f->getName().str() << "(";
 
     for (; var_it != methodType.arguments().argumentsEnd(); var_it++) {
         const NamedValue *nv = *var_it;
@@ -126,19 +126,19 @@ void MethodVisitor::operator()(AstWalker &walker) const {
         llvm::Type *argType = arg->getType();
         arg->setName(nv->name());
 
-        cout.flush();
+        //cout.flush();
 
-        llvm::raw_os_ostream rout(cout);
-        argType->print(rout);
-        rout.flush();
-        cout << " " << nv->name() << ",";
+        //llvm::raw_os_ostream rout(cout);
+        //argType->print(rout);
+        //rout.flush();
+        //cout << " " << nv->name() << ",";
 
         Value *argVar = builder.CreateAlloca(argType, 0, nv->name());
         builder.CreateStore(arg, argVar);
         local[nv->name()] = argVar;
     }
 
-    cout << ")" << endl;
+    //cout << ")" << endl;
 
     Scope &methodScope = meth->scope();
     Scope::iterator sym_it = methodScope.begin();
@@ -211,8 +211,7 @@ void CharLiteralVisitor::operator()(AstWalker &walker) const {
 void IntLiteralVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * val = tokenText(*b);
-    walker.setData(ConstantInt::get(module().getContext(),
-                                    APInt(32, val, 10)));
+    walker.setData(values().constInt(val));
 }
 
 void BinopVisitor::operator()(AstWalker &walker) const {
@@ -433,11 +432,10 @@ void ArrDesVisitor::operator()(AstWalker &walker) const {
 
     ni++;
     Value *index = visitChild(walker, ni);
-    LLVMContext &ctx = module().getContext();
 
     vector<Value*> idx;
-    idx.push_back(ConstantInt::get(ctx, APInt(32, 0, true)));
-    idx.push_back(ConstantInt::get(ctx, APInt(32, 1, true)));
+    idx.push_back(values().constInt(0));
+    idx.push_back(values().constInt(1));
     Value *arrayDataPtr = builder.CreateGEP(var, idx, "array_data_ptr");
 
     Value *arrayData = builder.CreateLoad(arrayDataPtr, "array_data");
@@ -452,7 +450,7 @@ void NewVisitor::operator()(AstWalker &walker) const {
     llvm::Type *ptype = values().type(typeName);
     llvm::Type *stype = ptype->getContainedType(0);
     StructType *s = dyn_cast<StructType>(stype);
-    uint64_t size = sizeOf(s);
+    size_t size = sizeOf(s);
     Value* voidPtr = callMalloc(size);
     Value* structPtr = builder.CreateBitCast(voidPtr, ptype, s->getName() + "_ptr");
     walker.setData(structPtr);
@@ -469,10 +467,8 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
     llvm::Type *atype = arrayType(ptype);
     llvm::Type *patype = PointerType::get(atype, 0);
 
-    LLVMContext &ctx = module().getContext();
-
     uint64_t typeSize = sizeOf(type);
-    Value *typeSizeVal = ConstantInt::get(ctx, APInt(64, typeSize, true));
+    Value *typeSizeVal = ConstantInt::get(values().type("mj.size_t"), typeSize, true);
 
     Value *dataSize = builder.CreateMul(typeSizeVal, arrSize, "data_size_tmp");
 
@@ -484,7 +480,7 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
     Value *arrayStructPtr = builder.CreateBitCast(voidPtr, patype, "array_ptr");
 
     Value *aSizePtr = structPtrField(arrayStructPtr, 0);
-    Value *arrSizeL = builder.CreateSExt(arrSize, values().type("mj.size_t"));
+    Value *arrSizeL = builder.CreateSExtOrBitCast(arrSize, values().type("mj.size_t"));
     builder.CreateStore(arrSizeL, aSizePtr);
 
     Value *aDataPtr = structPtrField(arrayStructPtr, 1);
@@ -573,8 +569,8 @@ llvm::Value* CodegenVisitor::callMalloc(Value *size) const {
 }
 
 llvm::Value* CodegenVisitor::structPtrField(llvm::Value *structPtr, int idx) const {
-    Value *idxVal = ConstantInt::get(_module.getContext(), APInt(32, idx, false));
-    Value *ptrDeref = ConstantInt::get(_module.getContext(), APInt(32, 0, false));
+    Value *idxVal = values().constInt(idx);
+    Value *ptrDeref = values().constInt(0);
     vector<Value*> indexes;
     indexes.push_back(ptrDeref);
     indexes.push_back(idxVal);
@@ -677,8 +673,8 @@ void MjModule::makeStdLib() {
     builder.CreateStore(argA, arr);
 
     vector<Value*> idx;
-    idx.push_back(ConstantInt::get(ctx, APInt(32, 0, true)));
-    idx.push_back(ConstantInt::get(ctx, APInt(32, 0, true)));
+    idx.push_back(values.constInt(0));
+    idx.push_back(values.constInt(0));
 
     Value *lenPtr = builder.CreateGEP(arr, idx, "len_ptr");
     Value *len = builder.CreateLoad(lenPtr, false, "len");
@@ -705,7 +701,7 @@ void MjModule::makeMain() {
 
     Value *mjMain = values.value("main");
     builder.CreateCall(mjMain);
-    builder.CreateRet(ConstantInt::get(_module.getContext(), APInt(32, 0)));
+    builder.CreateRet(values.constInt(0));
 
 }
 

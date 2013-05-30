@@ -113,6 +113,7 @@ class Example
 
     List readList()
         List cur;
+        List next;
         List head;
         int i;
         int v;
@@ -126,24 +127,31 @@ class Example
         head = cons(v, null);
         i = 1;
 
-        while(i < MAX_SIZE && v > 0) {
+        while(i < MAX_SIZE) {
             read(v);
             if (v < 0) {
                 break;
             }
             if (v < head.val) {
                 head = cons(v, head);
-            }
-            cur = head;
+            } else {
+                cur = head;
+                next = cur.tail;
 
-            while (cur.tail != null) {
-                if (v > cur.tail.val) {
-                    cur = cur.tail;
-                } else {
-                    break;
+                while (next != null) {
+                    if (v > next.val) {
+                        //print(next.val);
+                        //print(' ');
+                        //print(v);
+                        //print(eol);
+                        cur = next;
+                        next = next.tail;
+                    } else {
+                        break;
+                    }
                 }
+                insertAfter(cur, v);
             }
-            insertAfter(cur, v);
             i = i +1;
         }
 

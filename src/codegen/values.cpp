@@ -224,7 +224,12 @@ void Values::initGlobals(const GlobalScope &global) {
 void Values::initExterns() {
 
     // malloc
-    FunctionType *malloc_type = TypeBuilder<llvm::types::i<8>*(llvm::types::i<64>), true>::get(_module->getContext());
+    llvm::Type *voidPtr = types["void*"];
+    llvm::Type *sizeT = types["mj.size_t"];
+    vector<llvm::Type*> args;
+    args.push_back(sizeT);
+    FunctionType *malloc_type = FunctionType::get(voidPtr, args, false);
+    //FunctionType *malloc_type = TypeBuilder<llvm::types::i<8>*(llvm::types::i<64>), true>::get(_module->getContext());
     Function* func_malloc = Function::Create(
      /*Type=*/malloc_type,
      /*Linkage=*/GlobalValue::ExternalLinkage,
@@ -325,6 +330,10 @@ int Values::index(const std::string &structName, const std::string &fieldName) c
 
 Value* Values::constInt(int val) const {
     return ConstantInt::get(type("int"), val);
+}
+
+Value* Values::constInt(string val) const {
+    return ConstantInt::get(dyn_cast<IntegerType>(type("int")), val, 10);
 }
 
 void Values::enterFunction(std::string name, llvm::Function *f, ValueTable *local) {

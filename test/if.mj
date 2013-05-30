@@ -8,11 +8,13 @@ class If
         i = 1;
         j = 2;
         k = 3;
-        if (i < j) {
+        if (i > j) {
             k++;
         } else {
             k--;
         }
+
+        print(k);
 
         if (k <= j) {
             j++;

@@ -1,6 +1,7 @@
 class Class
     class Simple {
         int val;
+        Simple s;
     }
 {
     void main()
@@ -9,6 +10,8 @@ class Class
     {
         s = new Simple;
         s.val = 5;
+        s.s = new Simple;
+        s.s.val = 6;
         i = s.val;
     }
 }
