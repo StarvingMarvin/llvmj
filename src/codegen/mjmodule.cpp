@@ -11,12 +11,15 @@
 
 #include <llvm/Analysis/Verifier.h>
 #include <llvm/DerivedTypes.h>
-#include <llvm/Target/TargetData.h>
-#include <llvm/Support/IRBuilder.h>
-#include <llvm/Support/TypeBuilder.h>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
+#include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/raw_os_ostream.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/TypeBuilder.h>
+#include <llvm/Target/TargetData.h>
 
 #include "parser/parser.h"
 #include "semantics/symbols.h"
@@ -33,6 +36,8 @@ using llvm::ArrayType;
 using llvm::BasicBlock;
 using llvm::ConstantInt;
 using llvm::dyn_cast;
+using llvm::EngineBuilder;
+using llvm::ExecutionEngine;
 using llvm::Function;
 using llvm::FunctionType;
 using llvm::GlobalValue;
@@ -200,8 +205,7 @@ void CallVisitor::operator ()(AstWalker &walker) const {
 void CharLiteralVisitor::operator()(AstWalker &walker) const {
     nodeiterator b = walker.firstChild();
     char * val = tokenText(*b);
-    walker.setData(ConstantInt::get(module().getContext(),
-                                    APInt(8, val, 10)));
+    walker.setData(ConstantInt::get(values().type("char"), val[0]));
 }
 
 void IntLiteralVisitor::operator()(AstWalker &walker) const {
@@ -480,7 +484,7 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
     Value *arrayStructPtr = builder.CreateBitCast(voidPtr, patype, "array_ptr");
 
     Value *aSizePtr = structPtrField(arrayStructPtr, 0);
-    Value *arrSizeL = builder.CreateSExt(arrSize, IntegerType::get(ctx, 64));
+    Value *arrSizeL = builder.CreateSExt(arrSize, values().type("mj.size_t"));
     builder.CreateStore(arrSizeL, aSizePtr);
 
     Value *aDataPtr = structPtrField(arrayStructPtr, 1);
@@ -503,7 +507,20 @@ void PrintVisitor::operator ()(AstWalker &walker) const {
     Value *val = visitChild(walker, ni);
     IntegerType *it = dyn_cast<IntegerType>(val->getType());
     if (it->getBitWidth() == 8) {
-
+        Value *ext = builder.CreateZExt(val, values().type("int"));
+        Value* putchar = module().getFunction("putchar");
+        builder.CreateCall(putchar, ext);
+    } else {
+        Value* printf = module().getFunction("printf");
+        Value *fmtVar = values().value("mj.dec_fmt");
+        vector<Value*> idx;
+        idx.push_back(ConstantInt::get(values().type("int"), 0));
+        idx.push_back(ConstantInt::get(values().type("int"), 0));
+        Value *fmt = builder.CreateGEP(fmtVar, idx, "fmt");
+        vector<Value*> args;
+        args.push_back(fmt);
+        args.push_back(val);
+        builder.CreateCall(printf, args);
     }
 }
 
@@ -588,7 +605,7 @@ void MjModule::makeStdLib() {
 
     //Value *c = builder.CreateLoad(argC, false, "c");
 
-    Value *ret = builder.CreateSExt(argC, IntegerType::get(ctx, 32));
+    Value *ret = builder.CreateSExt(argC, values.type("int"));
     builder.CreateRet(ret);
 
     values.leaveFunction();
@@ -612,7 +629,7 @@ void MjModule::makeStdLib() {
 
     //Value *i = builder.CreateLoad(argI, false, "i");
 
-    ret = builder.CreateTrunc(argI, IntegerType::get(_module.getContext(), 8));
+    ret = builder.CreateTrunc(argI, values.type("char"));
     builder.CreateRet(ret);
     values.leaveFunction();
 
@@ -621,7 +638,7 @@ void MjModule::makeStdLib() {
     llvm::Type* arrType = values.type("mj.array");
     vector<llvm::Type*> lenArgs;
     lenArgs.push_back(arrType);
-    FunctionType *len_type = FunctionType::get(IntegerType::get(ctx, 32), lenArgs, false);
+    FunctionType *len_type = FunctionType::get(values.type("int"), lenArgs, false);
     Function* func_len = Function::Create(
      /*Type=*/len_type,
      /*Linkage=*/GlobalValue::ExternalLinkage,
@@ -670,6 +687,15 @@ void MjModule::makeMain() {
     builder.CreateCall(mjMain);
     builder.CreateRet(ConstantInt::get(_module.getContext(), APInt(32, 0)));
 
+}
+
+void MjModule::run(int argc, char** argv) {
+    string err;
+    llvm::InitializeNativeTarget();
+    ExecutionEngine *engine = EngineBuilder(&_module).setErrorStr(&err).create();
+    cerr << err << endl;
+    int (*fp)() = (int (*)())engine->getPointerToFunction(_module.getFunction("main"));
+    fp();
 }
 
 void MjModule::walkTree() {

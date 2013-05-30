@@ -34,6 +34,7 @@ int main(int argc, char** argv) {
         checkSemantics(ast, symbols);
         MjModule module(ast, symbols);
         module.module().dump();
+        module.run(argc, argv);
     } catch (exception& e) {
         cerr << "Error occured: " << e.what() << endl;
         return 1;

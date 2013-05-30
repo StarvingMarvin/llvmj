@@ -13,6 +13,7 @@ public:
     llvm::Value* value(const std::string &name) const;
     llvm::Type* type(const std::string &name) const;
     int index(const std::string &structName, const std::string &fieldName) const;
+    llvm::Value* constInt(int val) const;
     void enterFunction(std::string name, llvm::Function *f, ValueTable *local);
     void leaveFunction();
     llvm::Type *returnType() const { return _returnType; }
@@ -24,6 +25,7 @@ private:
     llvm::Type *initClass(const mj::Class &c);
     llvm::Type *initArrayType(const mj::ArrayType &at);
     void initGlobals(const mj::GlobalScope &global);
+    void initExterns();
     void initMethods(const mj::GlobalScope &global);
 
     llvm::Module* _module;

@@ -285,6 +285,7 @@ class MjModule
 public:
     MjModule(AST ast, const mj::Symbols &symbols);
     llvm::Module &module() { return _module; }
+    void run(int argc, char** argv);
 private:
     AST _ast;
     const Symbols &_symbols;

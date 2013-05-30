@@ -58,14 +58,8 @@ Values::Values(llvm::Module *module, const Symbols &symbols):
     initPrimitives();
     initTypes(global);
     initGlobals(global);
+    initExterns();
     initMethods(global);
-
-    FunctionType *malloc_type = TypeBuilder<llvm::types::i<8>*(llvm::types::i<64>), true>::get(module->getContext());
-    Function* func_malloc = Function::Create(
-     /*Type=*/malloc_type,
-     /*Linkage=*/GlobalValue::ExternalLinkage,
-     /*Name=*/"malloc", module); // (external, no body)
-    func_malloc->setCallingConv(llvm::CallingConv::C);
 
 }
 
@@ -177,8 +171,9 @@ void Values::initGlobals(const GlobalScope &global) {
     // internal constants
     llvm::ArrayType *dec_fmt_array = llvm::ArrayType::get(IntegerType::get(_module->getContext(), 8), 3);
     GlobalVariable* dec_fmt =
-            new GlobalVariable(*_module, dec_fmt_array, true, GlobalValue::PrivateLinkage,0, "dec_fmt");
+            new GlobalVariable(*_module, dec_fmt_array, true, GlobalValue::PrivateLinkage,0, "mj.dec_fmt");
      dec_fmt->setAlignment(1);
+     globalValues["mj.dec_fmt"] = dec_fmt;
 
      // Constant Definitions
     llvm::Constant* dec_fmt_val = llvm::ConstantArray::get(_module->getContext(), "%d", true);
@@ -224,6 +219,53 @@ void Values::initGlobals(const GlobalScope &global) {
         globalValues[v->name()] = gv;
     }
 
+}
+
+void Values::initExterns() {
+
+    // malloc
+    FunctionType *malloc_type = TypeBuilder<llvm::types::i<8>*(llvm::types::i<64>), true>::get(_module->getContext());
+    Function* func_malloc = Function::Create(
+     /*Type=*/malloc_type,
+     /*Linkage=*/GlobalValue::ExternalLinkage,
+     /*Name=*/"malloc", _module);
+    func_malloc->setCallingConv(llvm::CallingConv::C);
+
+
+    // putchar
+    FunctionType *putchar_type = TypeBuilder<llvm::types::i<32>(llvm::types::i<32>), true>::get(_module->getContext());
+    Function* func_putchar = Function::Create(
+     /*Type=*/putchar_type,
+     /*Linkage=*/GlobalValue::ExternalLinkage,
+     /*Name=*/"putchar", _module);
+    func_putchar->setCallingConv(llvm::CallingConv::C);
+
+
+    // scanf
+    FunctionType *scanf_type = TypeBuilder<llvm::types::i<32>(llvm::types::i<8>*,...), true>::get(_module->getContext());
+    Function* func_scanf = Function::Create(
+     /*Type=*/scanf_type,
+     /*Linkage=*/GlobalValue::ExternalLinkage,
+     /*Name=*/"__isoc99_scanf", _module);
+    func_scanf->setCallingConv(llvm::CallingConv::C);
+
+
+    // printf
+    FunctionType *printf_type = TypeBuilder<llvm::types::i<32>(llvm::types::i<8>*,...), true>::get(_module->getContext());
+    Function* func_printf = Function::Create(
+     /*Type=*/printf_type,
+     /*Linkage=*/GlobalValue::ExternalLinkage,
+     /*Name=*/"printf", _module);
+    func_printf->setCallingConv(llvm::CallingConv::C);
+
+
+    // getchar
+    FunctionType *getchar_type = TypeBuilder<llvm::types::i<32>(), true>::get(_module->getContext());
+    Function* func_getchar = Function::Create(
+     /*Type=*/getchar_type,
+     /*Linkage=*/GlobalValue::ExternalLinkage,
+     /*Name=*/"getchar", _module);
+    func_getchar->setCallingConv(llvm::CallingConv::C);
 }
 
 void Values::initMethods(const GlobalScope &global) {
@@ -281,9 +323,9 @@ int Values::index(const std::string &structName, const std::string &fieldName) c
     return -1;
 }
 
-//void Values::define(std::string name, llvm::Value *value) {
-//    globalValues[name] = value;
-//}
+Value* Values::constInt(int val) const {
+    return ConstantInt::get(type("int"), val);
+}
 
 void Values::enterFunction(std::string name, llvm::Function *f, ValueTable *local) {
     globalValues[name] = f;
