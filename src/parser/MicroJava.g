@@ -60,12 +60,6 @@ tokens {
 }
 
 
-@header {
-}
-
-@lexer::header{
-}
-
 program : CLASS IDENT (const_decl|var_decl|class_decl)* '{' method_decl* '}'
             -> ^(PROGRAM IDENT const_decl* class_decl* var_decl* method_decl*);
 
@@ -147,7 +141,8 @@ expr    :   term (addop^ term)*
 
 term    : factor (mulop^ factor)*;
 
-factor  : designator ('(' actual_params? ')' -> ^(CALL designator actual_params?) 
+factor  : designator ('(' actual_params? ')' 
+                          -> ^(CALL designator actual_params?) 
                         | -> ^(DEREF designator))
         | literal
         | NEW type ('['expr']'-> ^(NEW_ARR type expr) | -> ^(NEW type))
@@ -169,7 +164,8 @@ IDENT   :   ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;
 
 NUMBER  :   ('0'..'9')+;
 
-CHAR    :   '\'' PRINTABLE_CHAR '\'' {SETTEXT($PRINTABLE_CHAR->getText($PRINTABLE_CHAR));};
+CHAR    :   '\'' PRINTABLE_CHAR '\'' 
+            {SETTEXT($PRINTABLE_CHAR->getText($PRINTABLE_CHAR));};
 
 fragment
 PRINTABLE_CHAR
