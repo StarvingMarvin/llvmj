@@ -37,32 +37,58 @@ namespace mj {
             _parent(parent), _index(index) {}
 
         nodeiterator& operator++() {_index++; return *this;}
-        nodeiterator operator++(int) {nodeiterator tmp(*this); operator++(); return tmp;}
+        
+        nodeiterator operator++(int) 
+            {nodeiterator tmp(*this); operator++(); return tmp;}
+        
         nodeiterator& operator--() {_index--; return *this;}
-        nodeiterator operator--(int) {nodeiterator tmp(*this); operator--(); return tmp;}
-        nodeiterator operator+(int i) {return nodeiterator(_parent, _index + i);}
-        nodeiterator operator-(int i) {return nodeiterator(_parent, _index - i);}
+        
+        nodeiterator operator--(int) 
+            {nodeiterator tmp(*this); operator--(); return tmp;}
+        
+        nodeiterator operator+(int i) 
+            {return nodeiterator(_parent, _index + i);}
+        
+        nodeiterator operator-(int i) 
+            {return nodeiterator(_parent, _index - i);}
+        
         nodeiterator& operator+=(int i) {_index+=i; return *this;}
+        
         nodeiterator& operator-=(int i) {_index-=i; return *this;}
-        int operator-(const nodeiterator &rhs) {return _index - rhs._index;}
-        bool operator==(const nodeiterator &rhs) {return _index == rhs._index;}
-        bool operator!=(const nodeiterator &rhs) {return _index != rhs._index;}
-        bool operator>(const nodeiterator &rhs) {return _index > rhs._index;}
-        bool operator<(const nodeiterator &rhs) {return _index < rhs._index;}
-        bool operator>=(const nodeiterator &rhs) {return _index <= rhs._index;}
-        bool operator<=(const nodeiterator &rhs) {return _index >= rhs._index;}
+        
+        int operator-(const nodeiterator &rhs) 
+            {return _index - rhs._index;}
+        
+        bool operator==(const nodeiterator &rhs) 
+            {return _index == rhs._index;}
+        
+        bool operator!=(const nodeiterator &rhs) 
+            {return _index != rhs._index;}
+        
+        bool operator>(const nodeiterator &rhs) 
+            {return _index > rhs._index;}
+        
+        bool operator<(const nodeiterator &rhs) 
+            {return _index < rhs._index;}
+        
+        bool operator>=(const nodeiterator &rhs) 
+            {return _index <= rhs._index;}
+        
+        bool operator<=(const nodeiterator &rhs) 
+            {return _index >= rhs._index;}
+        
         AST operator*() {return (AST)_parent->getChild(_parent, _index);}
+        
         AST operator[](int i) {return (AST)_parent->getChild(_parent, i);}
 
     };
 
     class AstWalker {
         public:
-            AstWalker(AST ast, const NodeVisitor& defaultVisitor = NodeVisitor());
+            AstWalker(const NodeVisitor& defaultVisitor = NodeVisitor());
             void addVisitor(uint32_t tokenType, const NodeVisitor& visitor);
             const NodeVisitor& getVisitor(uint32_t tokenType);
             void visit(AST ast);
-            void walkTree();
             uint32_t tokenType();
             char* tokenText();
             size_t childCount();
@@ -82,7 +108,7 @@ namespace mj {
             }
         private:
             const NodeVisitor &_defaultVisitor;
-            std::map<uint32_t, NodeVisitor*> visitors;
+            std::map<uint32_t, const NodeVisitor*> visitors;
             std::vector<AST> stack;
     };
 

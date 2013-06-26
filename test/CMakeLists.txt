@@ -28,9 +28,10 @@ add_custom_target(CopyTestPrograms ALL
     DEPENDS ${plist})
 
 add_executable(test-symbol symbols.cpp)
-target_link_libraries(test-symbol ${LLVM_LIB} MjSemantics)
+target_link_libraries(test-symbol MjSemantics ${LLVM_LIB})
+
 add_executable(test-semantics semantics.cpp)
-target_link_libraries(test-semantics ${LLVM_LIB} ${ANTLR_LIB} MjSemantics Parser)
+target_link_libraries(test-semantics MjSemantics Parser ${LLVM_LIB} ${ANTLR_LIB})
 
 enable_testing()
 

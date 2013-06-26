@@ -1,0 +1,11 @@
+class IO
+{
+
+    void main()
+        char c;
+    {
+        c = 'c';
+        print(5);
+        print(c);
+    }
+}

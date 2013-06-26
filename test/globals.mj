@@ -1,0 +1,15 @@
+class Globals
+    final int SIZE = 123;
+    int size;
+    char c;
+{
+    void main()
+        int i;
+    {
+        c = eol;
+        size=SIZE;
+        i = size;
+        size = 15;
+    }
+
+}

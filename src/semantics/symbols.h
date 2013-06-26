@@ -2,16 +2,6 @@
 #ifndef _SYMBOLS_H_
 #define _SYMBOLS_H_
 
-#include "llvmjConfig.h"
-
-#include <string>
-#include <vector>
-#include <stack>
-#include <map>
-#include <cstdlib>
-#include <memory>
-#include <iostream>
-
 namespace mj {
 
     class Printable {
@@ -50,13 +40,23 @@ namespace mj {
             virtual bool compatible(const Type &t) const;
     };
 
-    class Variable : public Symbol {
+    class NamedValue : public Symbol {
         public:
-            Variable(const std::string name, const Type& type);
+            NamedValue(const std::string name, const Type& type);
             const Type& type() const { return _type; }
             virtual std::ostream& print(std::ostream& os)const;
         private:
             const Type& _type;
+    };
+
+    class Constant : public NamedValue {
+        public:
+            Constant(const std::string name, const Type &type, int val):
+                NamedValue(name, type), _value(val) {}
+            int value() const { return _value; }
+            virtual std::ostream& print(std::ostream& os)const;
+        private:
+            int _value;
     };
 
     typedef std::map<const std::string, const Symbol*> SymbolTable;
@@ -70,13 +70,39 @@ namespace mj {
             virtual const Symbol* resolve(const std::string name);
             friend std::ostream& operator<<(std::ostream& os, const Scope& s);
             virtual ~Scope();
+
+            class iterator : 
+                std::iterator<std::input_iterator_tag, Symbol>
+            {
+                public: 
+                    iterator(SymbolTable::const_iterator it): _it(it){}
+
+                    iterator& operator++() { _it++; return *this; }
+                    
+                    iterator operator++(int) 
+                        { iterator tmp(*this); operator++(); return tmp; }
+
+                    bool operator==(const iterator &rhs)
+                        { return _it == rhs._it; }
+
+                    bool operator!=(const iterator &rhs)
+                        { return _it != rhs._it; }
+
+                    const Symbol& operator*() { return *(_it->second); }
+                private:
+                    SymbolTable::const_iterator _it;
+            };
+
+            virtual iterator begin() const { return iterator(symbolTable.begin()); }
+            virtual iterator end() const { return iterator(symbolTable.end()); }
+
         protected:
             virtual unsigned int depth() const;
             SymbolTable symbolTable;
 
         private:
-            Scope(Scope & s){}
-            void operator=(Scope& s){}
+            Scope(const Scope& s){}
+            void operator=(const Scope& s){}
             Scope *_parent;
 
     };
@@ -92,7 +118,7 @@ namespace mj {
         private:
             const Type &_valueType;
         public:
-            ArrayType(const Type &valueType);
+            explicit ArrayType(const Type &valueType);
             const Type& valueType() const { return _valueType; }
     };
 
@@ -106,6 +132,8 @@ namespace mj {
     };
 
     typedef std::vector<const Type*> ArgumentTypes;
+    typedef std::vector<const NamedValue*> Arguments;
+    typedef Arguments::const_iterator arguments_iterator;
     
     class MethodArguments: public Scope {
         public:
@@ -113,13 +141,16 @@ namespace mj {
             virtual void define(const Symbol &s);
             bool matchArguments(ArgumentTypes argumentTypes);
             std::string typeSignature();
+            arguments_iterator argumentsBegin() const { return arguments.begin(); }
+            arguments_iterator argumentsEnd() const { return arguments.end(); }
         private:
-            ArgumentTypes arguments;
+            ArgumentTypes _argumentTypes;
+            Arguments arguments;
     };
 
     class MethodScope: public Scope {
         public:
-            MethodScope(Scope *parent);
+            explicit MethodScope(Scope *parent);
         protected:
             virtual unsigned int depth() const { return Scope::depth() - 1; }
             /* virtual void define(Symbol *s);
@@ -137,24 +168,27 @@ namespace mj {
             MethodArguments &_arguments;
     };
 
-    class Method : public ScopeContainer, public Variable {
+    class Method : public ScopeContainer, public NamedValue {
         friend class MethodScope;
         public:
             Method(const std::string name, 
                     const MethodType &methodType);
-            virtual Scope& scope() const {return *methodScope;}
+            virtual Scope& scope() const {return _methodScope;}
+            MethodScope& methodScope() const {return _methodScope;}
             virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
-            const MethodType& methodType() const { return dynamic_cast<const MethodType&>(type()); }
+            const MethodType& methodType() const { return _methodType; }
+            virtual ~Method() { delete &_methodScope; };
         private:
-            MethodScope *methodScope;
+            MethodScope &_methodScope;
+            const MethodType &_methodType;
     };
 
     class ClassScope : public Scope {
         public:
             ClassScope(Scope *parent, Type * c);
             virtual const Symbol *resolve(const std::string name);
-            const Symbol *resolveField(const std::string name);
+            const NamedValue *resolveField(const std::string name);
         private:
             Type *_c;
     };
@@ -162,29 +196,78 @@ namespace mj {
     class Class : public ReferenceType, ScopeContainer {
         public:
             Class(std::string name, Scope *parentScope);
-            virtual Scope& scope() const {return classScope;}
+            virtual Scope& scope() const {return _classScope;}
+            virtual ClassScope& classScope() const {return _classScope;}
             virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
-            virtual ~Class() { delete &classScope; }
         private:
-            ClassScope &classScope;
+            ClassScope &_classScope;
+    };
+
+    typedef std::vector<const MethodType*>::const_iterator method_type_iterator;
+    typedef std::vector<const ArrayType*>::const_iterator array_type_iterator;
+    typedef std::vector<const Method*>::const_iterator method_iterator;
+    typedef std::vector<const Constant*>::const_iterator constant_iterator;
+    typedef std::vector<const NamedValue*>::const_iterator variable_iterator;
+    typedef std::vector<const Class*>::const_iterator class_iterator;
+
+    class SplitScope : public Scope {
+        public:
+            SplitScope(Scope *parentScope) : Scope(parentScope){}
+            virtual void define(const Symbol &s); 
+            method_iterator methodBegin() const { return methods.begin(); }
+            method_iterator methodEnd() const { return methods.end(); }
+            constant_iterator constantBegin() const { return constants.begin(); }
+            constant_iterator constantEnd() const { return constants.end(); }
+            variable_iterator variableBegin() const { return variables.begin(); }
+            variable_iterator variableEnd() const { return variables.end(); }
+            class_iterator classBegin() const { return classes.begin(); }
+            class_iterator classEnd() const { return classes.end(); }
+        private:
+            std::vector<const Method*> methods;
+            std::vector<const NamedValue*> variables;
+            std::vector<const Constant*> constants;
+            std::vector<const Class*> classes;
     };
 
     class Program : public ScopeContainer, public Symbol {
         public:
             Program(std::string name, Scope *parentScope);
             virtual Scope& scope() const {return _scope;}
+            virtual SplitScope& programScope() const {return _scope;}
             virtual std::ostream& print(std::ostream& os) const;
             virtual std::ostream& printSignature(std::ostream& os) const;
             virtual ~Program() { delete &_scope; }
         private:
-            Scope &_scope;
+            SplitScope &_scope;
     };
 
-    class GlobalScope : public Scope {
+    class GlobalScope : public SplitScope {
         public:
-        GlobalScope();
-        virtual ~GlobalScope();
+            GlobalScope();
+            void defineArrayAutoType(const ArrayType &t);
+            void defineMethodAutoType(const MethodType &t);
+            void defineProgram(const Program &p);
+            
+            method_type_iterator methodPrototypesBegin() const
+                { return prototypes.begin(); }
+            
+            method_type_iterator methodPrototypesEnd() const
+                { return prototypes.end(); }
+            
+            array_type_iterator arrayTypesBegin() const
+                { return arrayTypes.begin(); }
+
+            array_type_iterator arrayTypesEnd() const
+                { return arrayTypes.end(); }
+
+
+            const Program *program() const { return _program; }
+            virtual ~GlobalScope();
+        private:
+            std::vector<const MethodType*> prototypes;
+            std::vector<const ArrayType*> arrayTypes;
+            const Program *_program;
     };
 
     class Symbols {
@@ -193,11 +276,12 @@ namespace mj {
 
             const Symbol* resolve(const std::string name) const;
             const Type* resolveType(const std::string name) const;
-            const Variable* resolveVariable(const std::string name) const;
+            const NamedValue* resolveNamedValue(const std::string name) const;
             const Method* resolveMethod(const std::string name) const;
             const Class* resolveClass(const std::string name) const;
 
-            void defineVariable(const std::string name, const Type &t);
+            void defineNamedValue(const std::string name, const Type &t);
+            void defineConstant(const std::string name, const Type &t, int vac);
             void defineArray(const std::string name, const Type &t);
 
             Class& enterClassScope(const std::string name);
@@ -207,16 +291,17 @@ namespace mj {
                     MethodArguments &arguments);
             MethodArguments& enterMethodArgumentsScope();
             void leaveScope();
-
-            ~Symbols();
+            const GlobalScope &globalScope() const { return global; }
+            // no destructor as global will cleanup allocates symbols
 
             friend std::ostream& operator<<(std::ostream& os, const Symbols& s);
 
         private:
-            void define (Symbol &s);
+            void define (const Symbol &s);
             void enterScope(Scope& s) {scopes.push(&s);}
             Scope *currentScope() const {return scopes.top();}
             std::stack<Scope*> scopes;
+            GlobalScope global;
     };
 
     std::ostream& operator<<(std::ostream &os, const mj::Symbol& s);

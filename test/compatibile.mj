@@ -1,0 +1,23 @@
+class Compatibile
+    class Simple
+    {
+        int val;
+    }
+
+
+{
+    int testVal(Simple s) {
+        if (s == null) {
+            return 0;
+        } else {
+            return s.val;
+        }
+    }
+
+    void main()
+        Simple s;
+    {
+        s = null;
+        testVal(s);
+    }
+}
