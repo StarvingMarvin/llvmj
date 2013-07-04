@@ -9,3 +9,38 @@
 \lstinputlisting{../src/parser/MicroJava.g}
 
 \chapter{Korišćene LLVM instrukcije}
+
+\subsection*{Memorijske instrukcije}
+
+\begin{description}
+\item[alloca] Alokacija memorije na steku
+\item[load] ucitavanje u registar
+\item[store] upisivanje u memoriju
+\item[gep] racunanje adrese
+\end{description}
+
+\subsection*{Aritmeticko logicke}
+
+\begin{description}
+\item[add, sub, mul, sdiv, srem, neg] celobrojne aritmeticke operacije
+\item[icmpeq, icmpne, icmpsgt, icmpsge, icmpslt, icmpsle] celobrojno poredjenje
+\item[and, or] logicke operacije
+\end{description}
+
+\subsection*{Kontrola toka}
+
+\begin{description}
+\item[br] bezuskovni skok
+\item[condbr] uslovni skok
+\item[call] poziv funkcije
+\item[ret] povratak iz funkcije
+\end{description}
+
+\subsection*{Konverzije}
+
+\begin{description}
+\item[bitcast]
+\item[sextorbitcast]
+\item[zext]
+\item[trunc]
+\end{description}
