@@ -13,34 +13,34 @@
 \subsection*{Memorijske instrukcije}
 
 \begin{description}
-\item[alloca] Alokacija memorije na steku
-\item[load] ucitavanje u registar
-\item[store] upisivanje u memoriju
-\item[gep] racunanje adrese
+\item[\code{alloca}] Alokacija memorije na steku. Memorija se automatski oslobadja po izlasku iz funkcije.
+\item[\code{load}] Ucitavanje vrednosti sa date memorijske lokacije u registar. Moguce je ucitavanje samo vrednosti prvog reda.
+\item[\code{store}] upisivanje u memoriju
+\item[\code{gep}] Racunanje vrednosti pokazivaca u okviru niza ili strukture.
 \end{description}
 
 \subsection*{Aritmeticko logicke}
 
 \begin{description}
-\item[add, sub, mul, sdiv, srem, neg] celobrojne aritmeticke operacije
-\item[icmpeq, icmpne, icmpsgt, icmpsge, icmpslt, icmpsle] celobrojno poredjenje
-\item[and, or] logicke operacije
+\item[\code{add, sub, mul, sdiv, srem, neg}] Celobrojne aritmeticke operacije. Oba operanda moraju biti istog tipa
+\item[\code{icmp}] Celobrojno poredjenje datih argumenata. Prvi argument je vrsta poredjenja i moze biti
+jedno od: \code{eq} - jednako,  \code{ne} - razlicito, \code{sgt} - vece, \code{sge} - vece ili jednako,  \code{slt} - manje i  \code{sle} - manje ili jednako, 
+\item[\code{and, or}] Bit-logicke operacije. Argumenti mogu biti bilo kog ceelobrojnog tipa, ali u slucaju MicroJava-e, uvek je u pitanju \code{i1}
 \end{description}
 
 \subsection*{Kontrola toka}
 
 \begin{description}
-\item[br] bezuskovni skok
-\item[condbr] uslovni skok
-\item[call] poziv funkcije
-\item[ret] povratak iz funkcije
+\item[\code{br}] Instrukcija skoka kojom se kontrola toka prebacuje bloku unutar iste funkcije. Postoje dva oblika ove instrukcije: \textit{bezuslovni skok} koji za parametar prima labelu bloka na koji se skace i \textit{uslovni skok} koji prima vrednost tipa \code{i1} i dve labele.
+\item[\code{call}] poziv funkcije
+\item[\code{ret}] Vraca kontrolu toka, a opciono i povratnu vlrednost pozivaocu trenutne funkcije. Da bi funkcija bila ispravna, tip vrednosti koja se vraca mora biti jednak povratnom tipu finkcije, odnosno vrednost mora biti \code{void} ako funkcija ne vraca vrednost. Povratni tip mora biti prvog reda.
 \end{description}
 
 \subsection*{Konverzije}
 
 \begin{description}
-\item[bitcast]
-\item[sextorbitcast]
-\item[zext]
-\item[trunc]
+\item[\code{bitcast}] Konvertuje datu vrednost u zadati tip bez promene bitova. Pogodno za konvertovanje tipova pokazivaca ili tip pokazivaca u celobrojni tip odgovarajuce sirine.
+\item[\code{sextorbitcast}]
+\item[\code{zext}] Uzima kao parametre celobrojnu vrednost tipa \code{t1} i celobrojni tip \code{t2} vece preciznosti, prosiri datu vrednost nulama sa leve strane i vrati vrednost tipa \code{t2}. Ova operacija uvek vrsi konverziju, zato sto sirina tipa \code{t2} mora biti strogo veca od sirine tipa \code{t1}
+\item[\code{trunc}] Uzima kao parametre celobrojnu vrednost tipa \code{t1} i celobrojni tip \code{t2} manje preciznosti, odbaci vise bite date vrednosti i vrati vrednost tipa \code{t2}. Ova operacija uvek vrsi konverziju, zato sto sirina tipa \code{t2} mora biti strogo manja od sirine tipa \code{t1}
 \end{description}
