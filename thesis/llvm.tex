@@ -118,10 +118,16 @@ Značajne osobine LLVM reprezentacije su
 SSA forma
 \footnote{\skr \eng Static single asignement \ndash Statička jedinstvena dodela}
 striktno tipiziranje podataka
-pristup operacijama niskog nivoa, uključujući i 
+pristup operacijama niskog nivoa, uključujući i instrukcije specifične za pojedine procesore.
 
 \section{LLVM tipovi}
-%\'{c}\v{s}
+
+LLVM je striktan po pitanju tipova u smislu da ni u jednom trenutku neće izvršiti implicitnu konverziju između dva tipa, 
+uključujući tu i proširenje brojnih vrednosi ili pretvaranje jednog tipa pokazivača u drugi. 
+Sa druge strane korisnika ništa ne sprečava da eksplicitno izvrši konverziju između bilo koja dva tipa odgovarajućim instrukcijama.
+
+Tipovi se mogu podeliti na primitivne i izvedene
+
 Primitivni: label, void, int, float, x86mmx, metadata
 
 Izvedeni: nizovi, funkcije, pointer, structure, vector, opaque
