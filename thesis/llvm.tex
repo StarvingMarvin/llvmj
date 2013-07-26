@@ -120,19 +120,31 @@ SSA forma
 striktno tipiziranje podataka
 pristup operacijama niskog nivoa, uključujući i instrukcije specifične za pojedine procesore.
 
+
 \section{LLVM tipovi}
 
+Tipovi podataka LLVM-u omogućavaju brojne optimizacije da budu spovedene direktno nad međureprezentacijom, 
+bez potrebe za se vrši uporedna analiza mogućih vrednosti u nekom registru pre primene transformacije.
 LLVM je striktan po pitanju tipova u smislu da ni u jednom trenutku neće izvršiti implicitnu konverziju između dva tipa, 
 uključujući tu i proširenje brojnih vrednosi ili pretvaranje jednog tipa pokazivača u drugi. 
 Sa druge strane korisnika ništa ne sprečava da eksplicitno izvrši konverziju između bilo koja dva tipa odgovarajućim instrukcijama.
 
-Tipovi se mogu podeliti na primitivne i izvedene
+Tipovi se mogu podeliti na primitivne i izvedene. 
+Primitivni tipovi su tipovi celobrojnih i realnih brojeva, labela, i metapodatak.
+Pošto tipovi celih i realnih brojeva zavise od podrške konkretne procesorske arhitekture,
+sam LLVM pruža veliku fleksibilnost u njihovom deklarisanju
+pa su mogući tipobi \code{i1} do \code{i8192} gde broj predstavlja širinu u bitima.
+Slično tome, realni brojevi mogu biti šitine 64, 80 i 128 bita.
 
-Primitivni: label, void, int, float, x86mmx, metadata
+\subsection*{Primitivni tipovi}
 
-Izvedeni: nizovi, funkcije, pointer, structure, vector, opaque
+\subsection*{Izvedeni tipovi}
 
-Tipovi prvog reda: int, float, pointer, vector, struct, array, label, metadata
+Izvedeni tipovi su nizovi, funkcije, pokazivači, strukture i vektori.
+% opis izvedenih tipova
+
+Osim ove podele bitno je istaći da nisu svi tipovi ravnopravni.
+Oni tipovi koji se mogu skladištiti u memoriji, prosleđivati kao parametar ili vraćati kao rezultat funkcije se nazivaju tipovi prvog reda, a to su: celobrojni i realni tipovi, pokazivači, nizovi, strukture, vektori, labele i metapodaci.
 
 
 \section{LLVM instrukcije}
