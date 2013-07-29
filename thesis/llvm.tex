@@ -129,22 +129,34 @@ LLVM je striktan po pitanju tipova u smislu da ni u jednom trenutku neće izvrš
 uključujući tu i proširenje brojnih vrednosi ili pretvaranje jednog tipa pokazivača u drugi. 
 Sa druge strane korisnika ništa ne sprečava da eksplicitno izvrši konverziju između bilo koja dva tipa odgovarajućim instrukcijama.
 
-Tipovi se mogu podeliti na primitivne i izvedene. 
-Primitivni tipovi su tipovi celobrojnih i realnih brojeva, labela, i metapodatak.
-Pošto tipovi celih i realnih brojeva zavise od podrške konkretne procesorske arhitekture,
-sam LLVM pruža veliku fleksibilnost u njihovom deklarisanju
-pa su mogući tipobi \code{i1} do \code{i8192} gde broj predstavlja širinu u bitima.
-Slično tome, realni brojevi mogu biti šitine 64, 80 i 128 bita.
+Tipovi se mogu podeliti na primitivne kao što su tipovi celobrojnih i realnih brojeva, labela, i metapodatak; 
+i izvedene tipove kao što su nizovi, funkcije, pokazivači, strukture i vektori.
+
+Osim ove podele bitno je istaći da nisu svi tipovi ravnopravni.
+Oni tipovi koji mogu biti rezultat LLVM instrukcija i mogu se skladištiti u memoriji, prosleđivati kao parametar ili vraćati kao rezultat funkcije, nazivaju se tipovi prvog reda, a to su: celobrojni i realni tipovi, pokazivači, nizovi, strukture, vektori, labele i metapodaci.
+
 
 \subsection*{Primitivni tipovi}
 
+Primitivni tipovi su osnovni gradivni blokovi LLVM sistema.
+
+Pošto tipovi celih i realnih brojeva zavise od podrške konkretne procesorske arhitekture,
+sam LLVM pruža veliku fleksibilnost u njihovom deklarisanju
+pa su mogući tipovi bilo koje širine od 1 do $2^{23} - 1$ (pribliižno 8 miliona) koji se označavaju sa \code{iN} gde \code{N} predstavlja širinu u bitima. Posebna instrukcija mapira pojedine tipove na 
+
+Postoji 5 tipova realnih brojeva: 
+\code{float} koji je širine 32 bita, 
+\code{double} širine 63 bita, 
+\code{fp128} od 128 bita sa mantisom od 112 bita, 
+kao i hardverski specifične x86_fp80 od 80 bita 
+i ppc_fp128 koji takodje ima 128 bita, ali mantisu širine 64 bita.
+
+
 \subsection*{Izvedeni tipovi}
 
-Izvedeni tipovi su nizovi, funkcije, pokazivači, strukture i vektori.
+
 % opis izvedenih tipova
 
-Osim ove podele bitno je istaći da nisu svi tipovi ravnopravni.
-Oni tipovi koji se mogu skladištiti u memoriji, prosleđivati kao parametar ili vraćati kao rezultat funkcije se nazivaju tipovi prvog reda, a to su: celobrojni i realni tipovi, pokazivači, nizovi, strukture, vektori, labele i metapodaci.
 
 
 \section{LLVM instrukcije}
