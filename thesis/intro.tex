@@ -5,7 +5,7 @@ Ako se pogleda malo detaljnije, vidi se da analizu sačinjava nekoliko koraka.
 Svaki korak transformiše svoj ulaz u oblik pogodniji za dalji proces prevođenja. 
 Na samom početku \emph{leksičkom analizom} će se niz slova i znakova sa ulaza pretvoriti u niz \emph{tokena}, logičkih celina kao što su idetifikator, ključna reč, broj i slično. 
 Potom će \emph{sintaksnom analizom} za niz tokena da se utvrdi da li odgovaraju gramatičkim pravilima jezika. 
-Potrebno je sakupiti simbole koji se u programu javljaju i izgraditi neku strukturnu model programa u memoriji pogodnu za dalju obradu. 
+Potrebno je sakupiti simbole koji se u programu javljaju i izgraditi neki strukturni model programa u memoriji pogodnu za dalju obradu. 
 Ako program zadovoljava gramatiku jezika, to i dalje ne mora da znači da je ispravan. 
 Slično govornim jzicima, gramatički validna rečenica ne mora da ima smisla, pa je potrebno proći kroz izgrađeni model programa, i proveriti da li su zadovoljena i semantička pravila. 
 Sada je moguće preći i na generisanje koda.
@@ -15,12 +15,14 @@ Model programa koji je bio pogodan za semantičku analizu treba dalje transformi
 Neke tehnike optimizacije su primenjive nezavisno od konkretne procesorske arhitekture i njima je moguće transformisati trenutni model programa. 
 Zatim se generišu mašinske instrukcije i primenjuju optimizacije specifične za ciljanu procesorsku arhitekturu.
 
-antlr ide od lexera do asta.
-ima dosta parsera.
+ANTLR je parser generator i brine se o tumačenju ulaznog programa. Ono što ANTLR izdvaja od drugih parser generatora je to što ide korak dalje i pomaže u generisanju apstraktnog sintaksnog stabla.
 
-llvm ide od tri address koda do mašinskih instrukcija.
-nema dosta projekata kao sto je llvm - eventualno jvm i clr.
+Za razliku od parser generatora, ne postoji previše projekata koji se bave optimizacijom i generisanjem koda nezavisno od izvornog jezika, pa tako većina prevodilaca i interpretera svaki ponovo implemetira ove funkcionalnosti. 
+Tri platforme koje donekle predstavljaju izuzetak su JVM\footnote{\skr \eng Java Virtual Machine}, CLR\footnote{\skr \eng Common Language Runtime} i GCC\footnote{\skr \eng GNU Compiler Collection}. % ali nisu tolko strava
 
-ostaje semantika u sredini.
+Ono što preostaje u sredini je sama suština jezika: kako se jezik ponaša i na koji način implementira svoje osobine. 
+Java i C imaju istu sintaksu za pristup elementu niza \textmdash \code{a[i]}, ali različitu semantiku: 
+Java će baciti izuzetak ukoliko indeks izlazi iz okvira niza, dok će C vratiti sadržaj tražene adrese, što može izazvati različite neželjene posledice.
 
-naredno poglavlje opisuje mikrojava jezik, zatim deo koji rešava antlr, semantika i llvm.
+Ostatak rada podeljen je u četiri poglavlja.
+Nakon polavlja o MicroJavi koji opisuje jezik koji se implementira, slede poglavlja o svakoj od faza implementacije jezika: prepoznavanje ulaza, semantička analiza i generisanje koda.
