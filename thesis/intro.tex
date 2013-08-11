@@ -17,11 +17,22 @@ Zatim se generišu mašinske instrukcije i primenjuju optimizacije specifične z
 
 ANTLR je parser generator i brine se o tumačenju ulaznog programa. Ono što ANTLR izdvaja od drugih parser generatora je to što ide korak dalje i pomaže u generisanju apstraktnog sintaksnog stabla.
 
-Za razliku od parser generatora, ne postoji previše projekata koji se bave optimizacijom i generisanjem koda nezavisno od izvornog jezika, pa tako većina prevodilaca i interpretera svaki ponovo implemetira ove funkcionalnosti. 
-Tri platforme koje donekle predstavljaju izuzetak su JVM\footnote{\skr \eng Java Virtual Machine}, CLR\footnote{\skr \eng Common Language Runtime} i GCC\footnote{\skr \eng GNU Compiler Collection}. % ali nisu tolko strava
+Za razliku od parser generatora, ne postoji mnogo projekata koji se bave optimizacijom i generisanjem koda nezavisno od izvornog jezika, pa tako većina prevodilaca i interpretera svaki ponovo implemetira ove funkcionalnosti. 
+Uz LLVM, tri platforme koje donekle predstavljaju izuzetak su 
+JVM\footnote{\skr \eng Java Virtual Machine \ndash Java virtualna mašina}, 
+CLR\footnote{\skr \eng Common Language Runtime \ndash Virtualna mašina koja stoji iza Majkrosoftove .net platforme} 
+i GCC\footnote{\skr \eng GNU Compiler Collection \ndash Kolekcija kompajlera koju čine jezici C, C++, ObjectiveC, Ada i Fortran}. 
+JVM i CLR predstavljaju virtualne mašine visokog nivoa i dolaze sa svojom semantikom vezanom za automatsko rukovanje memorijom, klasame, objekte i izuzetke. 
+Iako su mnogi jezici napisani ili portovani na ove platforme, taj posao je bitno lakši za jezike koji se u većoj meri poklapaju sa Javom odnosno C\#-om. 
+Ove platforme takodje ne pružaju način da se za njih jednostavno dopiše generator koda za novu procesorsku arhitekturu ili nova optimizaciona tehnika. 
+Ono što je po strukturi i svrsi približnije LLVM-u je GCC.
+GCC sa svoje ulazne strane podržava nekoliko jezika, a sa izlazne može da generise kod za mnoge procesorske arhitekture.
+U teoriji bi bilo moguće napisati podršku za novi jezik, nove procesore ili nove optimizacije.
+U praksi se pokazalo da unutrašnja arhitektura GCC-a suviše kompleksna i da su komponente prevodioca suviše međusobno povezane, pa trenutno ne postoji mnogo projekata nezavisnih od GCC-a koji koriste njegovu infrastrukturu.
 
-Ono što preostaje u sredini je sama suština jezika: kako se jezik ponaša i na koji način implementira svoje osobine. 
-Java i C imaju istu sintaksu za pristup elementu niza \textmdash \code{a[i]}, ali različitu semantiku: 
+Ono što preostaje u sredini je sama suština jezika: kako se jezik ponaša i na koji način implementira svoje osobine.
+Iako se često razlike među jezicima mere detaljima u sintaksi, semantika jezika čini jezik  i njegove karakteristike, dok je sintaksa tu samo da na što jednostavniji način približi ugrađene mogućnosti programeru.
+Java i C na primer imaju istu sintaksu za pristup elementu niza \ndash \code{a[i]}, ali različitu semantiku: 
 Java će baciti izuzetak ukoliko indeks izlazi iz okvira niza, dok će C vratiti sadržaj tražene adrese, što može izazvati različite neželjene posledice.
 
 Ostatak rada podeljen je u četiri poglavlja.
