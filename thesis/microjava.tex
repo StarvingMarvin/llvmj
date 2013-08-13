@@ -27,7 +27,7 @@ Jedanaest ključnih reči, koliko MicroJava poseduje može se svrstati u nekolik
 	kako nije moguće definisati metode promenljivog broja parametara, niti je moguće prosleđivanje prostih tipova po referenci, \mj{print} i \mj{read} su definisani kao ključne reči u samom jeziku.
 
 	\item[Tipovi] \hfill \\
-	Konstante se deklarišu modifikatorom \mj{final} koji je moguće primeniti na tipove int i char. Metode bez povratne vrednosti imaju tip \mj{void}. Korisnički tipovi se deklarišu sa \mj{class}, a zajedno sa nizovima instanciraju sa \mj{new}.
+	Konstante se deklarišu modifikatorom \mj{final} koji je moguće primeniti na tipove \mj{int} i \mj{char}. Metode bez povratne vrednosti imaju tip \mj{void}. Korisnički tipovi se deklarišu sa \mj{class}, a zajedno sa nizovima instanciraju sa \mj{new}.
 
 \end{description}
 
@@ -45,4 +45,4 @@ Osim ključnih reči, MicroJava poseduje i nekoliko predeklarisanih imena, od ko
 
 \subsection*{Opseg važenja}
 
-U MicroJavi postoje tri leksički ugnježdena opsega: globalni opseg (\textit{universe}) koji sadrži predeklarisana imena i glavnu klasu. Opseg glavne klase u kojme se definisu korisnički tipovi, promenljive i metode i opsezi samih metoda. Kako svako ime mora biti deklarisano pre prve upotrebe, in direktna rekurzija, kako u pozivima metoda, tako i u definisanju klasa, nije moguća. Ponovno deklarisanje imena u unutrašnjem opsegu $S$, sakriva deklaraciju tog imena u spoljnjem opsegu. Jedno ime ne sme biti deklarisano više puta u okviru istog opsega.
+U MicroJavi postoje tri nivoa leksički ugnježdenih opsega: globalni opseg (\textit{universe}) koji sadrži predeklarisana imena i glavnu klasu. Opseg glavne klase u kojme se definisu korisnički tipovi, promenljive i metode i opsezi samih metoda. Kako svako ime mora biti deklarisano pre prve upotrebe, in direktna rekurzija, kako u pozivima metoda, tako i u definisanju klasa, nije moguća. Ponovno deklarisanje imena u unutrašnjem opsegu $S$, sakriva deklaraciju tog imena u spoljnjem opsegu. Jedno ime ne sme biti deklarisano više puta u okviru istog opsega.

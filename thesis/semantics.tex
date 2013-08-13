@@ -1,3 +1,55 @@
-\chapter{Semantička analiza i implementacija}
+\chapter{Implementacija semantike}
+
+Ovo poglavlje opisuje arhitekturalne odluke i klasnu hijerarhiju koja je ključna u semantičkoj analizi i implementaciji osobina jezika.
+Način na koji se iz memorijskog modela generiše LLVM međureprezentacija je predmet narednog poglavlja.
+
 
 \section{Simboli}
+
+Centralno mesto u ovoj fazi MicroJava prevodioca zauzima hijerarhija klasa vezanih za simbole, opsege i tabelu simbola.
+
+\begin{center}
+
+\begin{tikzpicture}
+\tikzumlset[font=\footnotesize]
+\begin{umlpackage}[x=0,y=0]{semantics}
+	\umlclass[x=210pt,y=250pt]{Symbol}{+ name : string }{} 
+	\umlclass[x=90pt,y=170pt]{Type}
+	{}{+ operator==(t: Type) : bool \\ + compatible(t: Type) : bool}
+	\umlclass[x=290pt,y=170pt]
+		{NamedValue}{+ type : Type }{}
+	\umlclass[x=210pt,y=170pt]
+		{Program}{}{}
+	\umlclass[x=40pt,y=80pt]
+		{ReferenceType}{}{}
+	\umlclass[x=10pt,y=10pt]
+		{Array}{}{}
+	\umlclass[x=70pt,y=10pt]
+		{Class}{}{}
+	\umlclass[x=140pt,y=80pt]
+		{MethodType}{}{}
+	\umlclass[x=250pt,y=80pt]
+		{Method}{}{}
+	\umlclass[x=330pt,y=80pt]
+		{Constant}{+ value : int}{}
+	\umlVHVinherit{Type}{Symbol}
+	\umlVHVinherit{NamedValue}{Symbol}
+	\umlVHVinherit{Program}{Symbol}
+	\umlVHVinherit{ReferenceType}{Type}
+	\umlVHVinherit{MethodType}{Type}
+	\umlVHVinherit{Array}{ReferenceType}
+	\umlVHVinherit{Class}{ReferenceType}
+	\umlVHVinherit{Constant}{NamedValue}
+	\umlVHVinherit{Method}{NamedValue}
+	\umlcompo{Method}{MethodType}
+%	\umlclass[x=1,y=1]{Symbol}{+ name : string }{}
+	
+\end{umlpackage}
+\end{tikzpicture} 
+
+\textit{Pojednostavljena struktura klasa koje predstavljaju simbole}
+
+\end{center}
+\section{Semantička analiza}
+
+
