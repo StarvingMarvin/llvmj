@@ -1,0 +1,48 @@
+\begin{tikzpicture}
+	\tikzumlset{font=\footnotesize}
+
+	\begin{umlpackage}[x=0,y=0]{semantics}
+		\umlclass[x=210pt,y=250pt]{Symbol}{+ name : string }{} 
+		\umlclass[x=90pt,y=165pt]{Type}
+			{}{+ operator==(t: Type) : bool \\ + compatible(t: Type) : bool}
+		\umlclass[x=290pt,y=176pt]
+			{NamedValue}{}{}
+		\umlclass[x=210pt,y=176pt]
+			{Program}{}{}
+		\umlclass[x=40pt,y=85pt]
+			{ReferenceType}{}{}
+		\umlclass[x=10pt,y=16pt]
+			{Array}{}{}
+		\umlclass[x=70pt,y=16pt]
+			{Class}{}{}
+		\umlclass[x=140pt,y=85pt]
+			{MethodType}{}{}
+		\umlclass[x=250pt,y=85pt]
+			{Method}{}{}
+		\umlclass[x=330pt,y=80pt]
+			{Constant}{+ value : int}{}
+		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-15pt]
+			{Type}{Symbol}
+		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-15pt]
+			{NamedValue}{Symbol}
+		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-15pt]
+			{Program}{Symbol}
+		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-15pt]
+			{ReferenceType}{Type}
+		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-15pt]
+			{MethodType}{Type}
+		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-15pt]
+			{Array}{ReferenceType}
+		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-15pt]
+			{Class}{ReferenceType}
+		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-30pt]
+			{Constant}{NamedValue}
+		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-30pt]
+			{Method}{NamedValue}
+		\umlVHVuniaggreg[attr=methodType|1, anchor1=-120, anchor2=-60,arm2=-20pt,pos=1.9,align=left]
+			{Method}{MethodType}
+		\umlVHuniaggreg[attr=type|1,anchor1=-130, anchor2=-20,pos=1.9,align=left]
+			{NamedValue}{Type}
+	
+	\end{umlpackage}
+\end{tikzpicture} 

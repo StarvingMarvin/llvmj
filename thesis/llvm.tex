@@ -66,8 +66,9 @@ Rubinius implementacija Ruby-ja koristi LLVM za optimizacije i JIT
 \footnote{\skr \eng Just in Time \ndash Prevođenje međukoda u mašinski kod neposredno pre izvršavanja} 
 kompajliranje.
 
-\begin{center}
+\begin{figure}[h]
 
+\centering
 \begin{tikzpicture}
 	[inner sep=2.8mm,
 	box/.style={rectangle, draw, minimum width=25mm, }]
@@ -86,8 +87,8 @@ kompajliranje.
 	edge [<-] (optimizers);
 \end{tikzpicture} \\
 
-\textit{LLVM omogućava da se delovi arhitekture kompajlera kao što su optimizacije i generisanje mašinskog koda dele između nezavisnih projekata}
-\end{center}
+\caption{LLVM omogućava da se delovi arhitekture kompajlera kao što su optimizacije i generisanje mašinskog koda dele između nezavisnih projekata}
+\end{figure}
 
 \section{LLVM međureprezentacija}
 
