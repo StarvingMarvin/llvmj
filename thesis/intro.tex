@@ -15,12 +15,17 @@ Model programa koji je bio pogodan za semantičku analizu treba dalje transformi
 Neke tehnike optimizacije su primenjive nezavisno od konkretne procesorske arhitekture i njima je moguće transformisati trenutni model programa. 
 Zatim se generišu mašinske instrukcije i primenjuju optimizacije specifične za ciljanu procesorsku arhitekturu.
 
-antlr ide od lexera do asta.
-ima dosta parsera.
+Postoji mnoštvo parser-generatora koji se razlikuju po načinu zadavanja gramatike, strategije parsiranja i jezika u kome će željeni parser biti implementiran.
+ANTLR se između ostalog izdvaja po tome što je osim opisivanja sintakse jezika koji želimo da prepoznamo moguće opisati i apstraktno sintaksno stablo koje odgovara prepoznatom gramatičkom pravilu. 
+Na taj način ANTLR pokriva veći deo prve celine programskog prevodioca: leksičku i sintaksnu analizu i generisanje sintaksnog stabla.
 
+Nasuprot generatorima parsera, ne postoji mnogo projekata koji omogućavaju da se na jednostavan način od reprezentacije programa u memoriji dodje do izgenerisanog mašinskog koda.
+
+%% FIXME
 llvm ide od tri address koda do mašinskih instrukcija.
 nema dosta projekata kao sto je llvm - eventualno jvm i clr.
 
-ostaje semantika u sredini.
+Između analize ulaza i proizvedenog mašinskog koda, leži semantika jezika, ono što %% FIXME
 
-naredno poglavlje opisuje mikrojava jezik, zatim deo koji rešava antlr, semantika i llvm.
+
+Pre detaljnijeg opisa implementacije pojedinih faza MicroJava prevodioca sledi kratak pregled samog jezika. 
