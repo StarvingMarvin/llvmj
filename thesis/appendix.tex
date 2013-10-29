@@ -2,5 +2,97 @@
 \appendix
 
 \chapter{Listing gramatike}
+\lstset{
+  basicstyle=\footnotesize\ttfamily
+}
 
-\chapter{Korišćene LLVM instrukcije}
+\lstinputlisting{../src/parser/MicroJava.g}
+
+\chapter{LLVM}
+
+Za inspekciju i razumevanje generisanog koda, korisno je poznavati osnove LLVM asemblerskog jezika koji je ovde predstavljen u tri dela: sintaksa, tipovi i pregled najkorisnijih instrukcija.
+
+
+\section{LLVM sintaksa}
+
+
+
+\section{LLVM tipovi}
+
+Tipovi podataka u LLVM-u omogućavaju da brojne optimizacije budu spovedene direktno nad međureprezentacijom, 
+bez potrebe obavljanja uporedne analize mogućih vrednosti u nekom registru pre primene transformacije.
+LLVM je striktan po pitanju tipova u smislu da ni u jednom trenutku neće izvršiti implicitnu konverziju između dva tipa, 
+uključujući tu i proširenje brojnih vrednosi ili pretvaranje jednog tipa pokazivača u drugi. 
+Sa druge strane korisnika ništa ne sprečava da izvrši konverziju između bilo koja dva tipa odgovarajućim instrukcijama.
+
+Tipovi se mogu podeliti na primitivne kao što su tipovi celobrojnih i realnih brojeva, labela, i metapodatak; 
+i izvedene tipove kao što su nizovi, funkcije, pokazivači, strukture i vektori.
+
+Osim ove podele bitno je istaći da nisu svi tipovi ravnopravni.
+Oni tipovi koji mogu biti rezultat LLVM instrukcija i mogu se skladištiti u memoriji, prosleđivati kao parametar ili vraćati kao rezultat funkcije, nazivaju se tipovi prvog reda. Tipovi prvog reda su: celobrojni i realni tipovi, pokazivači, nizovi, strukture, vektori, labele i metapodaci.
+
+
+\subsection*{Primitivni tipovi}
+
+Primitivni tipovi su osnovni gradivni blokovi LLVM sistema.
+
+Pošto tipovi celih i realnih brojeva zavise od podrške konkretne procesorske arhitekture,
+sam LLVM pruža veliku fleksibilnost u njihovom deklarisanju
+pa su mogući tipovi bilo koje širine od 1 do $2^{23} - 1$ (pribliižno 8 miliona) koji se označavaju sa \code{iN} gde \code{N} predstavlja širinu u bitima. Posebna instrukcija mapira pojedine tipove na 
+
+Postoji 5 tipova realnih brojeva: 
+\code{float} koji je širine 32 bita, 
+\code{double} širine 63 bita, 
+\code{fp128} od 128 bita sa mantisom od 112 bita, 
+kao i hardverski specifične x86\_{}fp80 od 80 bita 
+i ppc\_{}fp128 koji takodje ima 128 bita, ali mantisu širine 64 bita.
+
+
+\subsection*{Izvedeni tipovi}
+
+
+% opis izvedenih tipova
+
+
+
+\section{Korišćene LLVM instrukcije}
+
+Sledi pregled svih potrebnih instrukcija za razumevanje generisanog MicroJava koda.
+
+\subsection*{Memorijske instrukcije}
+
+\begin{description}
+\item[\code{alloca}] Alokacija memorije na steku. Memorija se automatski oslobađa po izlasku iz funkcije.
+\item[\code{load}] Učitavanje vrednosti sa date memorijske lokacije u registar. Moguće je samo učitavanje vrednosti prvog reda.
+\item[\code{store}] upisivanje u memoriju
+\item[\code{gep}] Računanje vrednosti pokazivača u okviru niza ili strukture.
+\end{description}
+
+\subsection*{Aritmetičko logičke instrokcije}
+
+\begin{description}
+\item[\code{add, sub, mul, sdiv, srem, neg}] Celobrojne aritmetičke operacije. Oba operanda moraju biti istog tipa.
+\item[\code{icmp}] Celobrojno poređenje datih argumenata. Prvi argument je vrsta poređenja i moze biti
+jedno od: \code{eq} - jednako,  \code{ne} - različito, \code{sgt} - veće, \code{sge} - veće ili jednako,  \code{slt} - manje i  \code{sle} - manje ili jednako, 
+\item[\code{and, or}] Bit-logičke operacije. Argumenti mogu biti bilo kog celobrojnog tipa, ali u slučaju MicroJava-e, uvek je u pitanju \code{i1}
+\end{description}
+
+\subsection*{Kontrola toka}
+
+\begin{description}
+\item[\code{br}] Instrukcija skoka kojom se kontrola toka prebacuje bloku unutar iste funkcije. Postoje dva oblika ove instrukcije: \textit{bezuslovni skok} koji za parametar prima labelu bloka na koji se skače i \textit{uslovni skok} koji prima vrednost tipa \code{i1} i dve labele.
+\item[\code{call}] poziv funkcije
+\item[\code{ret}] Vraća kontrolu toka, a opciono i povratnu vrednost pozivaocu trenutne funkcije. Da bi funkcija bila ispravna, tip vrednosti koja se vraca mora biti jednak povratnom tipu finkcije, odnosno vrednost mora biti \code{void} ako funkcija ne vraća vrednost. Povratni tip mora biti prvog reda.
+\end{description}
+
+\subsection*{Konverzije}
+
+\begin{description}
+\item[\code{bitcast}] Konvertuje datu vrednost u zadati tip bez promene bitova. Pogodno za konvertovanje tipova pokazivača ili tip pokazivača u celobrojni tip odgovarajuće širine.
+\item[\code{sextorbitcast}]
+\item[\code{zext}] Uzima kao parametre celobrojnu vrednost tipa \code{t1} i celobrojni tip \code{t2} veće preciznosti, proširi datu vrednost nulama sa leve strane i vrati vrednost tipa \code{t2}. Ova operacija uvek vrši konverziju, zato sto širina tipa \code{t2} mora biti strogo veća od širine tipa \code{t1}
+\item[\code{trunc}] Uzima kao parametre celobrojnu vrednost tipa \code{t1} i celobrojni tip \code{t2} manje preciznosti, odbaci više bite date vrednosti i vrati vrednost tipa \code{t2}. Ova operacija uvek vrši konverziju, zato što širina tipa \code{t2} mora biti strogo manja od širine tipa \code{t1}
+\end{description}
+
+
+\chapter{Primer MicroJava programa i generisanog koda}

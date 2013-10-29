@@ -66,8 +66,9 @@ Rubinius implementacija Ruby-ja koristi LLVM za optimizacije i JIT
 \footnote{\skr \eng Just in Time \ndash Prevođenje međukoda u mašinski kod neposredno pre izvršavanja} 
 kompajliranje.
 
-\begin{center}
+\begin{figure}[h]
 
+\centering
 \begin{tikzpicture}
 	[inner sep=2.8mm,
 	box/.style={rectangle, draw, minimum width=25mm, }]
@@ -86,8 +87,8 @@ kompajliranje.
 	edge [<-] (optimizers);
 \end{tikzpicture} \\
 
-\textit{LLVM omogućava da se delovi arhitekture kompajlera kao što su optimizacije i generisanje mašinskog koda dele između nezavisnih projekata}
-\end{center}
+\caption{LLVM omogućava da se delovi arhitekture kompajlera kao što su optimizacije i generisanje mašinskog koda dele između nezavisnih projekata}
+\end{figure}
 
 \section{LLVM međureprezentacija}
 
@@ -104,16 +105,23 @@ kompajliranje.
 %bilities that are important for practical, lifelong analysis and
 %transformation of programs.
 
-Centralno mesto u arhitekturi LLVM-a\cite{aosa} zauzima međureprezentacija\footnote{\eng Intermediate Representation \ndash IR} kojom se opisuje kod unutar sistema. LLVM IR je dizajniran da omogući analize i transformacije koda kakve se mogu očekivati u delu kompajlera koji se bavi optimizacijom. Ono što je značajno kod ove reprezentacije je da ne predstavlja neki interni implementacioni detalj, kao kod vecine kompajlera, nego je pogurana u prvi plan kao jezik jasno definisane semantike. LLVM međureprezentacija se tako sasvim ravnopravno može opisati svojom sintaksom sličnom asembleru, bajt-kodom i direktno iz programa putem C++ API-ja\footnote{\eng Application Programming Interface}.
+Centralno mesto u arhitekturi LLVM-a\cite{aosa} zauzima međureprezentacija
+\footnote{\eng Intermediate Representation \ndash IR} 
+kojom se opisuje kod unutar sistema. 
+LLVM IR je dizajniran da omogući analize i transformacije koda kakve se mogu očekivati u delu kompajlera koji se bavi optimizacijom. 
+Ono što je značajno kod ove reprezentacije je da ne predstavlja neki interni implementacioni detalj kao kod vecine kompajlera, 
+nego je pogurana u prvi plan kao jezik jasno definisane semantike. 
+LLVM međureprezentacija se tako sasvim ravnopravno može opisati svojom sintaksom sličnom asembleru, 
+bajt-kodom i direktno iz programa putem C++ API-ja
+\footnote{\eng Application Programming Interface}.
+
+Značajne osobine LLVM reprezentacije su 
+SSA forma
+\footnote{\skr \eng Static single asignement \ndash Statička jedinstvena dodela}
+striktno tipiziranje podataka
+pristup operacijama niskog nivoa, uključujući i instrukcije specifične za pojedine procesore.
 
 
-\section{LLVM tipovi}
-
-Primitivni: label, void, int, float, x86mmx, metadata
-
-Izvedeni: nizovi, funkcije, pointer, structure, vector, opaque
-
-Tipovi prvog reda: int, float, pointer, vector, struct, array, label, metadata
 
 
 \section{LLVM instrukcije}
@@ -166,7 +174,7 @@ add sub...
 
 \section{Optimizacija koda}
 
-SSA \footnote{\skr \eng Static single asignement \ndash Statička jedinstvena dodela}
+
 
 
 \section{Elementi implementacije MicroJave}

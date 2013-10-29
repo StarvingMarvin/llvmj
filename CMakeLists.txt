@@ -6,19 +6,19 @@ configure_file (
     "${PROJECT_BINARY_DIR}/llvmjConfig.h"
     )
 
-set(CMAKE_CXX_FLAGS "-Wall")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Wno-unused-parameter -Werror")
 
 include_directories("${PROJECT_BINARY_DIR}" 
                     "${PROJECT_BINARY_DIR}/src"  
                     src 
-                    /usr/lib/llvm-3.0/include 
-                    /usr/lib/llvm/include 
-                    /usr/lib/llvm-3.1/include)
+                    /usr/lib/llvm-3.0/include
+                    /usr/lib/llvm-3.1/include
+                    /usr/lib/llvm/include)
 
 link_directories(/usr/lib 
-                /usr/lib/llvm-3.0/lib 
-                /usr/lib/llvm 
-                /usr/lib/llvm-3.1/lib 
+                /usr/lib/llvm-3.0/lib
+                /usr/lib/llvm-3.1/lib
+                /usr/lib/llvm
                 /usr/lib/x86_64-linux-gnu 
                 "${PROJECT_BINARY_DIR}/src"
                 "${PROJECT_BINARY_DIR}/src/codegen"
@@ -26,8 +26,8 @@ link_directories(/usr/lib
                 "${PROJECT_BINARY_DIR}/src/parser")
 
 find_library(LLVM_LIB
-    NAMES LLVM LLVM-3.0 LLVM-3.1 libLLVM 
-    PATHS /usr/lib/llvm /usr/lib /usr/lib/llvm-3.0/lib /usr/lib/x86_64-linux-gnu)
+    NAMES LLVM-3.0 LLVM-3.1 libLLVM-3.0 LLVM libLLVM
+    PATHS /usr/lib/llvm-3.0/lib /usr/lib/llvm-3.1/lib /usr/lib/x86_64-linux-gnu /usr/lib/llvm /usr/lib )
 
 find_library(ANTLR_LIB
     NAMES libantlr3c antlr3c libantlr3 antlr3

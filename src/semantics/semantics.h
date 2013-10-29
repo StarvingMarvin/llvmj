@@ -2,9 +2,6 @@
 #ifndef _SEMANTICS_H_
 #define _SEMANTICS_H_
 
-#include "parser/parser.h"
-#include "symbols.h"
-
 namespace mj {
 
     class SemanticError {
@@ -17,6 +14,8 @@ namespace mj {
             char* filename;
             char* message;
     };
+
+    namespace semantics {
 
     class SemanticNodeVisitor : public NodeVisitor {
         public:
@@ -35,7 +34,19 @@ namespace mj {
 
     class VarDesVisitor : public SemanticNodeVisitor {
         public:
-            VarDesVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            VarDesVisitor(Symbols &symbolTable): SemanticNodeVisitor(symbolTable) {}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
+    class SetVisitor : public CheckCompatibleVisitor {
+        public:
+            SetVisitor(Symbols &symbolTable): CheckCompatibleVisitor (symbolTable) {}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
+    class NamedValueVisitor : public SemanticNodeVisitor {
+        public:
+            NamedValueVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
             virtual void operator()(AstWalker &walker) const;
     };
 
@@ -81,6 +92,12 @@ namespace mj {
             virtual void operator()(AstWalker &walker) const;
     };
 
+    class ConstVisitor : public SemanticNodeVisitor {
+        public:
+            ConstVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
     class ArrVisitor : public SemanticNodeVisitor {
         public:
             ArrVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
@@ -103,6 +120,21 @@ namespace mj {
         public:
             LoopVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
             virtual void operator()(AstWalker &walker) const;
+    };
+
+    class UnexpectedBreakVisitor : public SemanticNodeVisitor {
+        public:
+            UnexpectedBreakVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
+    class ReturnVisitor : public SemanticNodeVisitor {
+        public:
+            ReturnVisitor(Symbols &symbolTable, const Type &t):
+                SemanticNodeVisitor(symbolTable), type(t) {}
+            virtual void operator()(AstWalker &walker) const;
+        private:
+            const Type &type;
     };
 
     class CallVisitor : public SemanticNodeVisitor {
@@ -140,6 +172,14 @@ namespace mj {
             ProgramVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
             virtual void operator()(AstWalker &walker) const;
     };
+
+    class DerefVisitor : public SemanticNodeVisitor {
+        public:
+            DerefVisitor(Symbols &symbolsTable): SemanticNodeVisitor(symbolsTable){}
+            virtual void operator()(AstWalker &walker) const;
+    };
+
+    }
 
     void checkSemantics(AST ast, Symbols &symbols);
 

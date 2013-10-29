@@ -1,31 +1,48 @@
 \chapter{Uvod}
 
-Posao prevođenja programskog jezika u mašinsku reprezentaciju se može jako jednostavno podeliti na dva dela: analiza ulaznog programa i generisanje krajnjeg izlaza\cite{dragon}. 
+Posao prevođenja programskog jezika u mašinsku reprezentaciju se jednostavno može podeliti na dva dela: analizu ulaznog programa i generisanje krajnjeg izlaza\cite{dragon}. 
 Ako se pogleda malo detaljnije, vidi se da analizu sačinjava nekoliko koraka. 
 Svaki korak transformiše svoj ulaz u oblik pogodniji za dalji proces prevođenja. 
 Na samom početku \emph{leksičkom analizom} će se niz slova i znakova sa ulaza pretvoriti u niz \emph{tokena}, logičkih celina kao što su idetifikator, ključna reč, broj i slično. 
-Potom će \emph{sintaksnom analizom} za niz tokena da se utvrdi da li odgovaraju gramatičkim pravilima jezika. 
-Potrebno je sakupiti simbole koji se u programu javljaju i izgraditi neku strukturnu model programa u memoriji pogodnu za dalju obradu. 
-Ako program zadovoljava gramatiku jezika, to i dalje ne mora da znači da je ispravan. 
-Slično govornim jzicima, gramatički validna rečenica ne mora da ima smisla, pa je potrebno proći kroz izgrađeni model programa, i proveriti da li su zadovoljena i semantička pravila. 
-Sada je moguće preći i na generisanje koda.
+Potom će se \emph{sintaksnom analizom} za niz tokena utvrditi da li odgovaraju gramatičkim pravilima jezika. 
+Potrebno je sakupiti simbole koji se u programu javljaju (tabela simbola) i izgraditi strukturni model programa u memoriji pogodan za dalju obradu (apstraktno sintaksno stablo).
+Ako program zadovoljava gramatiku jezika, to i dalje ne mora da znači da je ispravan.
+Slično govornim jezicima, gramatički validna rečenica ne mora da ima smisla.
+Stoga je potrebno proći kroz izgrađeni model programa i proveriti da li su zadovoljena i semantička pravila. 
+Kada se utvrdi da program zadovoljava i semantička pravila moguće je preći na generisanje koda.
 
-Slično analizi i generisanje se sastoji iz mnoštva manjih koraka. 
-Model programa koji je bio pogodan za semantičku analizu treba dalje transformisati u novi model koji je pogodniji za optimizaciju i generisanje koda. 
-Neke tehnike optimizacije su primenjive nezavisno od konkretne procesorske arhitekture i njima je moguće transformisati trenutni model programa. 
+Slično analizi i generisanje se sastoji iz mnoštva manjih koraka.
+Model programa koji je bio pogodan za semantičku analizu treba dalje transformisati u novi model koji je pogodniji za optimizaciju i generisanje koda, najčešće u obliku troadresnog koda.
+Neke tehnike optimizacije su primenljive nezavisno od konkretne procesorske arhitekture i njima je moguće transformisati trenutni model programa.
 Zatim se generišu mašinske instrukcije i primenjuju optimizacije specifične za ciljanu procesorsku arhitekturu.
 
-Postoji mnoštvo parser-generatora koji se razlikuju po načinu zadavanja gramatike, strategije parsiranja i jezika u kome će željeni parser biti implementiran.
-ANTLR se između ostalog izdvaja po tome što je osim opisivanja sintakse jezika koji želimo da prepoznamo moguće opisati i apstraktno sintaksno stablo koje odgovara prepoznatom gramatičkom pravilu. 
-Na taj način ANTLR pokriva veći deo prve celine programskog prevodioca: leksičku i sintaksnu analizu i generisanje sintaksnog stabla.
-
-Nasuprot generatorima parsera, ne postoji mnogo projekata koji omogućavaju da se na jednostavan način od reprezentacije programa u memoriji dodje do izgenerisanog mašinskog koda.
-
-%% FIXME
-llvm ide od tri address koda do mašinskih instrukcija.
-nema dosta projekata kao sto je llvm - eventualno jvm i clr.
-
-Između analize ulaza i proizvedenog mašinskog koda, leži semantika jezika, ono što %% FIXME
-
-
 Pre detaljnijeg opisa implementacije pojedinih faza MicroJava prevodioca sledi kratak pregled samog jezika. 
+ANTLR je parser generator i brine se o tumačenju ulaznog programa.
+Ono što ANTLR izdvaja od drugih parser generatora je to što ide korak dalje i pomaže u generisanju apstraktnog sintaksnog stabla.
+
+Za razliku od parser generatora, ne postoji mnogo projekata koji se bave optimizacijom i generisanjem koda nezavisno od izvornog jezika.
+Iz tog razloga većina prevodilaca i interpretera svaki ponovo implemetira ove funkcionalnosti. 
+Uz LLVM, tri platforme koje donekle predstavljaju izuzetak su 
+JVM\footnote{\skr \eng Java Virtual Machine \ndash Java virtualna mašina}, 
+CLR\footnote{\skr \eng Common Language Runtime \ndash Virtualna mašina koja stoji iza Majkrosoftove .net platforme} 
+i GCC\footnote{\skr \eng GNU Compiler Collection \ndash Kolekcija kompajlera koju čine jezici C, C++, ObjectiveC, Ada i Fortran}. 
+JVM i CLR predstavljaju virtualne mašine visokog nivoa i dolaze sa svojom semantikom vezanom za automatsko rukovanje memorijom, klasama, objektima i izuzecima. 
+Iako su mnogi jezici napisani ili portovani na ove platforme, taj posao je bitno lakši za jezike koji se u većoj meri poklapaju sa Javom odnosno C\#-om. 
+Ove platforme i sa strane generisanja koda imaju svoja ograničenja.
+One ne omogućavaju da se za njih jednostavno dopiše generator koda za novu procesorsku arhitekturu ili nova optimizaciona tehnika. 
+Ono što je po strukturi i svrsi približnije LLVM-u je GCC.
+GCC sa svoje ulazne strane podržava nekoliko jezika, a sa izlazne može da generise kod za mnoge procesorske arhitekture.
+U teoriji bi bilo moguće napisati podršku za novi jezik, nove procesore ili nove optimizacije.
+U praksi se pokazalo da je unutrašnja arhitektura GCC-a suviše kompleksna i da su komponente prevodioca suviše međusobno povezane. 
+Posledica toga je da trenutno ne postoji mnogo projekata nezavisnih od GCC-a koji koriste njegovu infrastrukturu.
+
+Ono što preostaje u sredini je sama suština jezika: kako se jezik ponaša i na koji način implementira svoje osobine.
+Sintaksa se prva uoči u toku upoznavanja nekog programskog jezika, pa joj se često prilikom poređenja daje preveliki značaj.
+Semantika, iako nije očigledna, čini jezik i njegove karakteristike.
+Na primer, Java i C imaju istu sintaksu za pristup elementu niza \ndash \code{a[i]}, ali je semantika različita.
+Java će baciti izuzetak ukoliko indeks izlazi iz okvira niza, dok će C vratiti sadržaj tražene adrese, što može izazvati različite neželjene posledice.
+Ova razlika u ponašanju nije primetna gledanjem u kod i zahteva dublje poznavanje jezika od same sintakse.
+Zbog toga bih pored prepoznavanja ulaza i generisanja mašinskog koda izdvojio i detalje implementacije semantičkih odlika jezika kao bitnu celinu u opisu rada prevodioca.
+
+Ove tri celine, koje čine programske prevodioce, opisane su u poglavljima prepoznavanje jezika, implementacija semantike i generisanje koda.
+Naredno polavlje opisuje MicroJavu, jezik koji se implementira u okviru ovog rada.
