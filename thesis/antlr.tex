@@ -1,14 +1,18 @@
 \chapter{Prepoznavanje jezika i sintaksna analiza}
 
 Prvi korak u implementaciji jezika je prepoznavanje ulaza i provera sintaksih i semantičkih pravila. 
-U slučaju jako jednostavnih gramatika, parser se veoma lako može napisati ručno. 
-Sa druge strane u slučaju jako komplikovanih gramatika ručno kodiranje određenih delova je verovatno jedini način da se parser verno implementira. 
+U slučaju jako jednostavnih gramatika, parser se veoma lako može napisati ručno, najčešće nekom varijantom rekurzivnog spusta. 
+Sa druge strane u slučaju jako komplikovanih gramatika ručno kodiranje određenih delova je verovatno jedini način da se parser verno implementira uz prihvatljive performanse i dovoljno detaljne opise greške.
 Međutim, za većinu svakodnevnih problema, najlakši način da se napravi parser je pomoću nekog od mnogobrojnih alata koji će za zadatu gramatiku generisati potreban kod. 
 
-%% FIXME: bez prvog lica
-Opredelio sam se za ANTLR
+Većina algoritama potiče iz 70-tih
+tradeoff izmedju brzine, snage i ostalih feature-a (error reporting and recovery, ease of development)
+do skora prvenstveno brzina i snaga (LR1) yacc etc
+sad se malo više razmišlja i o drugim stvarima (packrat, peg, antlr)
+Za ovu implementaciju MicroJava-e korišćen je ANTLR
+ll*, tree grammar, antlrworks...
 \footnote{\skr \eng Another Tool for Langauage Recognition} 
-zbog nekih njegovih svojstava kojima ću posvetiti nekoliko strana.
+zbog nekoliko njegovih svojstava opisanih na narednih par strana.
 
 \section{Uvod u ANTLR}
 
@@ -67,4 +71,4 @@ automatsko kompletiranje i formatiranje koda, grafički prikaz gramatičkih prav
 
 % predicates
 
-\section{ANTLR gramatika MicroJave}
+
