@@ -2,16 +2,25 @@
 
 Prvi korak u implementaciji jezika je prepoznavanje ulaza i provera sintaksih i semantičkih pravila. 
 U slučaju jako jednostavnih gramatika, parser se veoma lako može napisati ručno, najčešće nekom varijantom rekurzivnog spusta. 
-Sa druge strane u slučaju jako komplikovanih gramatika ručno kodiranje određenih delova je verovatno jedini način da se parser verno implementira uz prihvatljive performanse i dovoljno detaljne opise greške.
+Sa druge strane u slučaju jako komplikovanih gramatika ručno kodiranje je verovatno jedini način da se parser verno implementira uz prihvatljive performanse i dovoljno detaljne opise greške.
 Međutim, za većinu svakodnevnih problema, najlakši način da se napravi parser je pomoću nekog od mnogobrojnih alata koji će za zadatu gramatiku generisati potreban kod. 
 
-Većina algoritama potiče iz 70-tih
+Većina alata koji su u upotrebi zasnivaju se na $LR$ gramatikama i parsiranju od dna ka vrhu\footnote{\eng bottom-up}, pre svega $LALR(1)$ kao što je YACC.
+Algoritam za implementaciju $LALR(1)$ gramatike opisan je 1969. kao jednostavnija alternativa $LR(k)$ parseru.
+Oba algoritma garantuju linearno vreme izvršavanja, ali $LALR(1)$ žrtvuje malo na snazi zarad boljeg iskorišćenja memorije.
+
+Sa druge strane $LL$ gramatike su bile ređe primenjivane u praksi.
+Zbog toga što odluka o smeni mora da se donese na osnovu manje pročitanog ulaza u odnosu na $LR$ gramatike, $LL$ parseri mogu da prepoznaju manji broj jezika.
+Da bi $LL(k)$ gramatika bila upotrebiva u praksi, smatralo se da postoje dve mogućnosti: da se poveća $k$, da bi se odluka donosila sa više poznatih terminalnih simbola, što bi za posledicu imalo exponencijalni rast prostorne zahtevnosti, ili da se moguća grananja spekulativno izvrše, dok se ne pronađe ispravna produkcija, dovodeći do eksponencijalnog vremena izvršenja.
+
+Kako je u poslednjih par decenija računsk
+
 tradeoff izmedju brzine, snage i ostalih feature-a (error reporting and recovery, ease of development)
 do skora prvenstveno brzina i snaga (LR1) yacc etc
 sad se malo više razmišlja i o drugim stvarima (packrat, peg, antlr)
 Za ovu implementaciju MicroJava-e korišćen je ANTLR
-ll*, tree grammar, antlrworks...
 \footnote{\skr \eng Another Tool for Langauage Recognition} 
+ll*, tree grammar, antlrworks, c code...
 zbog nekoliko njegovih svojstava opisanih na narednih par strana.
 
 \section{Uvod u ANTLR}
