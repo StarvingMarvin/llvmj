@@ -5,7 +5,7 @@ U slučaju jako jednostavnih gramatika, parser se veoma lako može napisati ruč
 Sa druge strane u slučaju jako komplikovanih gramatika ručno kodiranje je verovatno jedini način da se parser verno implementira uz prihvatljive performanse i dovoljno detaljne opise greške.
 Međutim, za većinu svakodnevnih problema, najlakši način da se napravi parser je pomoću nekog od mnogobrojnih alata koji će za zadatu gramatiku generisati potreban kod. 
 
-Većina alata koji su u upotrebi zasnivaju se na $LR$ gramatikama i parsiranju od dna ka vrhu\footnote{\eng bottom-up}, pre svega $LALR(1)$ kao što je YACC.
+Većina alata koji su u upotrebi zasnivaju se na $LR$\cite{lr} gramatikama i parsiranju od dna ka vrhu\footnote{\eng bottom-up}, pre svega $LALR(1)$ kao što je YACC\cite{yacc}.
 Algoritam za implementaciju $LALR(1)$ gramatike opisan je 1969. kao jednostavnija alternativa $LR(k)$ parseru.
 Oba algoritma garantuju linearno vreme izvršavanja, ali $LALR(1)$ žrtvuje malo na snazi zarad boljeg iskorišćenja memorije.
 
@@ -15,15 +15,18 @@ Da bi $LL(k)$ gramatika bila upotrebiva u praksi, smatralo se da postoje dve mog
 
 Kako je u poslednjih par decenija računsk
 
+FIXME:
 tradeoff izmedju brzine, snage i ostalih feature-a (error reporting and recovery, ease of development)
-do skora prvenstveno brzina i snaga (LR1) yacc etc
 sad se malo više razmišlja i o drugim stvarima (packrat, peg, antlr)
-Za ovu implementaciju MicroJava-e korišćen je ANTLR
-\footnote{\skr \eng Another Tool for Langauage Recognition} 
-ll*, tree grammar, antlrworks, c code...
-zbog nekoliko njegovih svojstava opisanih na narednih par strana.
 
-\section{Uvod u ANTLR}
+Za ovu implementaciju MicroJava-e korišćen je ANTLR
+\footnote{\skr \eng Another Tool for Langauage Recognition}.
+Osobine koje su opredelile za izbor ovog parser generatora su između ostalog graficko okruženje za razvoj i analizu gramatika: Antlrworks, generisanje C koda i apstraktno sintaksno stablo kao izlaz parsera.
+Međutim ono što ovaj alat čini korisnim jesu pre svega inovativne strategije parsiranja kao što su $LL(k)$ sa predikatima\cite{pred-llk}, linearno približno predviđanje\cite{parr-thesis} i $LL(*)$\cite{ll*}.
+
+\section{Osobine ANTLR-a}
+
+
 
 ANTLR je parser generator napisan u Javi. 
 Razvijan je u prethodne dve decenije, prevenstveno od strane Terensa Para
