@@ -8,18 +8,18 @@
 #include <vector>
 
 #include <llvm/Analysis/Verifier.h>
-#include <llvm/Constants.h>
-#include <llvm/DerivedTypes.h>
-#include <llvm/Function.h>
-#include <llvm/GlobalVariable.h>
-#include <llvm/Instructions.h>
-#include <llvm/LLVMContext.h>
-#include <llvm/Module.h>
-#include <llvm/Support/IRBuilder.h>
-#include <llvm/Support/TypeBuilder.h>
-#include <llvm/Target/TargetData.h>
-#include <llvm/Type.h>
-#include <llvm/Value.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/GlobalVariable.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/TypeBuilder.h>
+#include <llvm/IR/DataLayout.h>
+#include <llvm/IR/Type.h>
+#include <llvm/IR/Value.h>
 
 #include "parser/parser.h"
 #include "semantics/symbols.h"
@@ -45,7 +45,7 @@ using llvm::LLVMContext;
 using llvm::Module;
 using llvm::PointerType;
 using llvm::StructType;
-using llvm::TargetData;
+using llvm::DataLayout;
 using llvm::TypeBuilder;
 using llvm::Value;
 
@@ -73,8 +73,8 @@ void Values::initPrimitives() {
     types["mj.null"] = void_ptr;
     types["void*"] = void_ptr;
 
-    TargetData td (_module);
-    unsigned int ptr_size = td.getPointerSizeInBits();
+    DataLayout dl (_module);
+    unsigned int ptr_size = dl.getPointerSizeInBits();
     llvm::Type *size_type = IntegerType::get(ctx, ptr_size);
     types["mj.size_t"] = size_type;
 
@@ -176,7 +176,7 @@ void Values::initGlobals(const GlobalScope &global) {
      globalValues["mj.dec_fmt"] = dec_fmt;
 
      // Constant Definitions
-    llvm::Constant* dec_fmt_val = llvm::ConstantArray::get(_module->getContext(), "%d", true);
+    llvm::Constant* dec_fmt_val = llvm::ConstantDataArray::getString(_module->getContext(), "%d", true);
     dec_fmt->setInitializer(dec_fmt_val);
 
     // global constants

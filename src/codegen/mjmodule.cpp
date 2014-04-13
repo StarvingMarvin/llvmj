@@ -10,16 +10,16 @@
 #include <vector>
 
 #include <llvm/Analysis/Verifier.h>
-#include <llvm/DerivedTypes.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/JIT.h>
-#include <llvm/LLVMContext.h>
-#include <llvm/Module.h>
-#include <llvm/Support/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/IRBuilder.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/TargetSelect.h>
-#include <llvm/Support/TypeBuilder.h>
-#include <llvm/Target/TargetData.h>
+#include <llvm/IR/TypeBuilder.h>
+#include <llvm/IR/DataLayout.h>
 
 #include "parser/parser.h"
 #include "semantics/symbols.h"
@@ -49,7 +49,7 @@ using llvm::LLVMContext;
 using llvm::Module;
 using llvm::PointerType;
 using llvm::StructType;
-using llvm::TargetData;
+using llvm::DataLayout;
 using llvm::TypeBuilder;
 using llvm::Value;
 
@@ -545,8 +545,8 @@ void ReadVisitor::operator ()(AstWalker &walker) const {
 }
 
 uint64_t CodegenVisitor::sizeOf(llvm::Type* t) const {
-    TargetData td (&_module);
-    return td.getTypeAllocSize(t);
+    DataLayout dl (&_module);
+    return dl.getTypeAllocSize(t);
 }
 
 llvm::Type* CodegenVisitor::arrayType(llvm::Type *ptype) const {

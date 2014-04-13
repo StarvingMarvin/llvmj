@@ -1,5 +1,5 @@
 
-FIND_PROGRAM(LLVM_AS NAMES llvm-as llvm-as-3.0 llvm-as-3.1)
+FIND_PROGRAM(LLVM_AS NAMES llvm-as llvm-as-3.2 llvm-as-3.3)
 
 ADD_CUSTOM_COMMAND(COMMAND ${LLVM_AS}
                     ARGS -o example.bc ${CMAKE_CURRENT_SOURCE_DIR}/example.ll
