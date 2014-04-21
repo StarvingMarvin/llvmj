@@ -122,10 +122,12 @@ namespace mj {
             }
     };
 
-    class ParserException {
+    class ParserException : public std::exception {
         public:
-            ParserException(const std::string message): _message(message){}
+            ParserException(const std::string message) throw() : std::exception(), _message(message){}
             const std::string message() const { return _message; }
+            virtual const char* what() const throw() { return _message.c_str(); }
+            virtual ~ParserException() throw() {}
         private:
             const std::string _message;
     };
@@ -174,6 +176,8 @@ namespace mj {
     T* getNodeData(AST ast) {
         return static_cast<T*>(ast->u);
     }
+
+    void pretty_print(AST ast, std::ostream &os);
 
 }
 

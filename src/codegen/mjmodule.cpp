@@ -10,16 +10,19 @@
 #include <vector>
 
 #include <llvm/Analysis/Verifier.h>
-#include <llvm/IR/DerivedTypes.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/IRBuilder.h>
-#include <llvm/Support/raw_os_ostream.h>
-#include <llvm/Support/TargetSelect.h>
 #include <llvm/IR/TypeBuilder.h>
 #include <llvm/IR/DataLayout.h>
+#include <llvm/Pass.h>
+#include <llvm/Support/raw_os_ostream.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Target/TargetMachine.h>
+
 
 #include "parser/parser.h"
 #include "semantics/symbols.h"
@@ -705,7 +708,7 @@ void MjModule::makeMain() {
 
 }
 
-void MjModule::run(int argc, char** argv) {
+void MjModule::run(int argc, const char** argv) {
     string err;
     llvm::InitializeNativeTarget();
     ExecutionEngine *engine = EngineBuilder(&_module).setErrorStr(&err).create();
@@ -713,6 +716,24 @@ void MjModule::run(int argc, char** argv) {
     int (*fp)() = (int (*)())engine->getPointerToFunction(_module.getFunction("main"));
     fp();
 }
+
+//llvm::PassManager* MjModule::modulePasses() {
+//    if (!_modulePasses) {
+//        _modulePasses = new llvm::PassManager();
+//    }
+//    return _modulePasses;
+//}
+
+//void emitBc(raw_ostream *os) {
+
+//    TargetMachine *tm = CreateTargetMachine(false);
+//    modulePasses(tm)->add(createBitcodeWriterPass(*os));
+//}
+
+//void emitLL(raw_ostream *os) {
+//    FormattedOS.setStream(*os, formatted_raw_ostream::PRESERVE_STREAM);
+//    modulePasses(TM)->add(createPrintModulePass(&FormattedOS));
+//}
 
 void MjModule::walkTree() {
     VisitChildren defVisitor;

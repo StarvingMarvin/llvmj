@@ -285,12 +285,14 @@ class MjModule
 public:
     MjModule(AST ast, const mj::Symbols &symbols);
     llvm::Module &module() { return _module; }
-    void run(int argc, char** argv);
+    void run(int argc, const char **argv);
+//    llvm::PassManager *modulePasses();
 private:
     AST _ast;
     const Symbols &_symbols;
     llvm::Module _module;
     Values values;
+
     void walkTree();
     void makeStdLib();
     void makeMain();

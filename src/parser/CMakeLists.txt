@@ -14,6 +14,6 @@ ADD_CUSTOM_COMMAND(COMMAND ${ANTLR}
 
 SET_SOURCE_FILES_PROPERTIES(${ANTLR_OUTPUT} PROPERTIES GENERATED true)
 
-ADD_LIBRARY(Parser parser.cpp ${PARS_DST}/MicroJavaLexer.c ${PARS_DST}/MicroJavaParser.c)
+ADD_LIBRARY(Parser ast-prettyprint.cpp parser.cpp ${PARS_DST}/MicroJavaLexer.c ${PARS_DST}/MicroJavaParser.c)
 
 

@@ -2,39 +2,106 @@
 #include "llvmjConfig.h"
 
 #include <string>
-#include <iostream>
-#include <stack>
-#include <vector>
-#include <map>
 
-#include <llvm/IR/DerivedTypes.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/Module.h>
-
-#include "llvmjConfig.h"
-#include "parser/parser.h"
-#include "semantics/symbols.h"
-#include "semantics/semantics.h"
-#include "codegen/values.h"
-#include "codegen/mjmodule.h"
+#include "codegen/codegen.h"
+#include "mjc/ezOptionParser.hpp"
 
 
 using namespace mj;
 using namespace std;
 
-int main(int argc, char** argv) {
+void usage(ez::ezOptionParser& opt) {
+    string usage;
+    opt.getUsage(usage);
+    cout << usage;
+}
 
-    const char *filename = (argc < 2 || argv[1] == NULL)?
-                        "./input" : argv[1];
+int main(const int argc, const char** argv) {
+    ez::ezOptionParser opt;
+
+    opt.overview = "MicroJava compiler.";
+    opt.syntax = "mjc [OPTIONS] FILE";
+    opt.example = "mjc -t ll -o program.mj\n\n";
+
+    opt.add(
+        "", // Default.
+        0, // Required?
+        0, // Number of args expected.
+        0, // Delimiter if expecting multiple args.
+        "Display usage instructions.",
+        "-h",
+        "--help"
+    );
+
+    opt.add(
+        "obj", // Default.
+        0, // Required?
+        1, // Number of args expected.
+        0, // Delimiter if expecting multiple args.
+        "Output type. Posible values are: ast, llvm, bc, asm and obj",
+        "-t",
+        "--output-type"
+    );
+
+    opt.add(
+        "", // Default.
+        0, // Required?
+        1, // Number of args expected.
+        0, // Delimiter if expecting multiple args.
+        "Output optimized code",
+        "-O",
+        "--optimize"
+    );
+
+    opt.parse(argc, argv);
+    vector<string> badOptions;
+
+    if(!opt.gotExpected(badOptions)) {
+        for(unsigned int i=0; i < badOptions.size(); ++i)
+            cerr << "ERROR: Got unexpected number of arguments for option " << badOptions[i] << ".\n\n";
+
+        usage(opt);
+        return 1;
+    }
+
+    if (opt.isSet("-h")) {
+        usage(opt);
+        return 0;
+    }
+
+    if (opt.lastArgs.size() != 1) {
+        cerr << "ERROR: Expected exactly one input file.\n\n";
+        usage(opt);
+        return 1;
+    }
+
+    string output_type;
+    opt.get("-t")->getString(output_type);
+
+    CodegenOptions cgOptions;
+    cgOptions.inputFilePath = *opt.lastArgs[0];
+
+
+    if (output_type == "ast") {
+        cgOptions.type = codegen::AST;
+    } else if (output_type == "llvm") {
+        cgOptions.type = codegen::LLVM;
+    } else if (output_type == "bc") {
+        cgOptions.type = codegen::BC;
+    } else if (output_type == "asm") {
+        cgOptions.type = codegen::ASM;
+    } else if (output_type == "obj") {
+        cgOptions.type = codegen::OBJ;
+    } else {
+        cerr << "ERROR: Unknown output type: '" << output_type << "'" << endl;
+        usage(opt);
+        return 1;
+    }
+
+    cgOptions.optLevel = 0;
+
     try {
-        Parser p(filename);
-        AST ast = p.parse();
-        Symbols symbols;
-        checkSemantics(ast, symbols);
-        MjModule module(ast, symbols);
-        //module.module().dump();
-        module.run(argc, argv);
+        executeCodegen(cgOptions);
     } catch (exception& e) {
         cerr << "Error occured: " << e.what() << endl;
         return 1;
