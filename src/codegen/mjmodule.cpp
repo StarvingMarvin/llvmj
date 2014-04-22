@@ -717,24 +717,6 @@ void MjModule::run(int argc, const char** argv) {
     fp();
 }
 
-//llvm::PassManager* MjModule::modulePasses() {
-//    if (!_modulePasses) {
-//        _modulePasses = new llvm::PassManager();
-//    }
-//    return _modulePasses;
-//}
-
-//void emitBc(raw_ostream *os) {
-
-//    TargetMachine *tm = CreateTargetMachine(false);
-//    modulePasses(tm)->add(createBitcodeWriterPass(*os));
-//}
-
-//void emitLL(raw_ostream *os) {
-//    FormattedOS.setStream(*os, formatted_raw_ostream::PRESERVE_STREAM);
-//    modulePasses(TM)->add(createPrintModulePass(&FormattedOS));
-//}
-
 void MjModule::walkTree() {
     VisitChildren defVisitor;
 

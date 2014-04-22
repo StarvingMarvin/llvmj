@@ -286,7 +286,6 @@ public:
     MjModule(AST ast, const mj::Symbols &symbols);
     llvm::Module &module() { return _module; }
     void run(int argc, const char **argv);
-//    llvm::PassManager *modulePasses();
 private:
     AST _ast;
     const Symbols &_symbols;
