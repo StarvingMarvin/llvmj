@@ -8,15 +8,20 @@
 #include <map>
 #include <stdexcept>
 
+#include <llvm/Assembly/PrintModulePass.h>
 #include <llvm/Bitcode/ReaderWriter.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
+#include "llvm/Support/FormattedStream.h"
 #include <llvm/Support/PathV2.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/TargetRegistry.h>
+#include "llvm/Target/TargetLibraryInfo.h"
 #include <llvm/Target/TargetMachine.h>
+#include "llvm/Transforms/IPO.h"
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/PassManager.h>
 
@@ -41,7 +46,7 @@ public:
 private:
 
     llvm::TargetMachine *createTargetMachine();
-    void createPasses(llvm::TargetMachine *tm);
+    void createPasses();
 
     llvm::Module &llvmModule() const { return _module.module(); }
 
@@ -49,7 +54,7 @@ private:
     mj::CodegenOptions options;
     llvm::PassManager *modulePasses;
     llvm::FunctionPassManager *functionPasses;
-    llvm::PassManager *codeGenPasses;
+    llvm::PassManager *codegenPasses;
 };
 
 
@@ -67,13 +72,12 @@ llvm::TargetMachine *Codegen::createTargetMachine() {
 
     llvm::CodeGenOpt::Level optLevel = llvm::CodeGenOpt::Default;
     switch (options.optLevel) {
-        case 0: optLevel = CodeGenOpt::None; break;
-        case 3: optLevel = CodeGenOpt::Aggressive; break;
+        case 0: optLevel = llvm::CodeGenOpt::None; break;
+        case 3: optLevel = llvm::CodeGenOpt::Aggressive; break;
         default: break;
     }
 
     llvm::TargetOptions targetOptions;
-
 
     llvm::TargetMachine *tm = target->createTargetMachine(triple, "",
                                                        features, targetOptions,
@@ -83,120 +87,59 @@ llvm::TargetMachine *Codegen::createTargetMachine() {
     return tm;
 }
 
-void Codegen::createPasses(llvm::TargetMachine *tm) {
-  llvm::PassManagerBuilder pmBuilder;
-  pmBuilder.OptLevel = options.optLevel;
+void Codegen::createPasses() {
+    llvm::PassManagerBuilder pmBuilder;
+    pmBuilder.OptLevel = options.optLevel;
 
-  // Figure out TargetLibraryInfo.
-  llvm::Triple targetTriple(llvmModule().getTargetTriple());
-  pmBuilder.LibraryInfo = new llvm::TargetLibraryInfo(targetTriple);
-  if (!CodeGenOpts.SimplifyLibCalls)
-    PMBuilder.LibraryInfo->disableAllFunctions();
+    // Figure out TargetLibraryInfo.
+    llvm::Triple targetTriple(llvmModule().getTargetTriple());
+    pmBuilder.LibraryInfo = new llvm::TargetLibraryInfo(targetTriple);
 
-  switch (Inlining) {
-  case CodeGenOptions::NoInlining: break;
-  case CodeGenOptions::NormalInlining: {
-    // FIXME: Derive these constants in a principled fashion.
-    unsigned Threshold = 225;
-    if (CodeGenOpts.OptimizeSize == 1)      // -Os
-      Threshold = 75;
-    else if (CodeGenOpts.OptimizeSize == 2) // -Oz
-      Threshold = 25;
-    else if (OptLevel > 2)
-      Threshold = 275;
-    PMBuilder.Inliner = createFunctionInliningPass(Threshold);
-    break;
-  }
-  case CodeGenOptions::OnlyAlwaysInlining:
-    // Respect always_inline.
-    if (OptLevel == 0)
-      // Do not insert lifetime intrinsics at -O0.
-      PMBuilder.Inliner = createAlwaysInlinerPass(false);
-    else
-      PMBuilder.Inliner = createAlwaysInlinerPass();
-    break;
-  }
-
-  // Set up the per-function pass manager.
-  FunctionPassManager *FPM = getPerFunctionPasses(TM);
-  if (CodeGenOpts.VerifyModule)
-    FPM->add(createVerifierPass());
-  PMBuilder.populateFunctionPassManager(*FPM);
-
-  // Set up the per-module pass manager.
-  PassManager *MPM = getPerModulePasses(TM);
-
-  if (!CodeGenOpts.DisableGCov &&
-      (CodeGenOpts.EmitGcovArcs || CodeGenOpts.EmitGcovNotes)) {
-    // Not using 'GCOVOptions::getDefault' allows us to avoid exiting if
-    // LLVM's -default-gcov-version flag is set to something invalid.
-    GCOVOptions Options;
-    Options.EmitNotes = CodeGenOpts.EmitGcovNotes;
-    Options.EmitData = CodeGenOpts.EmitGcovArcs;
-    memcpy(Options.Version, CodeGenOpts.CoverageVersion, 4);
-    Options.UseCfgChecksum = CodeGenOpts.CoverageExtraChecksum;
-    Options.NoRedZone = CodeGenOpts.DisableRedZone;
-    Options.FunctionNamesInData =
-        !CodeGenOpts.CoverageNoFunctionNamesInData;
-    MPM->add(createGCOVProfilerPass(Options));
-    if (CodeGenOpts.getDebugInfo() == CodeGenOptions::NoDebugInfo)
-      MPM->add(createStripSymbolsPass(true));
-  }
-
-  PMBuilder.populateModulePassManager(*MPM);
+    unsigned inlineThreshold = 225;
+    if (options.optLevel > 2) {
+        inlineThreshold = 275;
+        modulePasses->add(llvm::createStripSymbolsPass(true));
+    }
+    pmBuilder.Inliner = llvm::createFunctionInliningPass(inlineThreshold);
+    pmBuilder.populateFunctionPassManager(*functionPasses);
+    pmBuilder.populateModulePassManager(*modulePasses);
 }
 
 void Codegen::emitCode(llvm::raw_ostream *os) {
-  llvm::formatted_raw_ostream formattedOS;
+    llvm::formatted_raw_ostream formattedOS;
 
-  TargetMachine *tm = createTargetMachine();
-  CreatePasses(tm);
+    //llvm::TargetMachine *tm = createTargetMachine();
+    createPasses();
 
-  switch (Action) {
-  case Backend_EmitNothing:
-    break;
+    switch (options.type) {
+    case codegen::LLVM:
+        formattedOS.setStream(*os, llvm::formatted_raw_ostream::PRESERVE_STREAM);
+        modulePasses->add(llvm::createPrintModulePass(&formattedOS));
+        break;
+    case codegen::BC:
+        modulePasses->add(llvm::createBitcodeWriterPass(*os));
+        break;
+    case codegen::ASM:
+    case codegen::OBJ:
+        formattedOS.setStream(*os, llvm::formatted_raw_ostream::PRESERVE_STREAM);
+        break;
+    default:
+        // screem
+        break;
+    }
 
-  case Backend_EmitBC:
-    getPerModulePasses(TM)->add(createBitcodeWriterPass(*OS));
-    break;
+    functionPasses->doInitialization();
+    for (llvm::Module::iterator I = llvmModule().begin(),
+         E = llvmModule().end(); I != E; ++I)
+        if (!I->isDeclaration())
+            functionPasses->run(*I);
+    functionPasses->doFinalization();
 
-  case Backend_EmitLL:
-    FormattedOS.setStream(*OS, formatted_raw_ostream::PRESERVE_STREAM);
-    getPerModulePasses(TM)->add(createPrintModulePass(&FormattedOS));
-    break;
 
-  default:
-    FormattedOS.setStream(*OS, formatted_raw_ostream::PRESERVE_STREAM);
-    if (!AddEmitPasses(Action, FormattedOS, TM))
-      return;
-  }
+    modulePasses->run(llvmModule());
 
-  // Before executing passes, print the final values of the LLVM options.
-  cl::PrintOptionValues();
+    codegenPasses->run(llvmModule());
 
-  // Run passes. For now we do all passes at once, but eventually we
-  // would like to have the option of streaming code generation.
-
-  if (PerFunctionPasses) {
-    PrettyStackTraceString CrashInfo("Per-function optimization");
-
-    PerFunctionPasses->doInitialization();
-    for (Module::iterator I = TheModule->begin(),
-           E = TheModule->end(); I != E; ++I)
-      if (!I->isDeclaration())
-        PerFunctionPasses->run(*I);
-    PerFunctionPasses->doFinalization();
-  }
-
-  if (PerModulePasses) {
-    PrettyStackTraceString CrashInfo("Per-module optimization passes");
-    PerModulePasses->run(*TheModule);
-  }
-
-  if (CodeGenPasses) {
-    PrettyStackTraceString CrashInfo("Code generation");
-    CodeGenPasses->run(*TheModule);
-  }
 }
 
 string extension(codegen::Type type) {
@@ -232,11 +175,13 @@ void executeCodegen(CodegenOptions options) {
         return;
     }
 
+    llvm::raw_os_ostream raw_os(os);
+
     Symbols symbols;
     checkSemantics(ast, symbols);
     MjModule module(ast, symbols);
-    //module.module().dump();
     Codegen cg(module, options);
+    cg.emitCode(&raw_os);
 
 }
 
