@@ -42,69 +42,66 @@ class Codegen
 {
 public:
     Codegen(mj::MjModule &module, CodegenOptions opts):
-        _module(module), options(opts){}
+        _module(module), options(opts), modulePasses(0), functionPasses(0),
+        codegenPasses(0), _targetMachine(0) {}
     void emitCode(llvm::raw_ostream *os);
+    ~Codegen() {
+        delete codegenPasses;
+        delete modulePasses;
+        delete _targetMachine;
+    }
 private:
 
-    llvm::TargetMachine *createTargetMachine();
+    llvm::TargetMachine *targetMachine();
     void createPasses();
 
     llvm::Module &llvmModule() const { return _module.module(); }
+    bool nativeEnabled() const { return options.type == codegen::ASM || options.type == codegen::OBJ; }
 
     mj::MjModule &_module;
     mj::CodegenOptions options;
     llvm::PassManager *modulePasses;
     llvm::FunctionPassManager *functionPasses;
     llvm::PassManager *codegenPasses;
+    llvm::TargetMachine *_targetMachine;
 };
 
 
-llvm::TargetMachine *Codegen::createTargetMachine() {
-    //// Create the TargetMachine for generating code.
-    llvm::InitializeNativeTarget();
-    string error;
-    string triple = llvmModule().getTargetTriple();
-    const llvm::Target *target = llvm::TargetRegistry::lookupTarget(triple, error);
+llvm::TargetMachine *Codegen::targetMachine() {
 
-    llvm::CodeModel::Model cm = llvm::CodeModel::Default;
+    if (!_targetMachine) {
 
-    string features;
+        //// Create the TargetMachine for generating code.
+        llvm::InitializeNativeTarget();
+        string error;
+        string triple = llvmModule().getTargetTriple();
+        const llvm::Target *target = llvm::TargetRegistry::lookupTarget(triple, error);
 
-    llvm::Reloc::Model rm = llvm::Reloc::Default;
+        llvm::CodeModel::Model cm = llvm::CodeModel::Default;
 
-    llvm::CodeGenOpt::Level optLevel = llvm::CodeGenOpt::Default;
-    switch (options.optLevel) {
-        case 0: optLevel = llvm::CodeGenOpt::None; break;
-        case 3: optLevel = llvm::CodeGenOpt::Aggressive; break;
-        default: break;
+        string features;
+
+        llvm::Reloc::Model rm = llvm::Reloc::Default;
+
+        llvm::CodeGenOpt::Level optLevel = llvm::CodeGenOpt::Default;
+        switch (options.optLevel) {
+            case 0: optLevel = llvm::CodeGenOpt::None; break;
+            case 3: optLevel = llvm::CodeGenOpt::Aggressive; break;
+            default: break;
+        }
+
+        llvm::TargetOptions targetOptions;
+
+        _targetMachine = target->createTargetMachine(triple, "",
+                                                           features, targetOptions,
+                                                           rm, cm, optLevel);
     }
-
-    llvm::TargetOptions targetOptions;
-
-    llvm::TargetMachine *tm = target->createTargetMachine(triple, "",
-                                                       features, targetOptions,
-                                                       rm, cm, optLevel);
-
-
-    return tm;
+    return _targetMachine;
 }
 
 //bool EmitAssemblyHelper::AddEmitPasses(BackendAction Action,
 //                                       formatted_raw_ostream &OS,
 //                                       TargetMachine *TM) {
-
-//  // Create the code generator passes.
-//  PassManager *PM = getCodeGenPasses(TM);
-
-//  // Add LibraryInfo.
-//  llvm::Triple TargetTriple(TheModule->getTargetTriple());
-//  TargetLibraryInfo *TLI = new TargetLibraryInfo(TargetTriple);
-//  if (!CodeGenOpts.SimplifyLibCalls)
-//    TLI->disableAllFunctions();
-//  PM->add(TLI);
-
-//  // Add Target specific analysis passes.
-//  TM->addAnalysisPasses(*PM);
 
 //  // Normal mode, emit a .s or .o file by running the code generator. Note,
 //  // this also adds codegenerator level optimization passes.
@@ -116,12 +113,6 @@ llvm::TargetMachine *Codegen::createTargetMachine() {
 //  else
 //    assert(Action == Backend_EmitAssembly && "Invalid action!");
 
-//  // Add ObjC ARC final-cleanup optimizations. This is done as part of the
-//  // "codegen" passes so that it isn't run multiple times when there is
-//  // inlining happening.
-//  if (LangOpts.ObjCAutoRefCount &&
-//      CodeGenOpts.OptimizationLevel > 0)
-//    PM->add(createObjCARCContractPass());
 
 //  if (TM->addPassesToEmitFile(*PM, OS, CGFT,
 //                              /*DisableVerify=*/!CodeGenOpts.VerifyModule)) {
@@ -134,16 +125,14 @@ llvm::TargetMachine *Codegen::createTargetMachine() {
 
 void Codegen::createPasses() {
 
-    llvm::TargetMachine *tm = createTargetMachine();
+    llvm::TargetMachine *tm = targetMachine();
     llvm::DataLayout *dl = new llvm::DataLayout(&llvmModule());
-    codegenPasses = new llvm::PassManager();
-    codegenPasses->add(dl);
+
     modulePasses = new llvm::PassManager();
     modulePasses->add(dl);
     functionPasses = new llvm::FunctionPassManager(&llvmModule());
     functionPasses->add(dl);
 
-    tm->addAnalysisPasses(*codegenPasses);
     tm->addAnalysisPasses(*modulePasses);
     tm->addAnalysisPasses(*functionPasses);
 
@@ -153,6 +142,13 @@ void Codegen::createPasses() {
     // Figure out TargetLibraryInfo.
     llvm::Triple targetTriple(llvmModule().getTargetTriple());
     pmBuilder.LibraryInfo = new llvm::TargetLibraryInfo(targetTriple);
+
+    if (nativeEnabled()) {
+        codegenPasses = new llvm::PassManager();
+        codegenPasses->add(dl);
+        codegenPasses->add(pmBuilder.LibraryInfo);
+        tm->addAnalysisPasses(*codegenPasses);
+    }
 
     unsigned inlineThreshold = 225;
     if (options.optLevel > 2) {
@@ -167,9 +163,9 @@ void Codegen::createPasses() {
 void Codegen::emitCode(llvm::raw_ostream *os) {
     llvm::formatted_raw_ostream formattedOS;
 
-
     createPasses();
 
+    llvm::TargetMachine::CodeGenFileType cgft = llvm::TargetMachine::CGFT_AssemblyFile;
     switch (options.type) {
     case codegen::LLVM:
         formattedOS.setStream(*os, llvm::formatted_raw_ostream::PRESERVE_STREAM);
@@ -179,8 +175,9 @@ void Codegen::emitCode(llvm::raw_ostream *os) {
         modulePasses->add(llvm::createBitcodeWriterPass(*os));
         break;
     case codegen::ASM:
+        break;
     case codegen::OBJ:
-        formattedOS.setStream(*os, llvm::formatted_raw_ostream::PRESERVE_STREAM);
+        cgft = llvm::TargetMachine::CGFT_ObjectFile;
         break;
     default:
         // screem
@@ -194,11 +191,13 @@ void Codegen::emitCode(llvm::raw_ostream *os) {
             functionPasses->run(*I);
     functionPasses->doFinalization();
 
-
     modulePasses->run(llvmModule());
 
-    codegenPasses->run(llvmModule());
-
+    if (codegenPasses) {
+        formattedOS.setStream(*os, llvm::formatted_raw_ostream::PRESERVE_STREAM);
+        targetMachine()->addPassesToEmitFile(*codegenPasses, formattedOS, cgft);
+        codegenPasses->run(llvmModule());
+    }
 }
 
 string extension(codegen::Type type) {
@@ -208,11 +207,11 @@ string extension(codegen::Type type) {
     case codegen::LLVM:
         return "ll";
     case codegen::BC:
-        return "bs";
+        return "bc";
     case codegen::ASM:
         return "s";
     case codegen::OBJ:
-        return "obj";
+        return "o";
     default:
         throw new runtime_error("Unsupported type");
     }
