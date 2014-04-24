@@ -19,6 +19,7 @@
 #include <llvm/IR/TypeBuilder.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/Pass.h>
+#include <llvm/Support/Host.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
@@ -595,6 +596,7 @@ MjModule::MjModule(AST ast, const Symbols &symbols):
     _module(symbols.globalScope().program()->name(), llvm::getGlobalContext()),
     values(&_module, _symbols)
 {
+    _module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
     makeStdLib();
     walkTree();
     makeMain();

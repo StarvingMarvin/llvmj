@@ -14,10 +14,11 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
-#include "llvm/Support/FormattedStream.h"
+#include <llvm/Support/FormattedStream.h>
 #include <llvm/Support/PathV2.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/raw_os_ostream.h>
+#include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/TargetRegistry.h>
 #include "llvm/Target/TargetLibraryInfo.h"
 #include <llvm/Target/TargetMachine.h>
@@ -60,6 +61,7 @@ private:
 
 llvm::TargetMachine *Codegen::createTargetMachine() {
     //// Create the TargetMachine for generating code.
+    llvm::InitializeNativeTarget();
     string error;
     string triple = llvmModule().getTargetTriple();
     const llvm::Target *target = llvm::TargetRegistry::lookupTarget(triple, error);
@@ -87,7 +89,64 @@ llvm::TargetMachine *Codegen::createTargetMachine() {
     return tm;
 }
 
+//bool EmitAssemblyHelper::AddEmitPasses(BackendAction Action,
+//                                       formatted_raw_ostream &OS,
+//                                       TargetMachine *TM) {
+
+//  // Create the code generator passes.
+//  PassManager *PM = getCodeGenPasses(TM);
+
+//  // Add LibraryInfo.
+//  llvm::Triple TargetTriple(TheModule->getTargetTriple());
+//  TargetLibraryInfo *TLI = new TargetLibraryInfo(TargetTriple);
+//  if (!CodeGenOpts.SimplifyLibCalls)
+//    TLI->disableAllFunctions();
+//  PM->add(TLI);
+
+//  // Add Target specific analysis passes.
+//  TM->addAnalysisPasses(*PM);
+
+//  // Normal mode, emit a .s or .o file by running the code generator. Note,
+//  // this also adds codegenerator level optimization passes.
+//  TargetMachine::CodeGenFileType CGFT = TargetMachine::CGFT_AssemblyFile;
+//  if (Action == Backend_EmitObj)
+//    CGFT = TargetMachine::CGFT_ObjectFile;
+//  else if (Action == Backend_EmitMCNull)
+//    CGFT = TargetMachine::CGFT_Null;
+//  else
+//    assert(Action == Backend_EmitAssembly && "Invalid action!");
+
+//  // Add ObjC ARC final-cleanup optimizations. This is done as part of the
+//  // "codegen" passes so that it isn't run multiple times when there is
+//  // inlining happening.
+//  if (LangOpts.ObjCAutoRefCount &&
+//      CodeGenOpts.OptimizationLevel > 0)
+//    PM->add(createObjCARCContractPass());
+
+//  if (TM->addPassesToEmitFile(*PM, OS, CGFT,
+//                              /*DisableVerify=*/!CodeGenOpts.VerifyModule)) {
+//    Diags.Report(diag::err_fe_unable_to_interface_with_target);
+//    return false;
+//  }
+
+//  return true;
+//}
+
 void Codegen::createPasses() {
+
+    llvm::TargetMachine *tm = createTargetMachine();
+    llvm::DataLayout *dl = new llvm::DataLayout(&llvmModule());
+    codegenPasses = new llvm::PassManager();
+    codegenPasses->add(dl);
+    modulePasses = new llvm::PassManager();
+    modulePasses->add(dl);
+    functionPasses = new llvm::FunctionPassManager(&llvmModule());
+    functionPasses->add(dl);
+
+    tm->addAnalysisPasses(*codegenPasses);
+    tm->addAnalysisPasses(*modulePasses);
+    tm->addAnalysisPasses(*functionPasses);
+
     llvm::PassManagerBuilder pmBuilder;
     pmBuilder.OptLevel = options.optLevel;
 
@@ -108,7 +167,7 @@ void Codegen::createPasses() {
 void Codegen::emitCode(llvm::raw_ostream *os) {
     llvm::formatted_raw_ostream formattedOS;
 
-    //llvm::TargetMachine *tm = createTargetMachine();
+
     createPasses();
 
     switch (options.type) {
