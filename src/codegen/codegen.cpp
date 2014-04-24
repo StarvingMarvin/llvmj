@@ -135,14 +135,13 @@ void Codegen::createPasses() {
     llvm::PassManagerBuilder pmBuilder;
     pmBuilder.OptLevel = options.optLevel;
 
-    // Figure out TargetLibraryInfo.
     llvm::Triple targetTriple(llvmModule().getTargetTriple());
     pmBuilder.LibraryInfo = new llvm::TargetLibraryInfo(targetTriple);
 
     if (nativeEnabled()) {
         codegenPasses = new llvm::PassManager();
         codegenPasses->add(dl);
-        codegenPasses->add(pmBuilder.LibraryInfo);
+        //codegenPasses->add(pmBuilder.LibraryInfo);
         tm->addAnalysisPasses(*codegenPasses);
     }
 
@@ -191,7 +190,9 @@ void Codegen::emitCode(llvm::raw_ostream *os) {
 
     if (codegenPasses) {
         formattedOS.setStream(*os, llvm::formatted_raw_ostream::PRESERVE_STREAM);
-        targetMachine()->addPassesToEmitFile(*codegenPasses, formattedOS, cgft);
+        if (targetMachine()->addPassesToEmitFile(*codegenPasses, formattedOS, cgft)) {
+            std::cout << "pass fail";
+        }
         codegenPasses->run(llvmModule());
     }
 }
@@ -236,6 +237,7 @@ void executeCodegen(CodegenOptions options) {
     MjModule module(ast, symbols);
     Codegen cg(module, options);
     cg.emitCode(&raw_os);
+    raw_os.flush();
 
 }
 
