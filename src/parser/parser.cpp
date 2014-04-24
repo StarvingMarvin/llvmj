@@ -143,7 +143,7 @@ const NodeVisitor& AstWalker::getVisitor(uint32_t tokenType) {
 void AstWalker::visit(AST ast) {
     stack.push_back(ast);
 #ifdef DEBUG
-    std::cout<< "Visiting " << tokenText() << std::endl;
+    //std::cout<< "Visiting " << tokenText() << std::endl;
 #endif
     uint32_t tt = tokenType();
     const NodeVisitor& visitor = getVisitor(tt);

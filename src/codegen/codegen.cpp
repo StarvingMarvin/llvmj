@@ -45,11 +45,7 @@ public:
         _module(module), options(opts), modulePasses(0), functionPasses(0),
         codegenPasses(0), _targetMachine(0) {}
     void emitCode(llvm::raw_ostream *os);
-    ~Codegen() {
-        delete codegenPasses;
-        delete modulePasses;
-        delete _targetMachine;
-    }
+
 private:
 
     llvm::TargetMachine *targetMachine();

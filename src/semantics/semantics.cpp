@@ -268,9 +268,16 @@ void LoopVisitor::operator()(AstWalker &walker) const {
     const NodeVisitor &nv = walker.getVisitor(BREAK);
 
     // NodeVisitor is noop
-    walker.addVisitor(BREAK, NodeVisitor());
+    NodeVisitor noop;
+#ifdef DEBUG
+    cout << "Installing noop break visitor: " << endl;
+#endif
+    walker.addVisitor(BREAK, noop);
     nodeiterator ni = walker.firstChild();
     visitChildren(walker, ni);
+#ifdef DEBUG
+    cout << "Installing back normal break visitor: " << endl;
+#endif
     walker.addVisitor(BREAK, nv);
 }
 
