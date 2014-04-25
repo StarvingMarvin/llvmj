@@ -232,6 +232,9 @@ void executeCodegen(CodegenOptions options) {
 
     llvm::raw_os_ostream raw_os(os);
 
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmPrinters();
     Symbols symbols;
     checkSemantics(ast, symbols);
     MjModule module(ast, symbols);

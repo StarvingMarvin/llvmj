@@ -186,7 +186,14 @@ void Values::initGlobals(const GlobalScope &global) {
         llvm::Type *t = types[c->type().name()];
         GlobalVariable *gv = new GlobalVariable(*_module, t, true,
                                      GlobalValue::ExternalLinkage, 0, c->name());
-        gv->setInitializer(ConstantInt::get(t, c->value(), true));
+
+        llvm::Constant *init;
+        if (c->name() == "null") {
+            init = llvm::ConstantAggregateZero::get(t);
+        } else {
+            init = ConstantInt::get(t, c->value(), true);
+        }
+        gv->setInitializer(init);
         globalValues[c->name()] = gv;
     }
 
@@ -217,12 +224,9 @@ void Values::initGlobals(const GlobalScope &global) {
 
         llvm::Constant *init;
         if (llvm::isa<StructType>(t)) {
-            std::cout << v->name() << ": " << v->type().name() << std::endl;
-            StructType *st = dyn_cast<StructType>(t);
-
-            llvm::Constant *len = ConstantInt::get(st->getStructElementType(0), 0, true);
-            llvm::Constant *dataPtr = ConstantInt::get(st->getStructElementType(1), 0, true);
-            init = llvm::ConstantStruct::get(st, len, dataPtr, (Type*)0);
+            init = llvm::ConstantAggregateZero::get(t);
+        } else if (llvm::isa<PointerType>(t)) {
+            init = llvm::ConstantPointerNull::get(dyn_cast<PointerType>(t));
         } else {
             init = ConstantInt::get(t, 0, true);
         }
