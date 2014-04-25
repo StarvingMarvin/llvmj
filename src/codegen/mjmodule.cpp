@@ -471,7 +471,7 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
     llvm::Type *atype = arrayType(ptype);
     llvm::Type *patype = PointerType::get(atype, 0);
 
-    uint64_t typeSize = sizeOf(type);
+    size_t typeSize = sizeOf(type);
     Value *typeSizeVal = ConstantInt::get(values().type("mj.size_t"), typeSize, true);
 
     Value *dataSize = builder.CreateMul(typeSizeVal, arrSize, "data_size_tmp");
@@ -479,12 +479,12 @@ void NewArrVisitor::operator()(AstWalker &walker) const {
     Value *voidPtr = callMalloc(dataSize);
     Value *arrayData = builder.CreateBitCast(voidPtr, ptype, "array_data_ptr");
 
-    uint64_t structSize = sizeOf(atype);
+    size_t structSize = sizeOf(atype);
     voidPtr = callMalloc(structSize);
     Value *arrayStructPtr = builder.CreateBitCast(voidPtr, patype, "array_ptr");
 
     Value *aSizePtr = structPtrField(arrayStructPtr, 0);
-    Value *arrSizeL = builder.CreateSExtOrBitCast(arrSize, values().type("mj.size_t"));
+    Value *arrSizeL = builder.CreateTruncOrBitCast(arrSize, values().type("int"));
     builder.CreateStore(arrSizeL, aSizePtr);
 
     Value *aDataPtr = structPtrField(arrayStructPtr, 1);
@@ -548,7 +548,7 @@ void ReadVisitor::operator ()(AstWalker &walker) const {
     }
 }
 
-uint64_t CodegenVisitor::sizeOf(llvm::Type* t) const {
+size_t CodegenVisitor::sizeOf(llvm::Type* t) const {
     DataLayout dl (&_module);
     return dl.getTypeAllocSize(t);
 }
@@ -556,12 +556,12 @@ uint64_t CodegenVisitor::sizeOf(llvm::Type* t) const {
 llvm::Type* CodegenVisitor::arrayType(llvm::Type *ptype) const {
     LLVMContext &ctx = _module.getContext();
     vector<llvm::Type*> fields;
-    fields.push_back(IntegerType::get(ctx, 64));
+    fields.push_back(IntegerType::get(ctx, 32));
     fields.push_back(ptype);
     return StructType::get(ctx, fields);
 }
 
-llvm::Value* CodegenVisitor::callMalloc(uint64_t size) const {
+llvm::Value* CodegenVisitor::callMalloc(size_t size) const {
     return callMalloc(ConstantInt::get(_module.getContext(), APInt(64, size, false)));
 }
 
@@ -686,7 +686,7 @@ void MjModule::makeStdLib() {
 
     builder.CreateRet(len);
     values.leaveFunction();
-
+    llvm::verifyFunction(*func_len);
     // print(int)
 
 

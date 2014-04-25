@@ -26,9 +26,9 @@ protected:
     llvm::Module &module() const { return _module; }
     Values &values() const { return _values; }
     static llvm::IRBuilder<> builder;
-    uint64_t sizeOf(llvm::Type* t) const;
+    size_t sizeOf(llvm::Type* t) const;
     llvm::Type* arrayType(llvm::Type *t) const;
-    llvm::Value* callMalloc(uint64_t size) const;
+    llvm::Value* callMalloc(size_t size) const;
     llvm::Value* callMalloc(llvm::Value* size) const;
     llvm::Value* structPtrField(llvm::Value *structPtr, int idx) const;
     llvm::Value* cast(llvm::Value* val, llvm::Type* type) const;

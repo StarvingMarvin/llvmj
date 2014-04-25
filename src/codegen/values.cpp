@@ -78,7 +78,7 @@ void Values::initPrimitives() {
     llvm::Type *size_type = IntegerType::get(ctx, ptr_size);
     types["mj.size_t"] = size_type;
 
-    types["mj.array"] = StructType::get(size_type, void_ptr, NULL);
+    types["mj.array"] = StructType::get(types["int"], void_ptr, NULL);
 }
 
 void Values::initTypes(const GlobalScope &global) {
@@ -161,7 +161,7 @@ llvm::Type *Values::initArrayType(const mj::ArrayType &at) {
     llvm::Type *ptype = PointerType::get(type, 0);
     LLVMContext &ctx = _module->getContext();
     vector<llvm::Type*> fields;
-    fields.push_back(IntegerType::get(ctx, 64));
+    fields.push_back(IntegerType::get(ctx, 32));
     fields.push_back(ptype);
     return StructType::get(ctx, fields);
 }
@@ -215,7 +215,18 @@ void Values::initGlobals(const GlobalScope &global) {
         GlobalVariable *gv = new GlobalVariable(*_module, t, false,
                                      GlobalValue::ExternalLinkage, 0, name);
 
-        gv->setInitializer(ConstantInt::get(t, 0, true));
+        llvm::Constant *init;
+        if (llvm::isa<StructType>(t)) {
+            std::cout << v->name() << ": " << v->type().name() << std::endl;
+            StructType *st = dyn_cast<StructType>(t);
+
+            llvm::Constant *len = ConstantInt::get(st->getStructElementType(0), 0, true);
+            llvm::Constant *dataPtr = ConstantInt::get(st->getStructElementType(1), 0, true);
+            init = llvm::ConstantStruct::get(st, len, dataPtr, (Type*)0);
+        } else {
+            init = ConstantInt::get(t, 0, true);
+        }
+        gv->setInitializer(init);
         globalValues[v->name()] = gv;
     }
 
@@ -229,7 +240,7 @@ void Values::initExterns() {
     vector<llvm::Type*> args;
     args.push_back(sizeT);
     FunctionType *malloc_type = FunctionType::get(voidPtr, args, false);
-    //FunctionType *malloc_type = TypeBuilder<llvm::types::i<8>*(llvm::types::i<64>), true>::get(_module->getContext());
+
     Function* func_malloc = Function::Create(
      /*Type=*/malloc_type,
      /*Linkage=*/GlobalValue::ExternalLinkage,
