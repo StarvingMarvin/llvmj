@@ -38,7 +38,7 @@ int main(const int argc, const char** argv) {
         0, // Required?
         1, // Number of args expected.
         0, // Delimiter if expecting multiple args.
-        "Output type. Posible values are: ast, llvm, bc, asm and obj",
+        "Output type. Posible values are: ast, llvm, bc, asm and obj. Default is obj",
         "-t",
         "--output-type"
     );
@@ -46,11 +46,10 @@ int main(const int argc, const char** argv) {
     opt.add(
         "", // Default.
         0, // Required?
-        1, // Number of args expected.
+        0, // Number of args expected.
         0, // Delimiter if expecting multiple args.
-        "Output optimized code",
-        "-O",
-        "--optimize"
+        "Output unoptimized code",
+        "-O0"
     );
 
     opt.parse(argc, argv);
@@ -98,7 +97,10 @@ int main(const int argc, const char** argv) {
         return 1;
     }
 
-    cgOptions.optLevel = 0;
+    cgOptions.optLevel = 2;
+    if (opt.isSet("-O0")) {
+        cgOptions.optLevel = 0;
+    }
 
     try {
         executeCodegen(cgOptions);
