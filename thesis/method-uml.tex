@@ -1,0 +1,18 @@
+\begin{tikzpicture}
+	\tikzumlset{font=\footnotesize}
+	\begin{umlpackage}[x=0,y=0]{symbols}
+
+		\umltypedef[x=-120pt, y=0pt]{ArgumentTypes}{vector$<$Type$>$}{} %\\ 
+		\umltypedef[x=-120pt, y=-50pt]{Arguments}{vector$<$NamedValue$>$}{} % \\ 
+		\umlclass[x=0pt,y=0pt]{Method}{}{}
+
+		\umlclass[x=0pt,y=-80pt]{MethodArguments}{}{}
+		
+		\umlclass[x=-120pt,y=-80pt]{MethodType}{
+			+ returnType : Type \\
+			+ arguments : vector
+		}{
+		}
+
+	\end{umlpackage}
+\end{tikzpicture}

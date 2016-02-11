@@ -1,0 +1,46 @@
+\begin{tikzpicture}
+	\tikzumlset{font=\footnotesize}
+
+	\begin{umlpackage}[x=0,y=0]{symbols}
+	
+		\umlclass[x=0pt,y=0pt]{Scope}{
+			}{
+				+ define(s: Symbol): void \\ 
+				+ resolve(name: string): Symbol \\
+				+ begin(): iterator \\
+				+ end(): iterator
+			}
+		
+		\umlemptyclass[x=-140pt,y=22pt]{Symbol}
+		
+		\umlclass[x=-86pt,y=-115pt]{MethodArguments}
+			{}{
+				+ matchArguments(args: vector)
+			}
+
+		\umlclass[x=180pt,y=-23pt]{SplitScope}
+			{}{
+				+ methodBegin(): iterator \\
+				+ methodEnd(): iterator \\
+				+ variableBegin(): iterator \\
+				+ variableEnd(): iterator \\
+				+ constantBegin(): iterator \\
+				+ constantEnd(): iterator \\
+				+ classBegin(): iterator \\
+				+ classEnd(): iterator
+			}
+		
+%		\umlemptyclass[x=-160pt,y=-50pt]{SplitScope}
+		
+		\umlemptyclass[x=60pt,y=-110pt]{ClassScope}
+		
+		\umlemptyclass[x=-140pt,y=-40pt]{Method}
+		
+		\umlemptyclass[x=80pt,y=-160pt]{Class}
+		
+		\umlemptyclass[x=120pt,y=-160pt]{Program}
+		
+		\umlemptyclass[x=210pt,y=-160pt]{GlobalScope}
+		
+	\end{umlpackage}
+\end{tikzpicture}

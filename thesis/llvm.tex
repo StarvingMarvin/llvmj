@@ -50,19 +50,32 @@
 %braries and system libraries.
 
 
-LLVM je infrastrujtura za razvijanje optimizujućih prevodilaca. Dizajniran je tako da omogući analizu i transformaciju programa kroz sve faze programskog ciklusa: od prevođenja i povezivanja, do vremena samog izvršavanja programa\cite{llvm-cgo04}. Iako LLVM predstavlja akronim za ,,Low Level Virtual Machine''\footnote{eng. virtualna mašina niskog nivoa}, sam naziv možda ne pruža najjasniji uvid u to šta LLVM pruža, a gde njegov domen prestaje. Pojam ,,virtualna mašina'' se često vezuje za Java ili .net virtualnu mašinu koje su precizno definisane, njihov bajt-kod je portabilan između platformi i upravljaju memorijom programa. Sve ove stvari su izvan opsega LLVM-a. Ova ograničenja postoje sa razlogom: kako bi LLVM omogućio generisanje efikasnog mašinskog koda za konkretnu procesorsku arhitekturu, on mora da omogući programeru pristup svim 
+LLVM je infrastrujtura za razvijanje optimizujućih prevodilaca. Dizajniran je tako da omogući analizu i transformaciju programa kroz sve faze programskog ciklusa: od prevođenja i povezivanja, do vremena samog izvršavanja programa\cite{llvm-cgo04}. 
+Iako LLVM predstavlja akronim za ,,Low Level Virtual Machine''
+\footnote{eng. virtualna mašina niskog nivoa}
+, sam naziv možda ne predstavlja najjasniju sliku u to šta LLVM pruža, a gde njegov domen prestaje. 
+Pojam ,,virtualna mašina'' se često vezuje za Java ili .net virtualnu mašinu koje definišu koncepte višeg nivoa kao što su klase, nasleđivanje, izuzeci ili automatsko upravljanje memorijom. 
+Sve ove stvari su izvan opsega LLVM-a, koji sa druge strane može biti korišćen da se takve virtualne mašine implementiraju. 
+Još jedna stvar koja se podrazumeva kod drugih virtualnih mašina je da je njihov bajt-kod je portabilan između platformi. 
+Sa druge strane kako bi LLVM omogućio generisanje efikasnog mašinskog koda za konkretnu procesorsku arhitekturu, on mora da omogući tvorcima kompajlera pristup specifičnim operacijama podržanih arhitektura. 
 
-JIT
-Clang, kompajler za C, C++ i Objective-C
-VMKit implementacija JVM-a
+Neki od projekata koji se baziraju ili koriste LLVM su Clang \ndash kompajler za C, C++ i Objective C, 
+zatim VMKit projekat implementacije Java virtualne mašine, 
+Glasgow Haskell Compiler od skora ima opciju da preko LLVM-a generiše kod, 
+Rubinius implementacija Ruby-ja koristi LLVM za optimizacije i JIT
+\footnote{\skr \eng Just in Time \ndash Prevođenje međukoda u mašinski kod neposredno pre izvršavanja} 
+kompajliranje.
 
+\begin{figure}[h]
+
+\centering
 \begin{tikzpicture}
-	[inner sep=3mm,
-	box/.style={rectangle, draw, minimum width=30mm, }]
+	[inner sep=2.8mm,
+	box/.style={rectangle, draw, minimum width=25mm, }]
 	\node[box] (c-frontend)   {C};
 	\node[box] (haskell-frontend)  [below=of c-frontend]  {Haskell};
 	\node[box] (other-frontend)  [below=of haskell-frontend]  {$\cdots$};
-	\node[box] (optimizers)  [right=of haskell-frontend]  {Optimizers}
+	\node[box] (optimizers)  [right=of haskell-frontend]  {Optimizacije}
 		edge [<-] (c-frontend)
 		edge [<-] (haskell-frontend)
 		edge [<-] (other-frontend);
@@ -72,7 +85,10 @@ VMKit implementacija JVM-a
 		edge [<-] (optimizers);
 	\node[box] (other-backend) [below=of x86-backend] {$\cdots$}
 	edge [<-] (optimizers);
-\end{tikzpicture}
+\end{tikzpicture} \\
+
+\caption{LLVM omogućava da se delovi arhitekture kompajlera kao što su optimizacije i generisanje mašinskog koda dele između nezavisnih projekata}
+\end{figure}
 
 \section{LLVM međureprezentacija}
 
@@ -89,17 +105,23 @@ VMKit implementacija JVM-a
 %bilities that are important for practical, lifelong analysis and
 %transformation of programs.
 
-Centralno mesto u arhitekturi LLVM-a\cite{aosa} zauzima međureprezentacija\footnote{eng. Intermediate Representation - IR} kojom se opisuje kod unutar sistema. LLVM IR je dizajniran da omogući analize i transformacije koda kakve se mogu očekivati u delu kompajlera koji se bavi optimizacijom. Ono što je značajno kod ove reprezentacije je da ne predstavlja neki interni implementacioni detalj, kao kod vecine kompajlera, nego je pogurana u prvi plan kao jezik jasno definisane semantike. LLVM međureprezentacija se tako sasvim ravnopravno može opisati svojom sintaksom sličnom asembleru, bajt-kodom i direktno iz programa putem C++ API-ja\footnote{eng. Application Programming Interface}.
+Centralno mesto u arhitekturi LLVM-a\cite{aosa} zauzima međureprezentacija
+\footnote{\eng Intermediate Representation \ndash IR} 
+kojom se opisuje kod unutar sistema. 
+LLVM IR je dizajniran da omogući analize i transformacije koda kakve se mogu očekivati u delu kompajlera koji se bavi optimizacijom. 
+Ono što je značajno kod ove reprezentacije je da ne predstavlja neki interni implementacioni detalj kao kod vecine kompajlera, 
+nego je pogurana u prvi plan kao jezik jasno definisane semantike. 
+LLVM međureprezentacija se tako sasvim ravnopravno može opisati svojom sintaksom sličnom asembleru, 
+bajt-kodom i direktno iz programa putem C++ API-ja
+\footnote{\eng Application Programming Interface}.
+
+Značajne osobine LLVM reprezentacije su 
+SSA forma
+\footnote{\skr \eng Static single asignement \ndash Statička jedinstvena dodela}
+striktno tipiziranje podataka
+pristup operacijama niskog nivoa, uključujući i instrukcije specifične za pojedine procesore.
 
 
-
-\section{LLVM tipovi}
-
-Primitivni: label, void, int, float, x86mmx, metadata
-
-Izvedeni: nizovi, funkcije, pointer, structure, vector, opaque
-
-Tipovi prvog reda: int, float, pointer, vector, struct, array, label, metadata
 
 
 \section{LLVM instrukcije}
@@ -149,6 +171,11 @@ Tipovi prvog reda: int, float, pointer, vector, struct, array, label, metadata
 %its successor basic blocks.
 
 add sub...
+
+\section{Optimizacija koda}
+
+
+
 
 \section{Elementi implementacije MicroJave}
 

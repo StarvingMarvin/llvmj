@@ -1,0 +1,60 @@
+\chapter{Implementacija semantike}
+
+Ovo poglavlje opisuje arhitekturalne odluke i klasnu hijerarhiju koja je ključna u semantičkoj analizi i implementaciji osobina jezika.
+Način na koji se iz memorijskog modela generiše LLVM međureprezentacija je predmet narednog poglavlja.
+
+
+\section{Simboli}
+
+Centralno mesto u ovoj fazi MicroJava prevodioca zauzima hijerarhija klasa vezanih za simbole, opsege i tabelu simbola.
+
+U MicroJavi možemo izdvojiti nekoliko vrsta simbola, kao što su primitivni tipovi, promenljive, konstante, klase i metode.
+Radi što lakše analize, a kasnije i generisanja koda, ovi simboli predstavljeni su hijerarhijom klasa kao na dijagramu \ref{symbols}.
+
+\begin{figure}[h]
+
+	\centering
+	\input{symbols-uml.tex}
+	\caption{Pojednostavljena struktura klasa koje predstavljaju simbole}
+	\label{symbols}
+\end{figure}
+
+Prilikom analize programa, bitno je da za tipove vrednosti u nekom izrazu utvrdimo da li su jednaki očekivanom tipu, odnosno da li su kompatabilni u slučaju dodele.
+Klasa \code{Type} deklariše virtualne metode \code{operator==} i \code{compatible}, a podrazumevana implementacija odgovara semantici primitivnih tipova: tipovi su jednaki ako se isto zovu, a kompatibilni su samo ako su jednaki.
+
+Klasa \code{ReferenceType} prihvata \mj{null} kao compatibilan tip.
+
+Tipovi nizova i metoda se implicitno registruju u globalnu tabelu simbola prilikom prvog nailaženja u kodu.
+
+
+
+\begin{figure}[h]
+	\centering
+	\input{scopes-uml.tex}
+	\caption{Pojednostavljena struktura klasa koje implementiraju i koriste opsege vidljivosti}
+\end{figure}
+
+MicroJava metod je implementiran kao vrednost koja ima tip 
+
+\begin{figure}[h]
+	\centering
+	\input{method-uml.tex}
+	\caption{Pojednostavljena struktura klasa koje opisuju metod}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\input{symbols-facade-uml.tex}
+	\caption{'Symbols' klasa je fasada ka predstavljenim klasama}
+\end{figure}
+
+\section{Semantička analiza}
+
+ASTWalker - utility klasa za prolazak kroz stablo koje je generisao antlr.
+
+External visitor pattern
+
+mnogo malih node visitor klasa
+
+rezultat analize je tabela simbola
+

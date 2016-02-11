@@ -1,14 +1,37 @@
-\chapter{Parsiranje i semantička analiza}
+\chapter{Prepoznavanje jezika i sintaksna analiza}
 
-Prvi korak u implementaciji jezika je prepoznavanje ulaza i provera sintaksih i semantičkih pravila. U slučaju jako jednostavnih gramatika, parser se veoma lako može napisati ručno. Sa druge strane u slučaju jako komplikovanih gramatika ručno kodiranje određenih delova je verovatno jedini način da se parser verno implementira. Međutim, za većinu svakodnevnih problema, najlakši način da se napravi parser je pomoću nekog od mnogobrojnih alata koji će za zadatu gramatiku generisati potreban kod. Opredelio sam se za ANTLR\footnote{skr. eng. Another Tool for Langauage Recognition} zbog nekih njegovih svojstava kojima ću posvetiti nekoliko strana.
+Prvi korak u implementaciji jezika je prepoznavanje ulaza i provera sintaksih i semantičkih pravila. 
+U slučaju jako jednostavnih gramatika, parser se veoma lako može napisati ručno, najčešće nekom varijantom rekurzivnog spusta. 
+Sa druge strane u slučaju jako komplikovanih gramatika ručno kodiranje je verovatno jedini način da se parser verno implementira uz prihvatljive performanse i dovoljno detaljne opise greške.
+Međutim, za većinu svakodnevnih problema, najlakši način da se napravi parser je pomoću nekog od mnogobrojnih alata koji će za zadatu gramatiku generisati potreban kod. 
 
-\section{Uvod u ANTLR}
+Većina alata koji su u upotrebi zasnivaju se na $LR$\cite{lr} gramatikama i parsiranju od dna ka vrhu\footnote{\eng bottom-up}, pre svega $LALR(1)$ kao što je YACC\cite{yacc}.
+Algoritam za implementaciju $LALR(1)$ gramatike opisan je 1969. kao jednostavnija alternativa $LR(k)$ parseru.
+Oba algoritma garantuju linearno vreme izvršavanja, ali $LALR(1)$ žrtvuje malo na snazi zarad boljeg iskorišćenja memorije.
 
-ANTLR je parser generator napisan u Javi. Razvijan je u prethodne dve decenije, prevenstveno od strane Terensa Para\footnote{Terrence Parr}, profesora univerziteta u San Francisku. Postoji nekoliko stvari koje ANTLR čine jedinstvenim\cite{antlr-contrib}:
+Sa druge strane $LL$ gramatike su bile ređe primenjivane u praksi.
+Zbog toga što odluka o smeni mora da se donese na osnovu manje pročitanog ulaza u odnosu na $LR$ gramatike, $LL$ parseri mogu da prepoznaju manji broj jezika.
+Da bi $LL(k)$ gramatika bila upotrebiva u praksi, smatralo se da postoje dve mogućnosti: da se poveća $k$, da bi se odluka donosila sa više poznatih terminalnih simbola, što bi za posledicu imalo exponencijalni rast prostorne zahtevnosti, ili da se moguća grananja spekulativno izvrše, dok se ne pronađe ispravna produkcija, dovodeći do eksponencijalnog vremena izvršenja.
 
+Kako je u poslednjih par decenija računsk
+
+FIXME:
+tradeoff izmedju brzine, snage i ostalih feature-a (error reporting and recovery, ease of development)
+sad se malo više razmišlja i o drugim stvarima (packrat, peg, antlr)
+
+Za ovu implementaciju MicroJava-e korišćen je ANTLR
+\footnote{\skr \eng Another Tool for Langauage Recognition}.
+Osobine koje su opredelile za izbor ovog parser generatora su između ostalog graficko okruženje za razvoj i analizu gramatika: Antlrworks, generisanje C koda i apstraktno sintaksno stablo kao izlaz parsera.
+Međutim ono što ovaj alat čini korisnim jesu pre svega inovativne strategije parsiranja kao što su $LL(k)$ sa predikatima\cite{pred-llk}, linearno približno predviđanje\cite{parr-thesis} i $LL(*)$\cite{ll*}.
+
+\section{Osobine ANTLR-a}
+
+ANTLR je parser generator napisan u Javi. 
+Razvijan je u prethodne dve decenije, prevenstveno od strane Terensa Para, profesora univerziteta u San Francisku.
+Postoji nekoliko stvari koje ANTLR čine jedinstvenim
 \begin{description}
 
-	\item[Linearno približno prepoznavanje]\footnote{eng. Linear Aproximate Lookahead} \hfill \\
+	\item[Linearno približno prepoznavanje]\footnote{\eng Linear Aproximate Lookahead} \hfill \\
 	Problem prepoznavanja gramatičkog pravila sa pročitanih $k > 1$ narednih simbola sa ulaza, je $O(|T|^{k})$ prostorne zahtevnosti, gde je $|T|$ veličina skupa ulaznih simbola. 
 	
 	Uz mali gubitak snage, strategija približnog prepoznavanja sa $O(|T|k)$ kompleksnosti čini \LLk parsere praktičnijim sa stanovišta performansi.
@@ -25,18 +48,22 @@ ANTLR je parser generator napisan u Javi. Razvijan je u prethodne dve decenije, 
 %PCCTS formalized the idea of selective backtracking as an operator, a predicate, that let you resolve finite lookahead conflicts with a possibly infinite, possibly nonregular, lookahead language.  Importantly, PCCTS generates hybrid finite/backtracking parsing decisions that avoid the backtrack when finite lookahead provides an obvious path at parse-time.  This hybrid approach significantly reduces the amount of backtracking done by the parser.	
 	\item[Generisanje apstraktnih sintaksnih stabala] \hfill \\
 	Ono što često želimo da uradimo po prepoznavanju ulazne sekvence jeste konstrukcija apstraktnog sintaksnog stabla. ANTLR jednostavnom sintaksom pomaže automatizaciju ovog procesa.
-	\item[Jedinstvena gramatika za lekser, parser i AST\footnote{skr. eng. Abstract syntax tree}  parser] \hfill \\
+	\item[Jedinstvena gramatika za lekser, parser i AST\footnote{\skr \eng Abstract syntax tree}  parser] \hfill \\
 	Istom notacijom se opisuje građenje terminalnog simbola od ulaznih karaktera, građenje neterminalnih simbola od terminalnih, kao i građenje pravila na osnovu sintaksnih stabala.
 	\item[Kanali za simbole] \hfill \\
-	Ideja je proistekla iz potrebe da se određeni terminalni simboli na ulazu ignorišu, ali ne i odbace, kao recimo komentari. Uopštenjem ove ideje došlo je do implementacije odvojenih kanala u koje lekser može da emituje simbole. Tako se recimo komentari, deklaracije, funkcije i slično mogu slati u odvojene kanale. Lekser time postaje emiter tokena, parser konzument, a između njih se može umetnuti i filter koji funkcioniše sa strane leksera kao kunzument, a sa strane parsera kao emiter.
+	Ideja je proistekla iz potrebe da se određeni terminalni simboli na ulazu ignorišu, ali ne i odbace, kao recimo komentari. 
+Uopštenjem ove ideje došlo je do implementacije odvojenih kanala u koje lekser može da emituje simbole. Tako se recimo komentari, deklaracije, funkcije i slično mogu slati u odvojene kanale. 
+Lekser time postaje emiter tokena, parser konzument, a između njih se može umetnuti i filter koji funkcioniše sa strane leksera kao kunzument, a sa strane parsera kao emiter.
 	\item [\LLa gramatike] \hfill \\
 	Ovo je novina u verziji 3. Generator parsera ovom strategijom može da prihvati gramatike koje zahtevaju čitanje proizvoljno mnogo simbola sa ulaza.
 
 \end{description}
 
-  U poglavljima ,,\LLa gramatike'' i ,,ANTLR gramatika'' detaljnije ću opisati neke od ovih osobina.
+Poglavlja ,,\LLa gramatike'' i ,,ANTLR gramatika'' detaljnije opisuju neke od ovih osobina.
   
-  ANTLR može da generiše kod u više programskih jezika (Java, C, C\#, Ruby, Python\ldots). Za lakšu izradu parsera postoji i razvojno okruženje, ANTLRWorks, koje poseduje širok skup mogućnosti, kao što su: automatsko kompletiranje i formatiranje koda, grafički prikaz gramatičkih pravila u vidu grafa stanja i testiranje gramatike za zadate ulaze.
+ANTLR može da generiše kod u više programskih jezika (Java, C, C\#, Ruby, Python\ldots). 
+Za lakšu izradu parsera postoji i razvojno okruženje, ANTLRWorks, koje poseduje širok skup mogućnosti, kao što su: 
+automatsko kompletiranje i formatiranje koda, grafički prikaz gramatičkih pravila u vidu grafa stanja i testiranje gramatike za zadate ulaze.
 
 
 \section{ANTLR gramatika}
@@ -52,4 +79,4 @@ ANTLR je parser generator napisan u Javi. Razvijan je u prethodne dve decenije, 
 
 % predicates
 
-\section{ANTLR gramatika MicroJave}
+

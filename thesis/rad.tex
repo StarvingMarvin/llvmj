@@ -5,6 +5,9 @@
 \usepackage{graphicx}
 \usepackage{setspace}
 \usepackage{tikz}
+\usepackage{tikz-uml}
+\usepackage{listings}
+\usepackage[font={small,it}]{caption}
 \usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,petri}
 
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
@@ -12,8 +15,11 @@
 \newcommand{\LLk}{\LL{k}}
 \newcommand{\LLa}{\LL{\ast}}
 
-\newcommand{\mj}[1]{\textit{#1}}
-
+\newcommand{\mj}[1]{\texttt{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\eng}{\textit{eng. {}}}
+\newcommand{\skr}{\textit{skr. {}}}
+\newcommand{\ndash}{\textendash {} }
 
 %opening
 \title{MicroJava na LLVM infrastrukturi}
@@ -34,6 +40,8 @@
 \input{microjava.tex}
 
 \input{antlr.tex}
+
+\input{semantics.tex}
 
 \input{llvm.tex}
 
