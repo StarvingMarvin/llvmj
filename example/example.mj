@@ -1,7 +1,7 @@
 class Example
     final int MAX_SIZE = 100;
-    char[] inputNumbersStr;
-    char[] sortedListStr;
+    char inputNumbersStr[];
+    char sortedListStr[];
 
     class List {
         int val;
@@ -11,7 +11,7 @@ class Example
     List list;
 
 {
-    void write(char[] string)
+    void write(char string[])
         int i;
         int l;
     {
@@ -24,7 +24,7 @@ class Example
 
     }
 
-    void writeln(char[] string) {
+    void writeln(char string[]) {
         write(string);
         print(eol);
     }
@@ -133,12 +133,14 @@ class Example
             }
             if (v < head.val) {
                 head = cons(v, head);
+            } else {
+                cur = head;
+                while (cur.tail != null && v > cur.tail.val) {
+                    cur = cur.tail;
+                }
+                insertAfter(cur, v);
             }
-            cur = head;
-            while (v > cur.tail.val) {
-                cur = cur.tail;
-            }
-            insertAfter(cur, v);
+            i++;
         }
 
         return head;
@@ -151,13 +153,14 @@ class Example
         while(cur != null) {
             print(cur.val);
             print(',', 2);
+            cur = cur.tail;
         }
         print(eol);
     }
 
     void main() {
         init();
-        write(inputNumberStr);
+        write(inputNumbersStr);
         list = readList();
         write(sortedListStr);
         writeList(list);
