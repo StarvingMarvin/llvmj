@@ -82,6 +82,7 @@ llvm::TargetMachine *Codegen::targetMachine() {
         llvm::CodeGenOpt::Level optLevel = llvm::CodeGenOpt::Default;
         switch (options.optLevel) {
             case 0: optLevel = llvm::CodeGenOpt::None; break;
+            case 1: optLevel = llvm::CodeGenOpt::Less; break;
             case 3: optLevel = llvm::CodeGenOpt::Aggressive; break;
             default: break;
         }
@@ -94,30 +95,6 @@ llvm::TargetMachine *Codegen::targetMachine() {
     }
     return _targetMachine;
 }
-
-//bool EmitAssemblyHelper::AddEmitPasses(BackendAction Action,
-//                                       formatted_raw_ostream &OS,
-//                                       TargetMachine *TM) {
-
-//  // Normal mode, emit a .s or .o file by running the code generator. Note,
-//  // this also adds codegenerator level optimization passes.
-//  TargetMachine::CodeGenFileType CGFT = TargetMachine::CGFT_AssemblyFile;
-//  if (Action == Backend_EmitObj)
-//    CGFT = TargetMachine::CGFT_ObjectFile;
-//  else if (Action == Backend_EmitMCNull)
-//    CGFT = TargetMachine::CGFT_Null;
-//  else
-//    assert(Action == Backend_EmitAssembly && "Invalid action!");
-
-
-//  if (TM->addPassesToEmitFile(*PM, OS, CGFT,
-//                              /*DisableVerify=*/!CodeGenOpts.VerifyModule)) {
-//    Diags.Report(diag::err_fe_unable_to_interface_with_target);
-//    return false;
-//  }
-
-//  return true;
-//}
 
 void Codegen::createPasses() {
 

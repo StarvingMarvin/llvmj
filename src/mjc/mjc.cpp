@@ -21,7 +21,7 @@ int main(const int argc, const char** argv) {
 
     opt.overview = "MicroJava compiler.";
     opt.syntax = "mjc [OPTIONS] FILE";
-    opt.example = "mjc -t ll -o program.mj\n\n";
+    opt.example = "mjc -t llvm program.mj\n";
 
     opt.add(
         "", // Default.
@@ -44,12 +44,12 @@ int main(const int argc, const char** argv) {
     );
 
     opt.add(
-        "", // Default.
+        "2", // Default.
         0, // Required?
-        0, // Number of args expected.
+        1, // Number of args expected.
         0, // Delimiter if expecting multiple args.
-        "Output unoptimized code",
-        "-O0"
+        "Optimization level. Possible values: 0-3",
+        "-O"
     );
 
     opt.parse(argc, argv);
@@ -77,6 +77,9 @@ int main(const int argc, const char** argv) {
     string output_type;
     opt.get("-t")->getString(output_type);
 
+    int optLevel;
+    opt.get("-O")->getInt(optLevel);
+
     CodegenOptions cgOptions;
     cgOptions.inputFilePath = *opt.lastArgs[0];
 
@@ -97,10 +100,7 @@ int main(const int argc, const char** argv) {
         return 1;
     }
 
-    cgOptions.optLevel = 2;
-    if (opt.isSet("-O0")) {
-        cgOptions.optLevel = 0;
-    }
+    cgOptions.optLevel = optLevel;
 
     try {
         executeCodegen(cgOptions);
