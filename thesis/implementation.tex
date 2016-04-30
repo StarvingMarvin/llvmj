@@ -1,0 +1,82 @@
+\chapter{Implementacija MicroJava prevodioca}
+\label{ch:implementacija}
+
+Ovo poglavlje opisuje arhitekturu i implementacione detalje. Posebna pažnja je posvećena implementaciji semantike jezika.
+
+\section{Parser}
+
+Kako ANTLR generiše C kod, rezultat parsiranja programa je struktura koja predstavlja sintaksno stablo.
+Za udobniji rad  u C++u sa dobijenom strukturom implementirane su
+\mj{AstWalker}, \mj{NodeVisitor} i \mj{nodeiterator} klase i nekoliko pomoćnih funkcija. \mj{AstWalker} prihvata registraciju podrazumevanog posetioca kao i instancu posetioca po tipu AST noda.
+Klasa \mj{nodeiterator} služi za obilazak dece datog noda.
+
+\section{Semantika}
+
+\subsection*{Simboli}
+
+Centralno mesto u ovoj fazi MicroJava prevodioca zauzima hijerarhija klasa vezanih za simbole, opsege i tabelu simbola.
+
+U MicroJavi možemo izdvojiti nekoliko vrsta simbola, kao što su primitivni tipovi, promenljive, konstante, klase i metode.
+Radi što lakše analize, a kasnije i generisanja koda, ovi simboli predstavljeni su hijerarhijom klasa kao na dijagramu \ref{fig:symbols}.
+
+\begin{figure}[h]
+
+	\centering
+	\input{symbols-uml.tex}
+	\caption{Pojednostavljena struktura klasa koje predstavljaju simbole}
+	\label{fig:symbols}
+\end{figure}
+
+Prilikom analize programa, bitno je da za tipove vrednosti u nekom izrazu utvrdimo da li su jednaki očekivanom tipu, odnosno da li su kompatabilni u slučaju dodele.
+Klasa \code{Type} deklariše virtualne metode \code{operator==} i \code{compatible}, a podrazumevana implementacija odgovara semantici primitivnih tipova: tipovi su jednaki ako se isto zovu, a kompatibilni su samo ako su jednaki.
+
+Klasa \code{ReferenceType} prihvata \mj{null} kao compatibilan tip.
+
+Tipovi nizova i metoda se implicitno registruju u globalnu tabelu simbola prilikom prvog nailaženja u kodu.
+
+MicroJava metod je implementiran kao vrednost koja ima tip.
+Tip metoda sastoji se od povratnog tipa i tipa argumenata. 
+U fazi semantičke analize, tip se koristi za proveru argumenata i dodele rezultata promenjvoj prilikom poziva metode.
+Kasnije se u fazi generisanja koda ponovo koristi za pravljenje ekvivalentnog LLVM tipa.
+Metode takodje poseduju i dva opsega vidljivosti: za lokalne promenjive i argumente.
+
+\begin{figure}[h]
+	\centering
+	\input{scopes-uml.tex}
+	\caption{Pojednostavljena struktura klasa koje implementiraju i koriste opsege vidljivosti}
+	\label{fig:scopes} 
+\end{figure}
+
+Opsezi vidljivosti takodje imaju svoju hijerarhiju, prikazanu na slici \ref{fig:scopes}.
+Osnovna funkcionalnost: definisanje i pronalaženje simbola, implementirana je u klasi \mj{Scope}.
+Globalni opseg, implementiran u klasi \mj{GlobalScope}, sadrži sve predefinisane tipove i simbole, kao i implicitno generisane tipove nizova i potpise metoda.
+Globalni opseg takođe sadrži i referencu na objekat tipa \mj{Program} koja predstavlja spoljnu klasu MicroJava programa.
+Ulazni fajl je nevalidan ako do kraja njegove obrade nije definisana tačno jedna instanca klase \mj{Program}.
+
+
+\subsection*{Semantička analiza}
+
+Koristeći \mj{AstWalker} klasu definisanu u \mj{parser} paketu, za svaki tip tokena iz sintaksnog stabla definisana je \mj{Visitor} klasa koja proverava semantičku ispravnost izraza i sakuplja simbole. 
+Svi posetioci poseduju referencu na objekat tipa \mj{Symbols} koji predstavlja fasadu ka konkretnim simbolima i opsezima vidljivosti \ref{fig:symbols-facade}.
+Sa uspešno izvršenom proverom ulaznog programa i popunjenom tabelom simbola, sve je spremno za generisanje koda.
+\begin{figure}[h]
+	\centering
+	\input{symbols-facade-uml.tex}
+	\caption{'Symbols' klasa je fasada ka simbolima i opsezima vidljivosti}
+	\label{fig:symbols-facade}
+\end{figure}
+
+
+\section{Generisanje koda}
+
+Ceo MicroJava program sa svim predefinisanim funkcijama smešten je u jedan LLVM modul. Implementacija se oslanja na sledeće funcije iz standardne C biblioteke: \mj{i8* @malloc(i64)},
+\mj{i32 @putchar(i32)},
+\mj{i32 @\_\_isoc99\_scanf(i8*, ...)},
+\mj{i32 @printf(i8*, ...)} i
+\mj{i32 @getchar()}.
+
+Nizovi su implementirani kao struktura \mj{\{ i32, i8* \}} za dužinu niza i same elemente, pa je \mj{len()} funkcija implementirana kao prosto čitanje polja iz strukture.
+
+Slično tome, \mj{ord()} i \mj{chr()} funkcije su implementirane kao proširenje celobrojnog tipa iz 8 u 32 bita, odnosno zadržavanje samo nižih 8 bita 32-bitnog broja.
+
+Koristeći popunjenu tabelu simbola, prolazi se još jednom kroz sintaksno stablo i generišu LLVM instrukcije.

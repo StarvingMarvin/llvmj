@@ -3,44 +3,45 @@
 
 	\begin{umlpackage}[x=0,y=0]{symbols}
 	
-		\umlclass[x=0pt,y=0pt]{Scope}{
+		\umlclass[x=-2,y=0]{Scope}{
 			}{
-				+ define(s: Symbol): void \\ 
+				+ define(s: Symbol): void \\
 				+ resolve(name: string): Symbol \\
+				+ parent(): Scope* \\
 				+ begin(): iterator \\
 				+ end(): iterator
 			}
 		
-		\umlemptyclass[x=-140pt,y=22pt]{Symbol}
-		
-		\umlclass[x=-86pt,y=-115pt]{MethodArguments}
+		\umlclass[x=0,y=-4]{MethodArguments}
 			{}{
 				+ matchArguments(args: vector)
 			}
 
-		\umlclass[x=180pt,y=-23pt]{SplitScope}
-			{}{
-				+ methodBegin(): iterator \\
-				+ methodEnd(): iterator \\
-				+ variableBegin(): iterator \\
-				+ variableEnd(): iterator \\
-				+ constantBegin(): iterator \\
-				+ constantEnd(): iterator \\
-				+ classBegin(): iterator \\
-				+ classEnd(): iterator
-			}
+		\umlemptyclass[x=4,y=-4]{ClassScope}
 		
-%		\umlemptyclass[x=-160pt,y=-50pt]{SplitScope}
+		\umlemptyclass[x=-4,y=-4]{MethodScope}
 		
-		\umlemptyclass[x=60pt,y=-110pt]{ClassScope}
+		\umlemptyclass[x=4,y=1]{Program}
 		
-		\umlemptyclass[x=-140pt,y=-40pt]{Method}
+		\umlemptyclass[x=4,y=-1.5]{GlobalScope}
 		
-		\umlemptyclass[x=80pt,y=-160pt]{Class}
+		\umlVHVinherit[anchor1=north, anchor2=south, weight=0.32]
+			{MethodArguments}{Scope}		
 		
-		\umlemptyclass[x=120pt,y=-160pt]{Program}
+		\umlVHVinherit[anchor1=north, anchor2=south, weight=0.32]
+			{MethodScope}{Scope}
+					
+		\umlVHVinherit[anchor1=north, anchor2=south, weight=0.32]
+			{ClassScope}{Scope}
+			
+		\umlVHVinherit[anchor1=south, anchor2=south, arm2=-1.1]
+			{GlobalScope}{Scope}		
+			
+		\umlVHuniaggreg[attr=|1, anchor1=-120, anchor2=-5]
+			{Program}{Scope}
 		
-		\umlemptyclass[x=210pt,y=-160pt]{GlobalScope}
-		
+		\umluniaggreg[attr=|1, anchor1=north, anchor2=south]
+			{GlobalScope}{Program}
+
 	\end{umlpackage}
 \end{tikzpicture}

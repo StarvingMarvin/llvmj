@@ -1,9 +1,10 @@
 \chapter{Uvod}
+\label{ch:uvod}
 
 Posao prevođenja programskog jezika u mašinsku reprezentaciju se jednostavno može podeliti na dva dela: analizu ulaznog programa i generisanje krajnjeg izlaza. 
-Ako se pogleda malo detaljnije, vidi se da analizu sačinjava nekoliko koraka. 
-Svaki korak transformiše svoj ulaz u oblik pogodniji za dalji proces prevođenja. 
-Na samom početku \emph{leksičkom analizom} će se niz slova i znakova sa ulaza pretvoriti u niz \emph{tokena}, logičkih celina kao što su idetifikator, ključna reč, broj i slično. 
+Ako se pogleda malo detaljnije, vidi se da analizu sačinjava nekoliko koraka.
+Svaki korak transformiše svoj ulaz u oblik pogodniji za dalji proces prevođenja.
+Na samom početku \emph{leksičkom analizom} će se niz slova i znakova sa ulaza pretvoriti u niz \emph{tokena}, logičkih celina kao što su idetifikator, ključna reč, broj i slično.
 Potom će se \emph{sintaksnom analizom} za niz tokena utvrditi da li odgovaraju gramatičkim pravilima jezika. 
 Potrebno je sakupiti simbole koji se u programu javljaju (tabela simbola) i izgraditi strukturni model programa u memoriji pogodan za dalju obradu (apstraktno sintaksno stablo).
 Ako program zadovoljava gramatiku jezika, to i dalje ne mora da znači da je ispravan.
@@ -44,5 +45,5 @@ Java će baciti izuzetak ukoliko indeks izlazi iz okvira niza, dok će C vratiti
 Ova razlika u ponašanju nije primetna gledanjem u kod i zahteva dublje poznavanje jezika od same sintakse.
 Zbog toga bih pored prepoznavanja ulaza i generisanja mašinskog koda izdvojio i detalje implementacije semantičkih odlika jezika kao bitnu celinu u opisu rada prevodioca.
 
-Ove tri celine, koje čine programske prevodioce, opisane su u poglavljima prepoznavanje jezika, implementacija semantike i generisanje koda.
+Ove tri celine, koje čine programske prevodioce, opisane su u poglavljima \nameref{ch:prepoznavanje}, \nameref{ch:generisanje} i \nameref{ch:implementacija}.
 Naredno polavlje opisuje MicroJavu, jezik koji se implementira u okviru ovog rada.

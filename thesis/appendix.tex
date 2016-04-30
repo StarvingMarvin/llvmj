@@ -1,6 +1,20 @@
 
 \appendix
 
+\chapter{ANTRL}
+\label{ch:antlr}
+
+U najširim crtama, ANTLR koristi varijantu EBNF\footnote{\skr\eng Extended Backus-Naur Form} notacije sličnu onoj koju koristi YACC.
+
+\section{ANTLR sintaksa}
+
+Terminali velika slova, neterminali mala
+
+\section{Atributi i akcije}
+
+\section{Izlazi parsera}
+
+
 \chapter{Listing gramatike}
 \lstset{
   basicstyle=\footnotesize\ttfamily
@@ -9,7 +23,7 @@
 \lstinputlisting{../src/parser/MicroJava.g}
 
 \chapter{LLVM}
-
+\label{ch:llvm}
 Za inspekciju i razumevanje generisanog koda, korisno je poznavati osnove LLVM asemblerskog jezika koji je ovde predstavljen u tri dela: sintaksa, tipovi i pregled najkorisnijih instrukcija.
 
 
@@ -42,9 +56,9 @@ pa su mogući tipovi bilo koje širine od 1 do $2^{23} - 1$ (pribliižno 8 milio
 
 Postoji 5 tipova realnih brojeva: 
 \code{float} koji je širine 32 bita, 
-\code{double} širine 63 bita, 
+\code{double} širine 64 bita, 
 \code{fp128} od 128 bita sa mantisom od 112 bita, 
-kao i hardverski specifične x86\_{}fp80 od 80 bita 
+kao i hardverski specifične x86\_{}fp80 širine 80 bita 
 i ppc\_{}fp128 koji takodje ima 128 bita, ali mantisu širine 64 bita.
 
 
@@ -68,7 +82,7 @@ Sledi pregled svih potrebnih instrukcija za razumevanje generisanog MicroJava ko
 \item[\code{gep}] Računanje vrednosti pokazivača u okviru niza ili strukture.
 \end{description}
 
-\subsection*{Aritmetičko logičke instrokcije}
+\subsection*{Aritmetičko logičke instrukcije}
 
 \begin{description}
 \item[\code{add, sub, mul, sdiv, srem, neg}] Celobrojne aritmetičke operacije. Oba operanda moraju biti istog tipa.
@@ -95,4 +109,8 @@ jedno od: \code{eq} - jednako,  \code{ne} - različito, \code{sgt} - veće, \cod
 \end{description}
 
 
-\chapter{Primer MicroJava programa i generisanog koda}
+\chapter{Dokumentacija MicroJava kompajlera}
+
+\subsection*{Instalacija}
+
+\subsection*{Opcije programa}

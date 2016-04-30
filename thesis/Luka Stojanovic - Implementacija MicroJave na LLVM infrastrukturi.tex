@@ -1,14 +1,17 @@
-\documentclass[a4paper,12pt]{report}
+\documentclass[a4paper,11pt]{report}
 
 \usepackage[serbian]{babel}
 \usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{listings}
+\usepackage{nameref}
 \usepackage{setspace}
 \usepackage{tikz}
 \usepackage{tikz-uml}
-\usepackage{listings}
+\usepackage{tkz-graph}
 \usepackage[font={small,it}]{caption}
-\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,petri}
+\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,petri, automata}
 
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 \newcommand{\LL}[1]{$LL(#1)$ {}}
@@ -41,9 +44,9 @@
 
 \input{antlr.tex}
 
-\input{semantics.tex}
-
 \input{llvm.tex}
+
+\input{implementation.tex}
 
 \input{appendix.tex}
 

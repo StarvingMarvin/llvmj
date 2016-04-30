@@ -1,6 +1,40 @@
 \begin{tikzpicture}
 	\tikzumlset{font=\footnotesize}
-	\begin{umlpackage}[x=0,y=0]{symbols}
-		\umlclass[x=0pt,y=0pt]{Symbols}{}{}
+	\begin{umlpackage}[x=-2.5,y=0]{semantycs}
+		\umlemptyclass[x=0, y=6]{SemanticNodeVisitor}
 	\end{umlpackage}
+	\begin{umlpackage}[x=2.5,y=0]{codegen}
+		\umlemptyclass[x=0, y=6]{CodegenVisitor}
+	\end{umlpackage}
+	
+	\begin{umlpackage}[x=0,y=0]{symbols}    
+	    \umlclass[x=0pt,y=0pt]{Symbols}{
+			- global: GlobalScope\\
+			- scopes: stack$\langle$Scope$\rangle$
+		}{
+		    + defineArray(name: string, type: Type): void \\
+            + defineConstant(name: string, t: Type, val: int): void \\
+		    + defineNamedValue(name: string, t: Type): void \\
+		    \\
+		    + resolve(name: string): Symbol \\
+            + resolveClass(name: string): Class \\
+            + resolveMethod(name: string): Method \\
+            + resolveNamedValue(name: string): NamedValue \\
+            + resolveType(name: string): Type \\  
+            \\
+            + enterProgramScope(name: string): Program \\
+            + enterClassScope(name: string):  Class \\
+            + enterMethodArgumentsScope(): MethodArguments \\
+            + enterMethodScope(name: string, returnType: Type, arguments: MethodArguments): Method \\
+            
+            + leaveScope(): void
+		}
+		\umlemptyclass[x=-2, y=-5]{Symbol}
+	    \umlemptyclass[x=2, y=-5]{Scope}
+	    
+	    \umlVHVuniassoc[anchor1=center, anchor2=north]{Symbols}{Symbol}
+	    \umlVHVuniassoc[anchor1=center, anchor2=north]{Symbols}{Scope}
+	\end{umlpackage}
+	\umlVHVuniassoc[anchor1=south, anchor2=north, weight=0.2]{SemanticNodeVisitor}{Symbols}
+	\umlVHVuniassoc[anchor1=south, anchor2=north, weight=0.2]{CodegenVisitor}{Symbols}
 \end{tikzpicture}

@@ -18,9 +18,9 @@
 
 		\umlemptyclass[x=40pt,y=85pt]{ReferenceType}
 
-		\umlemptyclass[x=10pt,y=16pt]{Array}
+		\umlemptyclass[x=10pt,y=20pt]{Array}
 
-		\umlemptyclass[x=70pt,y=16pt]{Class}
+		\umlemptyclass[x=70pt,y=20pt]{Class}
 
 		\umlemptyclass[x=140pt,y=85pt]{MethodType}
 
@@ -50,17 +50,21 @@
 		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-15pt]
 			{Class}{ReferenceType}
 
-		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-30pt]
+		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-40pt]
 			{Constant}{NamedValue}
 
-		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-30pt]
+		\umlVHVinherit[anchor1=north, anchor2=south, arm2=-40pt]
 			{Method}{NamedValue}
 
 		\umlVHVuniaggreg[attr=methodType|1, anchor1=-120, anchor2=-60,arm2=-20pt,pos=1.9,align=left]
 			{Method}{MethodType}
 
-		\umlVHuniaggreg[attr=type|1,anchor1=-130, anchor2=-20,pos=1.9,align=left]
+		\umlVHuniaggreg[attr=type|1,anchor1=-130, anchor2=-16,pos=1.9,align=left]
 			{NamedValue}{Type}
 	
+		\umlHVHuniaggreg[attr=returnType|1, anchor1=10,  anchor2=-16, arm2=40pt, pos=1.4]
+			{MethodType}{Type}
+		\umlHVHuniaggreg[attr=*|arguments, anchor1=-10,  anchor2=-16, arm2=55pt, pos=1.8]
+			{MethodType}{Type}
 	\end{umlpackage}
 \end{tikzpicture} 

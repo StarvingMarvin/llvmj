@@ -1,54 +1,6 @@
 \chapter{Generisanje koda}
-
+\label{ch:generisanje} 
 \section{Uvod u LLVM}
-
-%Because of the differing goals and representations, LLVM
-%is complementary to high-level virtual machines (e.g., Small-
-%Talk [18], Self [43], JVM [32], Microsoft’s CLI [33], and oth-
-%ers), and not an alternative to these systems. It diﬀers from
-%these in three key ways. First, LLVM has no notion of high-
-%level constructs such as classes, inheritance, or exception-
-%handling semantics, even when compiling source languages
-%with these features. Second, LLVM does not specify a
-%runtime system or particular object model: it is low-level
-%enough that the runtime system for a particular language
-%can be implemented in LLVM itself. Indeed, LLVM can
-%be used to implement high-level virtual machines. Third,
-%LLVM does not guarantee type safety, memory safety, or
-%language interoperability any more than the assembly lan-
-%guage for a physical processor does.
-%The LLVM compiler framework exploits the code repre-
-%sentation to provide a combination of ﬁve capabilities that
-%we believe are important in order to support lifelong anal-
-%ysis and transformation for arbitrary programs. In general,
-%these capabilities are quite diﬃcult to obtain simultaneously,
-%but the LLVM design does so inherently:
-%(1) Persistent program information: The compilation model
-%preserves the LLVM representation throughout an ap-
-%plication’s lifetime, allowing sophisticated optimiza-
-%tions to be performed at all stages, including runtime
-%and idle time between runs.
-%(2) Oﬄine code generation: Despite the last point, it is
-%possible to compile programs into eﬃcient native ma-
-%chine code oﬄine, using expensive code generation
-%techniques not suitable for runtime code generation.
-%This is crucial for performance-critical programs.
-%(3) User-based proﬁling and optimization: The LLVM
-%framework gathers proﬁling information at run-time in
-%the ﬁeld so that it is representative of actual users, and
-%can apply it for proﬁle-guided transformations both at
-%run-time and in idle time1 .
-%(4) Transparent runtime model: The system does not
-%specify any particular object model, exception seman-
-%tics, or runtime environment, thus allowing any lan-
-%guage (or combination of languages) to be compiled
-%using it.
-%(5) Uniform, whole-program compilation: Language-indep-
-%endence makes it possible to optimize and compile all
-%code comprising an application in a uniform manner
-%(after linking), including language-speciﬁc runtime li-
-%braries and system libraries.
-
 
 LLVM je infrastrujtura za razvijanje optimizujućih prevodilaca. Dizajniran je tako da omogući analizu i transformaciju programa kroz sve faze programskog ciklusa: od prevođenja i povezivanja, do vremena samog izvršavanja programa\cite{llvm-cgo04}. 
 Iako LLVM predstavlja akronim za ,,Low Level Virtual Machine''
@@ -56,8 +8,8 @@ Iako LLVM predstavlja akronim za ,,Low Level Virtual Machine''
 , sam naziv možda ne predstavlja najjasniju sliku u to šta LLVM pruža, a gde njegov domen prestaje. 
 Pojam ,,virtualna mašina'' se često vezuje za Java ili .net virtualnu mašinu koje definišu koncepte višeg nivoa kao što su klase, nasleđivanje, izuzeci ili automatsko upravljanje memorijom. 
 Sve ove stvari su izvan opsega LLVM-a, koji sa druge strane može biti korišćen da se takve virtualne mašine implementiraju. 
-Još jedna stvar koja se podrazumeva kod drugih virtualnih mašina je da je njihov bajt-kod je portabilan između platformi. 
-Sa druge strane kako bi LLVM omogućio generisanje efikasnog mašinskog koda za konkretnu procesorsku arhitekturu, on mora da omogući tvorcima kompajlera pristup specifičnim operacijama podržanih arhitektura. 
+Još jedna stvar koja se podrazumeva kod drugih virtualnih mašina je da je njihov bajt-kod portabilan između platformi. 
+Sa druge strane kako bi LLVM omogućio generisanje efikasnog mašinskog koda za konkretnu procesorsku arhitekturu, on mora da omogući autorima kompajlera pristup specifičnim operacijama podržanih arhitektura. 
 
 Neki od projekata koji se baziraju ili koriste LLVM su Clang \ndash kompajler za C, C++ i Objective C, 
 zatim VMKit projekat implementacije Java virtualne mašine, 
@@ -92,90 +44,46 @@ kompajliranje.
 
 \section{LLVM međureprezentacija}
 
-%LLVM deﬁnes a common, low-level
-%code representation in Static Single Assignment (SSA) form,
-%with several novel features: a simple, language-independent
-%type-system that exposes the primitives commonly used to
-%implement high-level language features; an instruction for
-%typed address arithmetic; and a simple mechanism that can
-%be used to implement the exception handling features of
-%high-level languages (and setjmp/longjmp in C) uniformly
-%and eﬃciently. The LLVM compiler framework and code
-%representation together provide a combination of key capa-
-%bilities that are important for practical, lifelong analysis and
-%transformation of programs.
-
-Centralno mesto u arhitekturi LLVM-a\cite{aosa} zauzima međureprezentacija
-\footnote{\eng Intermediate Representation \ndash IR} 
+Centralno mesto u arhitekturi LLVM-a\cite{aosa} zauzima međureprezentacija\footnote{\eng Intermediate Representation \ndash IR} 
 kojom se opisuje kod unutar sistema. 
 LLVM IR je dizajniran da omogući analize i transformacije koda kakve se mogu očekivati u delu kompajlera koji se bavi optimizacijom. 
 Ono što je značajno kod ove reprezentacije je da ne predstavlja neki interni implementacioni detalj kao kod vecine kompajlera, 
 nego je pogurana u prvi plan kao jezik jasno definisane semantike. 
 LLVM međureprezentacija se tako sasvim ravnopravno može opisati svojom sintaksom sličnom asembleru, 
-bajt-kodom i direktno iz programa putem C++ API-ja
-\footnote{\eng Application Programming Interface}.
+bajt-kodom i direktno iz programa putem C++ API-ja\footnote{\eng Application Programming Interface}.
 
-Značajne osobine LLVM reprezentacije su 
-SSA forma
-\footnote{\skr \eng Static single asignement \ndash Statička jedinstvena dodela}
+Arhitektura virtualne mašine je load/store, odnosno jedine dve instrukcije koje barataju memorijom su \mj{load} i \mj{store}. 
+Ostale instrukcije barataju samo registrima.
+Većina instrukcija je u troadresnoj formi: uzimaju jedan ili dva operanda i proizvode jedan rezultat.
+Autoru prevodioca je na raspolaganju beskonacan broj virtualnih registara koji mogu da drže neki od prostih tipova (boolean, broj ili pokazivač). Mapiranje iz virtualnih u stvarne registre vrši sam LLVM prilikom generisanja mašinskog koda.
+
+Još neke značajne osobine LLVM reprezentacije su 
+SSA forma\footnote{\skr \eng Static single asignement \ndash Statička jedinstvena dodela}
 striktno tipiziranje podataka
 pristup operacijama niskog nivoa, uključujući i instrukcije specifične za pojedine procesore.
 
+Informacije o LLVM sintaksi, tipovima i instrukcijama potrebne za razumevanje primera i generisanog koda mogu se naći u dodatku \ref{ch:llvm}.
+
+\subsection*{Statička jedinstvena dodela}
+
+Virtualni registri su u SSA formi, koja predstavlja primarnu reprezentaciju koda.
+To znači da se u svaki virtuelni registar može pisati samo jednom i da je svaki registar definisan pre prve upotrebe.
+SSA forma se ne odnosi na memorijske lokacije.
+
+Ovim izborom omogućeno je jednostavno kodiranje efikasnih optimizacije koje u velikoj meri zavise od toka podataka kroz telo programa kao što su propagacija konstanti ili opsega mogućih vrednosti, eliminacija mrtvog koda ili alokacija registara.
 
 
+% The LLVM instruction set includes an explicit phi instruction, which corresponds directly to the standard (non-gated) φ function of SSA form.
 
-\section{LLVM instrukcije}
-%The LLVM instruction set captures the key operations of
-%ordinary processors but avoids machine-speciﬁc constraints
-%such as physical registers, pipelines, and low-level calling
-%conventions. LLVM provides an inﬁnite set of typed virtual
-%registers which can hold values of primitive types (Boolean,
-%integer, ﬂoating point, and pointer). The virtual registers
-%are in Static Single Assignment (SSA) form [15]. LLVM
-%is a load/store architecture: programs transfer values be-
-%tween registers and memory solely via load and store op-
-%erations using typed pointers. The LLVM memory model is
-%described in Section 2.3.
-%The entire LLVM instruction set consists of only 31 op-
-%codes. This is possible because, ﬁrst, we avoid multiple op-
-%codes for the same operations3 . Second, most opcodes in
-%LLVM are overloaded (for example, the add instruction can
-%operate on operands of any integer or ﬂoating point operand
-%type). Most instructions, including all arithmetic and logi-
-%cal operations, are in three-address form: they take one or
-%two operands and produce a single result.
-%LLVM uses SSA form as its primary code representation,
-%i.e., each virtual register is written in exactly one instruc-
-%tion, and each use of a register is dominated by its deﬁnition.
-%Memory locations in LLVM are not in SSA form because
-%many possible locations may be modiﬁed at a single store
-%through a pointer, making it diﬃcult to construct a rea-
-%sonably compact, explicit SSA code representation for such
-%locations. The LLVM instruction set includes an explicit
-%phi instruction, which corresponds directly to the standard
-%(non-gated) φ function of SSA form. SSA form provides a
-%compact def-use graph that simpliﬁes many dataﬂow opti-
-%mizations and enables fast, ﬂow-insensitive algorithms to
-%achieve many of the beneﬁts of ﬂow-sensitive algorithms
-%without expensive dataﬂow analysis. Non-loop transforma-
-%tions in SSA form are further simpliﬁed because they do
-%not encounter anti- or output dependences on SSA registers.
-%Non-memory transformations are also greatly simpliﬁed be-
-%cause (unrelated to SSA) registers cannot have aliases.
-%LLVM also makes the Control Flow Graph (CFG) of every
-%function explicit in the representation. A function is a set
-%of basic blocks, and each basic block is a sequence of LLVM
-%instructions, ending in exactly one terminator instruction
-%(branches, return, unwind, or invoke; the latter two are
-%explained later below). Each terminator explicitly speciﬁes
-%its successor basic blocks.
+% Non-loop transformations in SSA form are further simpliﬁed because they do not encounter anti- or output dependences on SSA registers.
 
-add sub...
+% Non-memory transformations are also greatly simpliﬁed because (unrelated to SSA) registers cannot have aliases.
+
+% LLVM also makes the Control Flow Graph (CFG) of every function explicit in the representation.
+
+% A function is a set of basic blocks, and each basic block is a sequence of LLVM instructions, ending in exactly one terminator instruction (branches, return, unwind, or invoke).
+
+% Each terminator explicitly speciﬁes its successor basic blocks.
 
 \section{Optimizacija koda}
-
-
-
-
-\section{Elementi implementacije MicroJave}
 
