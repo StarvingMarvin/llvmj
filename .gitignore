@@ -3,3 +3,9 @@ tags
 cscope.out
 build
 debug
+CMakeLists.txt.user
+*.toc
+*.aux
+*.log
+*.pdf
+*.synctex.gz

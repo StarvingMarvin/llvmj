@@ -153,8 +153,6 @@ namespace mj {
             explicit MethodScope(Scope *parent);
         protected:
             virtual unsigned int depth() const { return Scope::depth() - 1; }
-            /* virtual void define(Symbol *s);
-            virtual Symbol *resolve(const std::string name); */
     };
 
     class MethodType: public Type {
