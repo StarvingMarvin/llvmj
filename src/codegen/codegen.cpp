@@ -8,10 +8,12 @@
 #include <map>
 #include <stdexcept>
 
-#include <llvm/Assembly/PrintModulePass.h>
 #include <llvm/Bitcode/ReaderWriter.h>
+#include <llvm/Bitcode/BitcodeWriterPass.h>
+#include <llvm/CodeGen/AsmPrinter.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/IRPrintingPasses.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/Support/FormattedStream.h>
@@ -25,6 +27,7 @@
 #include "llvm/Transforms/IPO.h"
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/PassManager.h>
+#include <llvm/Pass.h>
 
 #include "parser/parser.h"
 #include "semantics/symbols.h"
@@ -99,12 +102,12 @@ llvm::TargetMachine *Codegen::targetMachine() {
 void Codegen::createPasses() {
 
     llvm::TargetMachine *tm = targetMachine();
-    llvm::DataLayout *dl = new llvm::DataLayout(&llvmModule());
+//    llvm::DataLayout *dl = new llvm::DataLayout(&llvmModule());
 
     modulePasses = new llvm::PassManager();
-    modulePasses->add(dl);
+//     modulePasses->add(dl);
     functionPasses = new llvm::FunctionPassManager(&llvmModule());
-    functionPasses->add(dl);
+//    functionPasses->add(dl);
 
     tm->addAnalysisPasses(*modulePasses);
     tm->addAnalysisPasses(*functionPasses);
@@ -117,7 +120,7 @@ void Codegen::createPasses() {
 
     if (nativeEnabled()) {
         codegenPasses = new llvm::PassManager();
-        codegenPasses->add(dl);
+//        codegenPasses->add(dl);
         //codegenPasses->add(pmBuilder.LibraryInfo);
         tm->addAnalysisPasses(*codegenPasses);
     }
@@ -141,7 +144,7 @@ void Codegen::emitCode(llvm::raw_ostream *os) {
     switch (options.type) {
     case codegen::LLVM:
         formattedOS.setStream(*os, llvm::formatted_raw_ostream::PRESERVE_STREAM);
-        modulePasses->add(llvm::createPrintModulePass(&formattedOS));
+        modulePasses->add(llvm::createPrintModulePass(*os));
         break;
     case codegen::BC:
         modulePasses->add(llvm::createBitcodeWriterPass(*os));

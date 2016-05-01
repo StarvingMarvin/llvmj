@@ -1,5 +1,5 @@
 
-FIND_PROGRAM(LLVM_AS NAMES llvm-as llvm-as-3.4)
+FIND_PROGRAM(LLVM_AS NAMES llvm-as llvm-as-3.6)
 
 ADD_CUSTOM_COMMAND(COMMAND ${LLVM_AS}
                     ARGS -o example.bc ${CMAKE_CURRENT_SOURCE_DIR}/example.ll
@@ -13,4 +13,3 @@ ADD_CUSTOM_COMMAND(COMMAND chmod
 
 ADD_CUSTOM_TARGET(MJExample ALL echo
    DEPENDS   ${CMAKE_CURRENT_BINARY_DIR}/example.bcx)
-

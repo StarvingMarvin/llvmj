@@ -1,7 +1,5 @@
 
 link_directories(/usr/lib 
-                /usr/lib/llvm 
-                /usr/lib/llvm-2.9/lib 
                 /usr/lib/x86_64-linux-gnu 
                 "${PROJECT_BINARY_DIR}/src"
                 "${PROJECT_BINARY_DIR}/src/codegen"

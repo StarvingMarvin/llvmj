@@ -3,25 +3,29 @@
 
 #include <iostream>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <stack>
 #include <string>
 #include <stdexcept>
 #include <vector>
 
-#include <llvm/Analysis/Verifier.h>
+#include <llvm/Analysis/Passes.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/ExecutionEngine/MCJIT.h>
+#include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/TypeBuilder.h>
 #include <llvm/IR/DataLayout.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/Pass.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/ADT/STLExtras.h>
 #include <llvm/Target/TargetMachine.h>
 
 
@@ -593,10 +597,11 @@ llvm::Value* CodegenVisitor::cast(llvm::Value* val, llvm::Type* type) const {
 MjModule::MjModule(AST ast, const Symbols &symbols):
     _ast(ast),
     _symbols(symbols),
-    _module(symbols.globalScope().program()->name(), llvm::getGlobalContext()),
-    values(&_module, _symbols)
+    _module(llvm::make_unique<llvm::Module>(symbols.globalScope().program()->name(), llvm::getGlobalContext())),
+    values(_module.get(), _symbols)
 {
-    _module.setTargetTriple(llvm::sys::getDefaultTargetTriple());
+//    std::cout << llvm::sys::getDefaultTargetTriple();
+    _module->setTargetTriple(llvm::sys::getDefaultTargetTriple());
     makeStdLib();
     walkTree();
     makeMain();
@@ -605,16 +610,16 @@ MjModule::MjModule(AST ast, const Symbols &symbols):
 
 void MjModule::makeStdLib() {
 
-    LLVMContext &ctx = _module.getContext();
+    LLVMContext &ctx = _module->getContext();
 
     // ord(char)
     FunctionType *ord_type = TypeBuilder<llvm::types::i<32>(llvm::types::i<8>), true>::get(ctx);
     Function* func_ord = Function::Create(
      /*Type=*/ord_type,
      /*Linkage=*/GlobalValue::ExternalLinkage,
-     /*Name=*/"ord", &_module);
+     /*Name=*/"ord", _module.get());
 
-    BasicBlock *bb = BasicBlock::Create(_module.getContext(), "entry", func_ord);
+    BasicBlock *bb = BasicBlock::Create(_module->getContext(), "entry", func_ord);
     IRBuilder<> builder(ctx);
     builder.SetInsertPoint(bb);
 
@@ -633,13 +638,13 @@ void MjModule::makeStdLib() {
 
 
     // chr(int)
-    FunctionType *chr_type = TypeBuilder<llvm::types::i<8>(llvm::types::i<32>), true>::get(_module.getContext());
+    FunctionType *chr_type = TypeBuilder<llvm::types::i<8>(llvm::types::i<32>), true>::get(_module->getContext());
     Function* func_chr = Function::Create(
      /*Type=*/chr_type,
      /*Linkage=*/GlobalValue::ExternalLinkage,
-     /*Name=*/"chr", &_module);
+     /*Name=*/"chr", _module.get());
 
-    bb = BasicBlock::Create(_module.getContext(), "entry", func_chr);
+    bb = BasicBlock::Create(_module->getContext(), "entry", func_chr);
     builder.SetInsertPoint(bb);
 
     values.enterFunction("chr", func_chr, NULL);
@@ -663,7 +668,7 @@ void MjModule::makeStdLib() {
     Function* func_len = Function::Create(
      /*Type=*/len_type,
      /*Linkage=*/GlobalValue::ExternalLinkage,
-     /*Name=*/"len", &_module);
+     /*Name=*/"len", _module.get());
 
     bb = BasicBlock::Create(ctx, "entry", func_len);
     builder.SetInsertPoint(bb);
@@ -693,15 +698,15 @@ void MjModule::makeStdLib() {
 }
 
 void MjModule::makeMain() {
-    FunctionType *main_type = TypeBuilder<llvm::types::i<32>(), true>::get(_module.getContext());
+    FunctionType *main_type = TypeBuilder<llvm::types::i<32>(), true>::get(_module->getContext());
     Function* func_main = Function::Create(
      /*Type=*/main_type,
      /*Linkage=*/GlobalValue::ExternalLinkage,
-     /*Name=*/"main", &_module);
+     /*Name=*/"main", _module.get());
     func_main->setCallingConv(llvm::CallingConv::C);
 
-    BasicBlock *bb = BasicBlock::Create(_module.getContext(), "entry", func_main);
-    IRBuilder<> builder(_module.getContext());
+    BasicBlock *bb = BasicBlock::Create(_module->getContext(), "entry", func_main);
+    IRBuilder<> builder(_module->getContext());
     builder.SetInsertPoint(bb);
 
     Value *mjMain = values.value("main");
@@ -713,55 +718,61 @@ void MjModule::makeMain() {
 void MjModule::run(int argc, const char** argv) {
     string err;
     llvm::InitializeNativeTarget();
-    ExecutionEngine *engine = EngineBuilder(&_module).setErrorStr(&err).create();
+    llvm::InitializeNativeTargetAsmPrinter();
+    llvm::Module *m = _module.get();
+    ExecutionEngine *engine = EngineBuilder(std::move(_module))
+            .setErrorStr(&err)
+            .setMCJITMemoryManager(llvm::make_unique<llvm::SectionMemoryManager>())
+            .setEngineKind(llvm::EngineKind::Either)
+            .create();
     cerr << err << endl;
-    int (*fp)() = (int (*)())engine->getPointerToFunction(_module.getFunction("main"));
+    int (*fp)() = (int (*)())engine->getPointerToFunction(m->getFunction("main"));
     fp();
 }
 
 void MjModule::walkTree() {
     VisitChildren defVisitor;
 
-    AddVisitor addv(_module, values);
-    AssignVisitor assignv(_module, values);
-    FieldDesVisitor fdv(_module, values);
-    ArrDesVisitor adv(_module, values);
-    IntLiteralVisitor ilv(_module, values);
-    CharLiteralVisitor clv(_module, values);
-    MethodVisitor methodv(_module, values, _symbols);
-    CallVisitor callv(_module, values);
-    NewVisitor newv(_module, values);
-    NewArrVisitor nav(_module, values);
+    AddVisitor addv(*_module, values);
+    AssignVisitor assignv(*_module, values);
+    FieldDesVisitor fdv(*_module, values);
+    ArrDesVisitor adv(*_module, values);
+    IntLiteralVisitor ilv(*_module, values);
+    CharLiteralVisitor clv(*_module, values);
+    MethodVisitor methodv(*_module, values, _symbols);
+    CallVisitor callv(*_module, values);
+    NewVisitor newv(*_module, values);
+    NewArrVisitor nav(*_module, values);
 
-    SubVisitor subv(_module, values);
-    MulVisitor mulv(_module, values);
-    DivVisitor divv(_module, values);
-    ModVisitor modv(_module, values);
+    SubVisitor subv(*_module, values);
+    MulVisitor mulv(*_module, values);
+    DivVisitor divv(*_module, values);
+    ModVisitor modv(*_module, values);
 
-    EqlVisitor eqlv(_module, values);
-    NeqVisitor neqv(_module, values);
-    GrtVisitor grtv(_module, values);
-    GreVisitor grev(_module, values);
-    LstVisitor lstv(_module, values);
-    LseVisitor lsev(_module, values);
+    EqlVisitor eqlv(*_module, values);
+    NeqVisitor neqv(*_module, values);
+    GrtVisitor grtv(*_module, values);
+    GreVisitor grev(*_module, values);
+    LstVisitor lstv(*_module, values);
+    LseVisitor lsev(*_module, values);
 
-    AndVisitor andv(_module, values);
-    AndVisitor orv(_module, values);
+    AndVisitor andv(*_module, values);
+    AndVisitor orv(*_module, values);
 
-    WhileVisitor whilev(_module, values);
-    IfVisitor ifv(_module, values);
-    BreakVisitor breakv(_module, values);
+    WhileVisitor whilev(*_module, values);
+    IfVisitor ifv(*_module, values);
+    BreakVisitor breakv(*_module, values);
 
-    NegOpVisitor negv(_module, values);
-    IncVisitor incv(_module, values);
-    DecVisitor decv(_module, values);
+    NegOpVisitor negv(*_module, values);
+    IncVisitor incv(*_module, values);
+    DecVisitor decv(*_module, values);
 
-    VarDesVisitor vdv(_module, values);
-    DerefVisitor derefv(_module, values);
-    RetVisitor retv(_module, values);
+    VarDesVisitor vdv(*_module, values);
+    DerefVisitor derefv(*_module, values);
+    RetVisitor retv(*_module, values);
 
-    PrintVisitor printv(_module, values);
-    ReadVisitor readv(_module, values);
+    PrintVisitor printv(*_module, values);
+    ReadVisitor readv(*_module, values);
 
     AstWalker walker(defVisitor);
 

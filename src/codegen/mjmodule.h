@@ -6,6 +6,7 @@
 //  
 // <string>
 // <map>
+// <memory>
 //
 // <llvm/DerivedTypes.h>
 // <llvm/Support/IRBuilder.h>
@@ -284,12 +285,12 @@ class MjModule
 {
 public:
     MjModule(AST ast, const mj::Symbols &symbols);
-    llvm::Module &module() { return _module; }
+    llvm::Module &module() { return *_module; }
     void run(int argc, const char **argv);
 private:
     AST _ast;
     const Symbols &_symbols;
-    llvm::Module _module;
+    std::unique_ptr<llvm::Module> _module;
     Values values;
 
     void walkTree();

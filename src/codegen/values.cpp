@@ -7,7 +7,6 @@
 #include <stdexcept>
 #include <vector>
 
-#include <llvm/Analysis/Verifier.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
@@ -20,6 +19,7 @@
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
+#include <llvm/IR/Verifier.h>
 
 #include "parser/parser.h"
 #include "semantics/symbols.h"
