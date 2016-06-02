@@ -3,34 +3,33 @@
 
 Prvi korak u implementaciji jezika je prepoznavanje ulaza i provera sintaksih i semantičkih pravila. 
 U slučaju jako jednostavnih gramatika, parser se veoma lako može napisati ručno, najčešće nekom varijantom rekurzivnog spusta. 
-Sa druge strane u slučaju jako komplikovanih gramatika ručno kodiranje je verovatno jedini način da se parser verno implementira uz prihvatljive performanse i dovoljno detaljne opise greške.
+Sa druge strane u slučaju komplikovanih gramatika ručno kodiranje je verovatno jedini način da se parser verno implementira uz prihvatljive performanse i dovoljno detaljne opise greške.
 Međutim, za većinu svakodnevnih problema, najlakši način da se napravi parser je pomoću nekog od mnogobrojnih alata koji će za zadatu gramatiku generisati potreban kod. 
 
-Većina alata koji su u upotrebi zasnivaju se na $LR$\cite{lr} gramatikama i parsiranju od dna ka vrhu\footnote{\eng bottom-up}, pre svega $LALR(1)$ kao što je YACC\cite{yacc}.
+Većina alata se zasniva na $LR$\cite{lr} gramatikama i parsiranju od dna ka vrhu\footnote{\eng bottom-up}, pre svega $LALR(1)$ kao što je YACC\cite{yacc}.
 Algoritam za implementaciju $LALR(1)$ gramatike opisan je 1969. kao jednostavnija alternativa $LR(k)$ parseru.
 Oba algoritma garantuju linearno vreme izvršavanja, ali $LALR(1)$ žrtvuje malo na snazi zarad boljeg iskorišćenja memorije.
 
-Sa druge strane $LL$ gramatike su bile ređe primenjivane u praksi.
+Sa druge strane $LL$ gramatike se ređe primenjuju u praksi.
 Zbog toga što odluka o smeni mora da se donese na osnovu manje pročitanog ulaza u odnosu na $LR$ gramatike, $LL$ parseri mogu da prepoznaju manji broj jezika.
-Da bi $LL(k)$ gramatika bila upotrebiva u praksi, smatralo se da postoje dve mogućnosti: da se poveća $k$, da bi se odluka donosila sa više poznatih terminalnih simbola, što bi za posledicu imalo exponencijalni rast (memorijske) prostorne zahtevnosti, ili da se moguća grananja spekulativno izvrše, dok se ne pronađe ispravna produkcija, dovodeći do eksponencijalnog porasta vremena izvršenja.
+Za implementaciju praktičnog $LL(k)$ parsera, postoje dve mogućnosti: da se poveća $k$, da bi se odluka donosila sa više poznatih terminalnih simbola, što bi za posledicu imalo eksponencijalni rast (memorijske) prostorne zahtevnosti; ili da se moguće grane spekulativno izvrše, dok se ne pronađe ispravna produkcija, što dovodi do eksponencijalnog porasta vremena izvršenja.
 
-Sa povecanjem računarske moći, drugačiji kompromisi izmedju brzine, snage i drugih karakteristika postaju praktični.
-Mogućnosti kao što su lakoća oporavaka od grešaka i generisanje preciznijih i korisnijih poruka o greškama, kao i lakoća korisćenja postaju predmet dubljeg proučavanja.
+Sa povećanjem računarske moći, brzina generisanog parsera nije više toliko kritična, pa obraćanje više pažnje na druge karakteristike postaje moguće.
+Mogućnosti kao što su lakoća oporavaka od grešaka, generisanje preciznijih i korisnijih poruka o greškama i lakoća korisćenja postaju predmet dubljeg proučavanja.
 Inovativni primeri ukljucuju Packrat\cite{packrat}, PEG\cite{peg}\footnote{\skr \eng Parsing Expression Grammars - Gramatike izraza parsiranja} i ANTLR.
 Packrat je algoritam gde se koristi Haskell-ova evaluacija izraza po potrebi da se realizuje parser generator sa spekulativnim izvršavanjem u linearnom vremenu.
 PEG pretstavlja novu kategoriju gramatika gde se prepoznavanje vrši kombinovanjem jednostavnih izraza koji prihvataju ili odbijaju sekvencu sa ulaza.
 To predstavlja suprotnost generativnom opisu jezika, uobičajenog za bezkontekstne gramatike, gde je iz pravila jednostavno proizvesti sekvencu koja pripada jeziku, ali je prepoznavanje potencijalno višeznačno.
 
-Za ovu implementaciju MicroJava-e korišćen je ANTLR
-\footnote{\skr \eng Another Tool for Langauage Recognition}.
+Za ovu implementaciju MicroJava-e korišćen je ANTLR\footnote{\skr \eng Another Tool for Langauage Recognition}.
 Osobine koje su opredelile za izbor ovog parser generatora su između ostalog grafičko okruženje za razvoj i analizu gramatika: Antlrworks, generisanje C koda i apstraktno sintaksno stablo kao izlaz parsera.
-Međutim ono što ovaj alat čini korisnim jesu pre svega inovativne strategije parsiranja kao što su $LL(k)$ sa predikatima\cite{pred-llk}, linearno približno predviđanje\cite{parr-thesis} i $LL(*)$\cite{ll*}.
+Međutim, ono što ovaj alat čini korisnim jesu pre svega inovativne strategije parsiranja kao što su: $LL(k)$ sa predikatima\cite{pred-llk}, linearno približno predviđanje\cite{parr-thesis} i $LL(*)$\cite{ll*}.
 
 \section{Osobine ANTLR-a}
 
 ANTLR je parser generator napisan u Javi. 
 Razvijan je u prethodne dve decenije, prevenstveno od strane Terensa Para, profesora univerziteta u San Francisku.
-Postoji nekoliko stvari koje ANTLR čine jedinstvenim
+Postoji nekoliko stvari koje ANTLR čine jedinstvenim.
 \begin{description}
 
 	\item[Linearno približno prepoznavanje]\footnote{\eng Linear Aproximate Lookahead} \hfill \\
@@ -39,33 +38,34 @@ Postoji nekoliko stvari koje ANTLR čine jedinstvenim
 	Uz mali gubitak snage, strategija približnog prepoznavanja sa $O(|T|k)$ kompleksnosti čini \LLk parsere praktičnijim sa stanovišta performansi.
 	\item[Parsiranje sa sintaksnim i semantičkim predikatima] \hfill \\
 	\LLk parseri su često slabiji od $LR(k)$ parsera, jer $LR$ parseri imaju na raspolaganju više pročitanog ulaza prilikom donošenja odluke.
-	Međutim ni jedni ni drugi često ne mogu da se nose sa problemima kao što je parsiranje C++-a koje nije beskontekstno.
+	Međutim, ni jedni ni drugi često ne mogu da se nose sa problemima kao što je parsiranje C++-a koje nije beskontekstno.
 	Ideja semantičkih predikata nije nova\cite{attributed-translations}, a ANTLR implementacija donosi par novina kao što su mogućnost više  semantičkih predikata po jednom izvođenju i automatsko detektovanje potrebnog broja simbola sa ulaza $k$ koje treba pročitati da bi se predikat validirao.
 
 	\item[Generisanje apstraktnih sintaksnih stabala] \hfill \\
-	Ono što često želimo da uradimo po prepoznavanju ulazne sekvence jeste konstrukcija apstraktnog sintaksnog stabla. ANTLR jednostavnom sintaksom pomaže automatizaciju ovog procesa.
+	Nakon prepoznavanja ulazne sekvence, često želimo da konstruišemo apstraktno sintaksno stablo. ANTLR jednostavnom sintaksom pomaže automatizaciju ovog procesa.
 	\item[Jedinstvena gramatika za lekser, parser i AST\footnote{\skr \eng Abstract syntax tree}  parser] \hfill \\
 	Istom notacijom se opisuje građenje terminalnog simbola od ulaznih karaktera, građenje neterminalnih simbola od terminalnih, kao i građenje pravila na osnovu sintaksnih stabala.
 	\item[Kanali za simbole] \hfill \\
 	Ideja je proistekla iz potrebe da se određeni terminalni simboli na ulazu ignorišu, ali ne i odbace, kao recimo komentari. 
-Uopštenjem ove ideje došlo je do implementacije odvojenih kanala u koje lekser može da emituje simbole. Tako se recimo komentari, deklaracije, funkcije i slično mogu slati u odvojene kanale. 
+Generalizaciom ove ideje došlo je do implementacije odvojenih kanala u koje lekser može da emituje simbole. Tako se recimo komentari, deklaracije, funkcije i slično mogu slati u odvojene kanale. 
 Lekser time postaje emiter tokena, parser konzument, a između njih se može umetnuti i filter koji funkcioniše sa strane leksera kao kunzument, a sa strane parsera kao emiter.
 	\item [\LLa gramatike] \hfill \\
-	Ovo je novina u verziji 3. Generator parsera ovom strategijom može da prihvati gramatike koje zahtevaju čitanje proizvoljno mnogo simbola sa ulaza.
+	Novi algoritam koji je predstavljen u ANTLR verziji 3. Generator parsera ovom strategijom može da prihvati gramatike koje zahtevaju čitanje proizvoljno mnogo simbola sa ulaza.
 
 \end{description}
 
   
-ANTLR može da generiše kod u više programskih jezika (Java, C, C\#, Ruby, Python\ldots). 
+ANTLR može da generiše kod u više programskih jezika (Java, C, C\#, Ruby, Python i drugi). 
 Za lakšu izradu parsera postoji i razvojno okruženje, ANTLRWorks, koje poseduje mogućnosti kao što su: 
 automatsko kompletiranje i formatiranje koda, grafički prikaz gramatičkih pravila u vidu grafa stanja i testiranje gramatike za zadate ulaze.
 
-Poglavlje \ref{sec:lla-gram} bliže objašnjava ovu strategiju parsiranja, a za detaljniji pregled ostalh karakteristika pogledati dodatak \ref{ch:antlr}.
+Poglavlje \ref{sec:lla-gram} bliže objašnjava \LLa strategiju parsiranja.
+Za detaljniji pregled ostalh karakteristika pogledati dodatak \ref{ch:antlr}.
 
 \section{\LLa gramatike}
 \label{sec:lla-gram}
 
-Problemi koje \LLa strategija parsiranja pokušava da reši je određivanje maksimalnog broja simbola $k$, koje je potrebno pročitati unapred da bi se odredilo izvođenje, kao i rešavanje situacija gde je $k$ potencijalno beskonačno. 
+\LLa strategija parsiranja rešava problem određivanja maksimalnog broja simbola $k$, koje je potrebno pročitati unapred da bi se odredilo izvođenje, kao i problem generisanja parsera u situacijama kada je $k$ potencijalno beskonačno.
 Način rešavanja ovih problema je analiza pravila izvođenja i pokušavanje generisanja determinističkog konačnog automata\footnote{\eng Deterministic Finite Automata} za pravila izvođenja koja to zahtevaju.
 Uzmimo za primer sledeću gramatiku:
 \begin{align*}
@@ -75,7 +75,7 @@ Uzmimo za primer sledeću gramatiku:
 \end{align*}
 
 Ako bismo pokušali da implemeniramo parser naivnim rekurzivnim spustom, po dolasku proizvoljne reči morali bismo da gledamo makar jedan simbol unapred da bismo se odlučili za jednu od tri moguće opcije.
-Još gore, ako bi došao terminalni simbol `A', bilo bi potrebno pročitati proizvoljno mnogo simbola pre nego što bi mogli da odlučimo između produkcija $a$ i $b$.
+Još veći problem je dolazak terminalnog simbol `A'. Da bi se odlučilo između produkcija $a$ i $b$ bilo bi potrebno pročitati proizvoljno mnogo simbola.
 Strategija rešavanja ovog problema je da se analizom pravila izvođenja nađe deterministički konačni automat kojim će se prihvatati simboli dok se ne stigne do krajnjeg stanja.
 Za prethodno opisanu gramatiku DKA izgleda kao na slici \ref{fig:lookahead_dfa}.
 
@@ -103,4 +103,4 @@ Za prethodno opisanu gramatiku DKA izgleda kao na slici \ref{fig:lookahead_dfa}.
 Skup gramatika koje se na ovaj način mogu opisati naziva se $LL$-regularne.
 U slučaju da mini-jezik za prihvatanje unapred pročitanih simbola nije regularan, pa nije moguće konstruisati deterministički konačni automat, ANTLR će se vratiti na strategiju spekulativnog izvršavanja.
 Problem prepoznavanja da li su pravila prihvatanja simbola unapred regularna ili ne nije odlučiv, pa se primenjuje heuristika bazirana na dopunjenim mrežama prelaza\footnote{\eng Augumented Transition Networks} koja pokušava da pronađe DKA.
-Kombinovanje $LL$-regularne gramatike, heuristike odlučivanja i primena alternativnih strategija u slučaju da se automat stanja ne pronađe skupa čine \LLa strategiju parsiranja.
+Kombinovanje $LL$-regularne gramatike, heuristike odlučivanja i primena alternativnih strategija u slučaju da se automat stanja ne pronađe, skupa čine \LLa strategiju parsiranja.

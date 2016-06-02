@@ -3,8 +3,11 @@
 \usepackage[serbian]{babel}
 \usepackage[utf8x]{inputenc}
 \usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage{graphicx}
 \usepackage{listings}
+\usepackage{multicol}
 \usepackage{nameref}
 \usepackage{setspace}
 \usepackage{tikz}
@@ -23,6 +26,9 @@
 \newcommand{\eng}{\textit{eng. {}}}
 \newcommand{\skr}{\textit{skr. {}}}
 \newcommand{\ndash}{\textendash {} }
+
+\floatname{algorithm}{}
+\renewcommand\thealgorithm{}
 
 %opening
 \title{MicroJava na LLVM infrastrukturi}
