@@ -2,18 +2,17 @@
 \label{ch:generisanje} 
 \section{Uvod u LLVM}
 
-LLVM je infrastrujtura za razvijanje optimizujućih prevodilaca. Dizajniran je tako da omogući analizu i transformaciju programa kroz sve faze programskog ciklusa: od prevođenja i povezivanja, do vremena samog izvršavanja programa\cite{llvm-cgo04}. 
-Iako LLVM predstavlja akronim za ,,Low Level Virtual Machine''
-\footnote{eng. virtualna mašina niskog nivoa}
+LLVM je infrastruktura za razvijanje optimizujućih prevodilaca. Dizajniran je tako da omogući analizu i transformaciju programa kroz sve faze programskog ciklusa: od prevođenja i povezivanja, do vremena samog izvršavanja programa\cite{llvm-cgo04}. 
+Iako LLVM predstavlja akronim za ,,Low Level Virtual Machine''\footnote{eng. virtualna mašina niskog nivoa}
 , sam naziv možda ne predstavlja najjasniju sliku u to šta LLVM pruža, a gde njegov domen prestaje. 
 Pojam ,,virtualna mašina'' se često vezuje za Java ili .net virtualnu mašinu koje definišu koncepte višeg nivoa kao što su klase, nasleđivanje, izuzeci ili automatsko upravljanje memorijom. 
-Sve ove stvari su izvan opsega LLVM-a, koji sa druge strane može biti korišćen da se takve virtualne mašine implementiraju. 
-Još jedna stvar koja se podrazumeva kod drugih virtualnih mašina je da je njihov bajt-kod portabilan između platformi. 
+Navedeni koncepti su izvan opsega LLVM-a, koji može biti korišćen da se takve virtualne mašine implementiraju. 
+Još jedna česta karakteristika drugih virtualnih mašina je da je njihov bajt-kod portabilan između platformi. 
 Sa druge strane kako bi LLVM omogućio generisanje efikasnog mašinskog koda za konkretnu procesorsku arhitekturu, on mora da omogući autorima kompajlera pristup specifičnim operacijama podržanih arhitektura. 
 
-Neki od projekata koji se baziraju ili koriste LLVM su Clang \ndash kompajler za C, C++ i Objective C, 
-zatim VMKit projekat implementacije Java virtualne mašine, 
-Glasgow Haskell Compiler od skora ima opciju da preko LLVM-a generiše kod, 
+Neki od projekata koji se baziraju ili koriste LLVM su: Clang \ndash kompajler za C, C++ i Objective C; 
+zatim VMKit projekat implementacije Java virtualne mašine; 
+Glasgow Haskell Compiler od skora ima opciju da preko LLVM-a generiše kod; 
 Rubinius implementacija Ruby-ja koristi LLVM za optimizacije i JIT
 \footnote{\skr \eng Just in Time \ndash Prevođenje međukoda u mašinski kod neposredno pre izvršavanja} 
 kompajliranje.
@@ -47,19 +46,19 @@ kompajliranje.
 Centralno mesto u arhitekturi LLVM-a\cite{aosa} zauzima međureprezentacija\footnote{\eng Intermediate Representation \ndash IR} 
 kojom se opisuje kod unutar sistema. 
 LLVM IR je dizajniran da omogući analize i transformacije koda kakve se mogu očekivati u delu kompajlera koji se bavi optimizacijom. 
-Ono što je značajno kod ove reprezentacije je da ne predstavlja neki interni implementacioni detalj kao kod vecine kompajlera, 
-nego je pogurana u prvi plan kao jezik jasno definisane semantike. 
+Kod ove reprezentacije je značajno da ne predstavlja interni implementacioni detalj kao kod većine kompajlera, 
+nego je stavljena u prvi plan kao jezik jasno definisane semantike. 
 LLVM međureprezentacija se tako sasvim ravnopravno može opisati svojom sintaksom sličnom asembleru, 
 bajt-kodom i direktno iz programa putem C++ API-ja\footnote{\eng Application Programming Interface}.
 
-Arhitektura virtualne mašine je load/store, odnosno jedine dve instrukcije koje barataju memorijom su \mj{load} i \mj{store}. 
-Ostale instrukcije barataju samo registrima.
+Arhitektura virtualne mašine je load/store, odnosno jedine dve instrukcije koje pristupaju memoriji su \mj{load} i \mj{store}. 
+Ostale instrukcije kao argumente prihvataju isključivo registre.
 Većina instrukcija je u troadresnoj formi: uzimaju jedan ili dva operanda i proizvode jedan rezultat.
-Autoru prevodioca je na raspolaganju beskonacan broj virtualnih registara koji mogu da drže neki od prostih tipova (boolean, broj ili pokazivač). Mapiranje iz virtualnih u stvarne registre vrši sam LLVM prilikom generisanja mašinskog koda.
+Autoru prevodioca je na raspolaganju beskonačan broj virtualnih registara koji mogu da drže neki od prostih tipova (boolean, broj ili pokazivač). Mapiranje iz virtualnih u stvarne registre vrši sam LLVM, prilikom generisanja mašinskog koda.
 
-Još neke značajne osobine LLVM reprezentacije su 
-SSA forma\footnote{\skr \eng Static single asignement \ndash Statička jedinstvena dodela}
-striktno tipiziranje podataka
+Još neke značajne osobine LLVM reprezentacije su: 
+SSA forma\footnote{\skr \eng Static single asignement \ndash Statička jedinstvena dodela},
+striktno tipiziranje podataka,
 pristup operacijama niskog nivoa, uključujući i instrukcije specifične za pojedine procesore.
 
 Informacije o LLVM sintaksi, tipovima i instrukcijama potrebne za razumevanje primera i generisanog koda mogu se naći u dodatku \ref{ch:llvm}.
@@ -68,16 +67,78 @@ Informacije o LLVM sintaksi, tipovima i instrukcijama potrebne za razumevanje pr
 
 Virtualni registri su u SSA formi, koja predstavlja primarnu reprezentaciju koda.
 To znači da se u svaki virtuelni registar može pisati samo jednom i da je svaki registar definisan pre prve upotrebe.
-SSA forma se ne odnosi na memorijske lokacije.
 
-Ovim izborom omogućeno je jednostavno kodiranje efikasnih optimizacije koje u velikoj meri zavise od toka podataka kroz telo programa kao što su propagacija konstanti ili opsega mogućih vrednosti, eliminacija mrtvog koda ili alokacija registara.
+Ovim izborom omogućeno je jednostavno kodiranje efikasnih optimizacija koje u velikoj meri zavise od toka podataka kroz telo programa, kao što su: propagacija konstanti ili opsega mogućih vrednosti, eliminacija mrtvog koda ili alokacija registara.
 
 
-% The LLVM instruction set includes an explicit phi instruction, which corresponds directly to the standard (non-gated) φ function of SSA form.
+\begin{figure}[h]
+\begin{minipage}[t][8em]{0.45\textwidth}
+  \begin{algorithm}[H]
+  \caption{Programski kod}
+  \begin{algorithmic}
+		\State $i := 0$
+		\State $i := 5$
+		\State $j := i$
+  \end{algorithmic}
+  \end{algorithm}
+\end{minipage}
+\begin{minipage}[t][8em][c]{0.05\textwidth}
+  $\Rightarrow$
+\end{minipage}
+\begin{minipage}[t][8em]{0.45\textwidth}
+  \begin{algorithm}[H]
+  \caption{SSA forma}
+  \begin{algorithmic}
+		\State $i_1 := 0$
+		\State $i_2 := 5$
+		\State $j_1 := i_2$
+  \end{algorithmic}
+  \end{algorithm}
+\end{minipage}
+\caption{Vrednost registra $i_1$ se nigde ne koristi, pa se ta dodela može eliminisati}
+\end{figure}
 
-% Non-loop transformations in SSA form are further simpliﬁed because they do not encounter anti- or output dependences on SSA registers.
+U slučaju kada postoji više grana izvršenja kao u primeru \ref{fig:phi}, mora se izvršiti ujedinjenje svih mogućih vrednosti koje data promenljiva moze da ima.
+SSA forma, a samim tim i LLVM u svom modelu ima $\varphi$ instrukciju za tu svrhu.
+Kako se SSA forma ne odnosi na memorijske lokacije nego samo na registre, način da se izbegne računanje mesta na kojima je potrebno umetnuti $\varphi$ instrukciju je da se vrednosti uvek pišu u memoriju, odnosno učitavaju u nove registre.
+LLVM sadrži optimizacioni prolaz koji eliminiše nepotrebne \mj{store}/\mj{load} parove i umeće $\varphi$ instrukcije.
 
-% Non-memory transformations are also greatly simpliﬁed because (unrelated to SSA) registers cannot have aliases.
+\begin{figure}[h]
+\begin{minipage}[t][12em]{0.45\textwidth}
+  \begin{algorithm}[H]
+  \caption{Programski kod}
+    	\begin{algorithmic}
+			\If {condition}
+				\State $i := 0$
+			\Else			
+				\State $i := 5$
+			\EndIf
+			\State $j := f(i)$
+		\end{algorithmic}
+	    \end{algorithm}
+\end{minipage}
+\begin{minipage}[t][12em][c]{0.05\textwidth}
+  $\Rightarrow$
+\end{minipage}	
+\begin{minipage}[t][12em]{0.45\textwidth}
+  \begin{algorithm}[H]
+  \caption{SSA forma}
+  \begin{algorithmic}
+	\If {condition}
+		\State $i_1 := 0$
+	\Else			
+		\State $i_2 := 5$
+	\EndIf
+	\State $i_3 := \varphi(i_1, i_2)$
+	\State $j_1 := f(i_3)$
+\end{algorithmic}
+\end{algorithm}
+\end{minipage}
+\caption{Umetanje $\varphi$ instrukcije je način da se odabere vrednost u zavisnosti od toga koji je blok instrukcja prethodno izvršen}
+\label{fig:phi}
+\end{figure}
+	
+% CFG
 
 % LLVM also makes the Control Flow Graph (CFG) of every function explicit in the representation.
 
@@ -85,5 +146,6 @@ Ovim izborom omogućeno je jednostavno kodiranje efikasnih optimizacije koje u v
 
 % Each terminator explicitly speciﬁes its successor basic blocks.
 
-\section{Optimizacija koda}
+% \section{Optimizacija koda}
 
+% Arhitektura LLVM-a omogućava da se pišu namenski prolazi prevodioca koji vrše proveru
