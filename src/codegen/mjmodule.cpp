@@ -719,14 +719,13 @@ void MjModule::run(int argc, const char** argv) {
     string err;
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
-    llvm::Module *m = _module.get();
+    std::cout << "building engine" << std::endl;
     ExecutionEngine *engine = EngineBuilder(std::move(_module))
             .setErrorStr(&err)
-            .setMCJITMemoryManager(llvm::make_unique<llvm::SectionMemoryManager>())
-            .setEngineKind(llvm::EngineKind::Either)
+            .setEngineKind(llvm::EngineKind::JIT)
             .create();
     cerr << err << endl;
-    int (*fp)() = (int (*)())engine->getPointerToFunction(m->getFunction("main"));
+    int (*fp)() = (int (*)())engine->getFunctionAddress("main");
     fp();
 }
 
