@@ -202,7 +202,7 @@ void executeCodegen(CodegenOptions options) {
     AST ast = p.parse();
 
     filebuf outfile;
-    outfile.open(outpath.c_str(),std::ios::out);
+    outfile.open(outpath.c_str(), ios::out);
     ostream os(&outfile);
 
     if (options.type == codegen::AST) {

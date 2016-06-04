@@ -7,6 +7,7 @@ using namespace mj;
 using std::string;
 
 Parser::Parser(const string filename):
+    filename(filename),
     input(0),
     lxr(0),
     tstream(0),
@@ -14,14 +15,13 @@ Parser::Parser(const string filename):
     ast(0)
 {
     
-    fName = (pANTLR3_UINT8) filename.c_str();
 }
 
 AST Parser::parse() throw(ParserException) {
     if (ast != NULL) {
         return ast;
     }
-
+    fName = (pANTLR3_UINT8) filename.c_str();
     input	= antlr3AsciiFileStreamNew(fName);
 
     if (input == NULL)

@@ -141,7 +141,7 @@ namespace mj {
         private:
             Parser(Parser &p){}
             void operator=(Parser &p){}
-
+            const std::string           filename;
             pANTLR3_UINT8               fName;
             pANTLR3_INPUT_STREAM        input;
             pMicroJavaLexer             lxr;

@@ -83,7 +83,6 @@ int main(const int argc, const char** argv) {
     CodegenOptions cgOptions;
     cgOptions.inputFilePath = *opt.lastArgs[0];
 
-
     if (output_type == "ast") {
         cgOptions.type = codegen::AST;
     } else if (output_type == "llvm") {
