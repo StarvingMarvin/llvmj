@@ -9,3 +9,5 @@ CMakeLists.txt.user
 *.log
 *.pdf
 *.synctex.gz
+.kdev4
+llvmj.kdev4
