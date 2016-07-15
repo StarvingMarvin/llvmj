@@ -57,7 +57,7 @@ AST Parser::parse() throw(ParserException) {
     ast = psr->program(psr).tree;
 
     if (psr->pParser->rec->state->errorCount > 0) {
-        fprintf(stderr, "The parser returned %d errors, tree walking aborted.\n", psr->pParser->rec->state->errorCount);
+        fprintf(stderr, "The parser returned %d errors.\n", psr->pParser->rec->state->errorCount);
     }
     return ast;
 }

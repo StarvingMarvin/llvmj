@@ -1,35 +1,434 @@
 
 \appendix
 
-\chapter{ANTRL}
-\label{ch:antlr}
+\chapter{Specifikacija MicroJave}
+\label{ch:microjava-spec}
 
-U najširim crtama, ANTLR koristi varijantu EBNF\footnote{\skr\eng Extended Backus-Naur Form} notacije sličnu onoj koju koristi YACC.
+Programski jezik MikroJava 
+ 
+Ovaj dodatak opisuje programski jezik MikroJava koji se koristi u praktičnom delu kursa programskih 
+prevodilaca (IR4PP1) na Elektrotehničkom fakultetu u Beogradu. MikroJava je slična Javi, ali je mnogo 
+jednostavnija. 
+ 
+ 
+\section{Opšte osobine jezika}
+\begin{itemize}
+\item MikroJava program se sastoji od jedne klase koja ima statička polja i statičke metode. Ne postoje druge 
+spoljašnje klase, već samo unutrašnje koje se mogu koristiti kao tipovi podataka. 
+\item Glavna metoda MikroJava programa se uvek zove main(). Kada se poziva MikroJava program 
+izvršava se ta metoda. 
+\item Postoje
+\begin{itemize}
+\item Celobrojne i znakovne konstante (int i char), ali ne i znakovni nizovi (string). 
+\item Promenljive: sve promenljive predstavljaju reference; promenljive u glavnoj klasi su statičke. 
+\item Osnovni tipovi: int, char (Ascii). 
+\item Strukturirani tipovi: jednodim. nizovi kao u Javi, unutrašnje klase sa poljima, ali bez metoda. 
+\item Statičke metode u glavnoj klasi. 
+\end{itemize}
+\item Ne postoji garbage kolektor (alocirani objekti se samo dealociraju nakon kraja programa). 
+\item Predeklarisane procedure su ord, chr, len. 
+ 
+\end{itemize}
+ 
+ 
+ 
+\subsection*{Primer programa}
 
-\section{ANTLR sintaksa}
+\begin{lstlisting}
+class P
 
-Terminali velika slova, neterminali mala
+	final int size = 10;
 
-\section{Atributi i akcije}
+	class Table {
+		int pos[];
+		int neg[];
+	}
 
-\section{Izlazi parsera}
+	Table val;
+{
+	void main()
+		int x, i;
+	{ // Initialize val
+		val = new Table;
+		val.pos = new int[size];
+		val.neg = new int[size];
+		i = 0;
+		while (i < size) {
+			val.pos[i] = 0; val.neg[i] = 0;
+			i++;
+		}
+        // Read values
+		read(x);
+		while (x > 0) {
+			if (0 <= x && x < size) {
+				val.pos[x]++;
+			} else if (-size < x && x < 0) {
+				val.neg[-x]++;
+			}
+			read(x);
+		}
+	}
+}
+\end{lstlisting}
+
+\section{Sintaksa}
+\begin{tabular}{l l}
+Program & = ``class" ident \{ ConstDecl $\mid$ VarDecl $\mid$ ClassDecl \} ``\{" \{ MethodDecl \} ``\}". \\
+ConstDecl & = ``final" Type ident ``=" (number $\mid$ charConst) ``;". \\
+VarDecl & = Type ident [``[" ``]"] \{``," ident [``[" ``]"]\} ``;". \\
+ClassDecl & = ``class" ident ``{" {VarDecl} ``}". \\
+MethodDecl & = (Type $\mid$ ``void") ident ``(" [FormPars] ``)" \{VarDecl\} ``\{" \{Statement\} ``\}". \\
+FormPars & = Type ident [``[" ``]"] \{``," Type ident [``[" ``]"]\}. \\
+Type & = ident. \\
+
+Statement & = Designator (``=" Expr $\mid$ ``(" [ActPars] ``)" $\mid$ ``++" $\mid$ ``--") ``;" \\
+& $\mid$ ``if"{} ``(\grqq{} Condition ``)\grqq{} Statement [``else\grqq{} Statement] \\
+& $\mid$ ``while"{} ``(\grqq Condition ``)\grqq{} Statement \\
+& $\mid$ ``break"{} ``;" \\
+& $\mid$ ``return"{} [Expr] ``;" \\
+& $\mid$ ``read"{} ``(\grqq{} Designator ``)"{} ``;" \\
+& $\mid$ ``print"{} ``(" Expr [``," number] ``)"{} ``;" \\
+& $\mid$ ``\{" \{Statement\} ``\}". \\
+
+ActPars & = Expr \{``," Expr\}. \\
+Condition & = CondTerm \{``$\mid \mid$\grqq{} CondTerm\}. \\
+CondTerm & = CondFact \{``\&\&\grqq{} CondFact\}. \\
+CondFact & = Expr Relop Expr. \\
+Expr & = [``-"] Term \{Addop Term\}. \\
+Term & = Factor \{Mulop Factor\}. \\
+
+Factor & = Designator [``(" [ActPars] ``)"] \\
+& $\mid$ number \\
+& $\mid$ charConst \\
+& $\mid$ ``new" Type [``[" Expr ``]"] \\
+& $\mid$ ``(" Expr ``)". \\
+
+Designator & = ident \{ ``." ident $\mid$ ``[" Expr ``]"\}. \\
+Relop & = ``==" $\mid$ ``!=" $\mid$ ``>" $\mid$ ``>=" $\mid$ ``<" $\mid$ ``<=". \\
+Addop & = ``+" $\mid$ ``-". \\
+Mulop & = ``*" $\mid$ ``/" $\mid$ ``\%". \\
+
+\end{tabular}
+
+\subsection*{Leksičke strukture}
+ 
+\begin{tabular}{l l}
+
+Ključne reči: & break, class, else, final, if, new, print, read, return, void, while \\ 
+Vrste tokena: & ident = letter \{letter $\mid$ digit $\mid$ ``\_"\}.  \\ 
+& number = digit {digit}.  \\
+& charConst = ``'" printableChar ``'".  \\
+Operatori: & +, -, *, /, \%, ==, !=, >, >=, <, <=, \&\&, $\mid \mid$, =, ++, --, ;, zarez, ., (, ), [, ], {, }  \\ 
+Komentari: & // do kraja linije 
+\end{tabular}
+
+ 
+\section{Semantika}
+ 
+Svi pojmovi u ovom dokumentu, koji imaju definiciju, su podvučeni da bi se naglasilo njihovo posebno 
+značenje. Definicije tih pojmova su date u nastavku. 
+
+\hspace{0cm} \\
+
+\underline{Tip reference}
+
+Nizovi i klase su tipa reference. 
+
+\hspace{0cm} \\
+
+\underline{Tip konstante}
+
+\begin{itemize}
+\item Tip celobrojne konstante (npr. 17) je int. 
+\item Tip znakovne konstante (npr. 'x') je char. 
+\end{itemize}
+
+\hspace{0cm} \\
+ 
+\underline{Ekvivalentni tipovi podataka}
+
+Dva tipa podataka su ekvivalentna
+
+\begin{itemize}
+\item ako imaju isto ime, ili 
+\item ako su oba nizovi, a tipovi njihovih elemenata su \underline{ekvivalentni}. 
+\end{itemize}
+ 
+\hspace{0cm} \\
+
+\underline{Kompatibilni tipova podataka}
+
+Dva tipa podataka su kompatibilna 
+
+\begin{itemize}
+\item ako su \underline{ekvivalentni}, ili 
+\item ako je jedan od njih \underline{tip reference}, a drugi je tipa \textit{null}. 
+\end{itemize}
+ 
+Tip \textit{src} je kompatibilan pri dodeli sa tipom \textit{dst}
+
+\hspace{0pt} \\
+
+\underline{Kompatibilnost tipova podataka pri dodeli}
+
+\begin{itemize}
+\item ako su \textit{src} i \textit{dst} \underline{ekvivalentni}, ili
+\item ako je \textit{dst} \underline{tip reference}, a \textit{src} je tipa \textit{null}. 
+\end{itemize}
+
+\hspace{0pt} \\
+
+\underline{Predeklarisana imena}
+
+\begin{tabular}{l p{10cm}}
+int & tip svih celobrojnih vrednosti \\
+char & tip svih znakovnih vrednosti \\
+null & null vrednost promenljive tipa klase ili niza simbolički označava pokazivač koji ne pokazuje ni na jedan podatak \\
+eol & kraj reda karaktera (odgovara znaku `\textbackslash n'); print(eol) vrši prelazak u novi red \\
+chr & standardna metoda; chr(i) vrši konverziju celobrojnog izraza i u karakter (char) \\
+ord & standardna metoda; ord(ch) vrši konverziju karaktera ch u celobrojnu vrednost (int) \\ 
+len & standardna metoda; len(a) vraća broj elemenata u nizu a \\
+
+\end{tabular}
+
+\hspace{0pt} \\
+
+\underline{Opseg važenja}
+
+Opseg važenja (scope) predstavlja tekstualni doseg metode ili klase. Prostire se od početka definicije 
+metode ili klase do zatvorene velike zagrade na kraju te definicije. Opseg važenja ne uključuje imena 
+koja su deklarisana u opsezima koji su leksički ugnježdeni unutar njega. U opsegu se “vide” imena 
+deklarisana unutar njega i svih njemu spoljašnjih opsega. Pretpostavka je da postoji veštački globalni 
+opseg (universe), za koji je glavna klasa (koja predstavlja i glavni program) lokalna i koji sadrži sva 
+predeklarisana imena.  
+
+Deklaracija imena u unutrašnjem opsegu $S$ sakriva deklaraciju istog imena u spoljašnjem opsegu. 
+ 
+\subsection*{Napomena}
+ 
+\begin{itemize}
+\item Indirektna rekurzija nije dozvoljena i svako ime mora biti deklarisano pre prvog korišćenja.  
+\item Predeklarisana imena (npr. int ili char) mogu biti redeklarisani u unutrašnjem opsegu (ali to nije 
+preporučljivo).  
+\end{itemize} 
+ 
+\section{Kontekstni uslovi}
+ 
+\subsection*{Opšti kontekstni uslovi}
+
+\begin{itemize}
+\item Svako ime u programu mora biti deklarisano pre prvog korišćenja. 
+\item Ime ne sme biti deklarisano više puta unutar istog opsega. 
+\item U programu mora postojati metoda sa imenom main. Ona mora biti deklarisana kao void metoda bez 
+argumenata. 
+\end{itemize}
+
+\subsection*{Kontekstni uslovi za standardne metode}
+
+\begin{tabular}{l l}
+chr(e) & \textit{e} mora biti izraz tipa int. \\
+ord(c) & \textit{c} mora biti tipa char. \\
+len(a) & \textit{a} mora biti niz.
+\end{tabular}
+ 
+\subsection*{Kontekstni uslovi za MikroJava smene}
+ 
+ 
+\textbf{Program = ``class" ident \{ConstDecl $\mid$ VarDecl $\mid$ ClassDecl\} ``\{" \{MethodDecl\} ``\}". }
+
+\hRule \\[0.2cm]
+
+\textbf{ConstDecl = ``final" Type ident ``=" (number $\mid$ charConst) ``;".}
+
+• Tip terminala \textit{number} ili \textit{charConst} mora biti \underline{ekvivalentan} tipu Type. 
+
+\hRule \\[0.2cm]
+ 
+\textbf{VarDecl = Type ident [``[" ``]"] \{``," ident [``[" ``]"]\} ``;".} 
+
+\hRule \\[0.2cm]
+
+\textbf{ClassDecl = ``class" ident ``\{" \{VarDecl\} ``\}".} 
+
+\hRule \\[0.2cm]
+ 
+\textbf{MethodDecl = (Type $\mid$ ``void") ident ``(" [FormPars] ``)" \{VarDecl\} ``\{" \{Statement\} ``\}".} 
+
+• Ako metoda nije tipa void mora imati iskaz return unutar svog tela (ovo se proverava pri izvršenju). 
+
+\hRule \\[0.2cm]
+ 
+\textbf{FormPars = Type ident [``["{} ``]"] \{``," Type ident [``["{} ``]"]\}.} 
+
+\hRule \\[0.2cm]
+
+\textbf{Type = ident.} 
+
+• \textit{ident} mora označavati tip podataka. 
+ 
+\hRule \\[0.2cm] 
+  
+\textbf{Statement = Designator ``=" Expr ``;".} 
+
+• \textit{Designator} mora označavati promenljivu, element niza ili polje unutar objekta. 
+
+• Tip neterminala Expr mora biti kompatibilan pri dodeli sa tipom neterminala Designator. 
+ 
+\textbf{Statement = Designator (``++" $\mid$ ``--") ``;".} 
+
+• \textit{Designator} mora označavati promenljivu, element niza ili polje unutar objekta. 
+
+• \textit{Designator} mora biti tipa int. 
+ 
+\textbf{Statement = Designator ``(" [ActPars] ``)"{} ``;".} 
+
+• \textit{Designator} mora označavati metodu. 
+ 
+\textbf{Statement = ``break".} 
+
+• Iskaz break se može koristiti samo unutar while ciklusa. 
+ 
+\textbf{Statement = ``read"{} ``("{} Designator ``)"{} ``;".} 
+
+• \textit{Designator} mora označavati promenljivu, element niza ili polje unutar objekta. 
+
+• \textit{Designator} mora biti tipa int ili char. 
+ 
+\textbf{Statement = ``print"{} ``("{} Expr [``," number] ``)"{} ``;".} 
+
+• \textit{Expr} mora biti tipa int ili char. 
+  
+\textbf{Statement = ``return" [Expr] .} 
+
+• Tip neterminala \textit{Expr} mora biti isti kao i \underline{povratni tip} tekuće metode.
+
+• Ako neterminal \textit{Expr} nedostaje, tekuća metoda mora biti deklarisana kao void. 
+
+\begin{tabular}{l l}
+\textbf{Statement} & \textbf{= ``if" ``("{} Condition ``)"{} Statement [``else"{} Statement]}\\
+& \textbf{$\mid$ ``while" ``("{} Condition ``)"{} Statement} \\
+& \textbf{$\mid$ ``\{" {Statement} ``\}"} \\
+& \textbf{$\mid$ ";".} 
+\end{tabular}
+
+\hRule \\[0.2cm]
+
+\textbf{ActPars = Expr \{``," Expr\}. }
+
+• Broj formalnih i stvarnih argumenata metode mora biti isti. 
+
+• Tip svakog stvarnog argumenta mora biti \underline{kompatibilan pri dodeli} sa tipom svakog formalnog 
+argumenta na odgovarajućoj poziciji. 
+
+\hRule \\[0.2cm]
+
+\textbf{Condition = CondTerm {``$\mid\mid$"{} CondTerm}.} 
+
+\hRule \\[0.2cm]
+
+\textbf{CondTerm = CondFact {``\&\&"{} CondFact}.} 
+
+\hRule \\[0.2cm]
+ 
+\textbf{CondFact = Expr Relop Expr.} 
+
+• Tipovi oba izraza moraju biti \underline{kompatibilni}.
+ 
+• Uz promenljive tipa klase ili niza, od relacionih operatora, mogu se koristiti samo != i ==. 
+
+\hRule \\[0.2cm]
+ 
+\textbf{Expr = Term.} 
+ 
+\textbf{Expr = ``-"Term.}
+
+• \textit{Term} mora biti tipa int. 
+ 
+\textbf{Expr = Expr Addop Term.}
+
+• \textit{Expr} i \textit{Term} moraju biti tipa int. 
+
+\hRule \\[0.2cm]
+
+\textbf{Term = Factor.} 
+ 
+\textbf{Term = Term Mulop Factor.}
+
+• \textit{Term} i \textit{Factor} moraju biti tipa int. 
+ 
+\hRule \\[0.2cm]
+ 
+\textbf{Factor = Designator $\mid$ number $\mid$ charConst| ``(" Expr ``)".} 
+ 
+\textbf{Factor = Designator ``(" [ActPars] ``)".}
+
+• \textit{Designator} mora označavati metodu. 
+ 
+\textbf{Factor = ``new" Type .}
+
+• \textit{Type} mora označavati klasu. 
+ 
+\textbf{Factor = ``new" Type ``[" Expr ``]".}
+
+• Tip neterminala \textit{Expr} mora biti int. 
+
+\hRule \\[0.2cm]
+
+\textbf{Designator = Designator ``." ident .}
+
+• Tip neterminala \textit{Designator} mora biti klasa. 
+
+• \textit{Ident} mora biti polje neterminala \textit{Designator}. 
+ 
+\textbf{Designator = Designator ``[" Expr ``]".}
+
+• Tip neterminala \textit{Designator} mora biti niz.
+
+• Tip neterminala \textit{Expr} mora biti int. 
+ 
+\hRule \\[0.2cm]
+
+\textbf{Relop = ``==" $\mid$ "!=" $\mid$ ">" $\mid$ ">=" $\mid$ "<" $\mid$ "<=".} 
+
+\hRule \\[0.2cm] 
+ 
+\textbf{Addop = ``+" $\mid$ ``-".} 
+
+\hRule \\[0.2cm]
+
+\textbf{Mulop = ``*" $\mid$ ``/" $\mid$ ``\%".} 
+
+
+\section{Implementaciona ograničenja}
+ 
+• Ne sme se koristiti više od 256 lokalnih promenljivih. 
+
+• Ne sme se koristiti više od 65536 globalnih promenljivih. 
+
+• Klasa ne sme imati više od 65536 polja. 
+
+• Izvorni kod programa ne sme biti veći od 8 KB. 
 
 
 \chapter{Listing gramatike}
-\lstset{
-  basicstyle=\footnotesize\ttfamily
-}
 
 \lstinputlisting{../src/parser/MicroJava.g}
 
+\chapter{Primer programa i sintaksnog stabla}
+\label{ch:example}
+
+Primer programa koji sortira listu unetih brojeva:
+
+\lstinputlisting{../example/example.mj}
+
+Generisano sintaksno stablo:
+
+\lstinputlisting{../example/example.ast}
+
+
 \chapter{LLVM}
 \label{ch:llvm}
-Za inspekciju i razumevanje generisanog koda, korisno je poznavati osnove LLVM asemblerskog jezika koji je ovde predstavljen u tri dela: sintaksa, tipovi i pregled najkorisnijih instrukcija.
-
-
-\section{LLVM sintaksa}
-
-
+Za inspekciju i razumevanje generisanog koda, korisno je poznavati osnove LLVM asemblerskog jezika koji je ovde ukratko predstavljen.
 
 \section{LLVM tipovi}
 
@@ -52,7 +451,7 @@ Primitivni tipovi su osnovni gradivni blokovi LLVM sistema.
 
 Pošto tipovi celih i realnih brojeva zavise od podrške konkretne procesorske arhitekture,
 sam LLVM pruža veliku fleksibilnost u njihovom deklarisanju
-pa su mogući tipovi bilo koje širine od 1 do $2^{23} - 1$ (pribliižno 8 miliona) koji se označavaju sa \code{iN} gde \code{N} predstavlja širinu u bitima. Posebna instrukcija mapira pojedine tipove na 
+pa su mogući tipovi bilo koje širine od 1 do $2^{23} - 1$ (pribliižno 8 miliona) koji se označavaju sa \code{iN} gde \code{N} predstavlja širinu u bitima.
 
 Postoji 5 tipova realnih brojeva: 
 \code{float} koji je širine 32 bita, 
@@ -60,13 +459,6 @@ Postoji 5 tipova realnih brojeva:
 \code{fp128} od 128 bita sa mantisom od 112 bita, 
 kao i hardverski specifične x86\_{}fp80 širine 80 bita 
 i ppc\_{}fp128 koji takodje ima 128 bita, ali mantisu širine 64 bita.
-
-
-\subsection*{Izvedeni tipovi}
-
-
-% opis izvedenih tipova
-
 
 
 \section{Korišćene LLVM instrukcije}

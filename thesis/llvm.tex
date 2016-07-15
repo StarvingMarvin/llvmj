@@ -98,7 +98,7 @@ Ovim izborom omogućeno je jednostavno kodiranje efikasnih optimizacija koje u v
 \caption{Vrednost registra $i_1$ se nigde ne koristi, pa se ta dodela može eliminisati}
 \end{figure}
 
-U slučaju kada postoji više grana izvršenja kao u primeru \ref{fig:phi}, mora se izvršiti ujedinjenje svih mogućih vrednosti koje data promenljiva moze da ima.
+U slučaju kada postoji više grana izvršenja kao u primeru \ref{fig:phi}, mora se izvršiti ujedinjenje svih mogućih vrednosti koje data promenljiva može da ima.
 SSA forma, a samim tim i LLVM u svom modelu ima $\varphi$ instrukciju za tu svrhu.
 Kako se SSA forma ne odnosi na memorijske lokacije nego samo na registre, način da se izbegne računanje mesta na kojima je potrebno umetnuti $\varphi$ instrukciju je da se vrednosti uvek pišu u memoriju, odnosno učitavaju u nove registre.
 LLVM sadrži optimizacioni prolaz koji eliminiše nepotrebne \mj{store}/\mj{load} parove i umeće $\varphi$ instrukcije.

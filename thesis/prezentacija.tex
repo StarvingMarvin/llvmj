@@ -1,0 +1,258 @@
+\documentclass{beamer}
+
+\usepackage[serbian]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{tikz-uml}
+\usepackage{tkz-graph}
+\usepackage[font={small,it}]{caption}
+\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,petri, automata}
+
+\newcommand{\LL}[1]{$LL(#1)$ {}}
+\newcommand{\LLk}{\LL{k}}
+\newcommand{\LLa}{\LL{\ast}}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\usetheme{PaloAlto}
+\usecolortheme{seahorse}
+\usefonttheme{structurebold}
+
+\lstset{
+  basicstyle=\footnotesize\ttfamily
+}
+
+\setbeamertemplate{footline}
+{
+}
+%\setbeameroption{show notes on second screen}
+
+\title{MicroJava na LLVM infrastrukturi}
+\author{Luka Stojanović}
+\institute{
+Elektrotehnički fakultet, \\ Beogradski univerzitet
+}
+\date{12. 07. 2016.}
+\subject{Software engineering}
+
+\begin{document}
+\begin{frame}
+	\titlepage
+\end{frame}
+  
+\begin{frame}
+	\frametitle{Pregled}
+    \tableofcontents
+\end{frame}
+
+\section{Uvod}
+
+\begin{frame}
+	\frametitle{Uvod}
+	\begin{itemize}
+		\item Prepoznavanje ulaznog teksta
+	    \begin{itemize}
+			\item Prvi prevodioci nastali pre skoro 60 godina
+			\item $LR$ algoritam opisan pre nešto više od 50 godina
+		\end{itemize}
+		\item Implementacija odlika jezika
+		\item Generisanje izlaznog koda
+	    \begin{itemize}
+			\item Svaki prevodilac implementirao a sebe
+			\item Virtualne mašine
+			\item LLVM
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{MicroJava}
+\end{frame}
+
+
+\section{Korišćeni alati}
+% antlr
+\begin{frame}
+	\frametitle{ANTLR}
+	\begin{itemize}
+		\item \LLa parser
+		\item Implementiran u Javi
+		\item Ume da generiše kod za više jezika (Java, C, C\#, itd.)
+		\item Ista gramatika za lekser i parser
+		\item Razvojno okruženje
+		\item Generisanje sintaksnog stabla
+		\item Prevođenje iz teksta u tekst
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{ANTLR - Sintaksno stablo}
+	
+	\begin{lstlisting}
+program 
+: CLASS IDENT (const_decl|var_decl|class_decl)*
+  '{' method_decl* '}'
+  -> ^(PROGRAM IDENT
+       const_decl* class_decl*
+       var_decl* method_decl*);
+
+statement
+    :   while_stat
+        | BREAK ';'!
+        | RETURN^ expr? ';'!
+        | READ^ '('! designator ')'! ';'!
+        | print_stat
+        | des_stat
+        | '{' statement* '}' -> ^(BLOCK statement*)
+        | if_stat;
+	\end{lstlisting}
+	
+
+\end{frame}
+
+
+% llvm
+\begin{frame}
+	\frametitle{LLVM}
+	\begin{itemize}
+		\item Pravljenje kompajlera i alata oko kompajlera
+		\item Clang, Rust, Rubinius, $\ldots$
+		\item lldb, lld, $\ldots$
+		\item klee, vmkit, gragonegg, $\ldots$
+		\item API, "asemblerski" kod, binarni kod
+		\item Generisanje mašinskog koda za više različitih platformi
+	\end{itemize}
+\end{frame}
+
+\section{Detalji implementacije}
+% parsiranje
+\begin{frame}
+	\frametitle{Parsiranje}
+	\begin{itemize}
+		\item ANTLR generiše sintaksno stablo kao strukturu u memoriji.
+		\item Svaki čvor ima tip
+		\item Detektovanje greške ne zaustavlja rad parsera
+		\item \code{AstWalker}-u se registruje posetilac za svaki tip
+	\end{itemize}
+\end{frame}
+
+% parsiranje - slika
+
+\begin{frame}[c]
+	\frametitle{Parsiranje}
+\begin{center}
+
+	\scalebox{0.6}{
+		\input{visitor-uml.tex}
+	}
+\end{center}
+\end{frame}
+
+
+% semantika
+
+\begin{frame}
+	\frametitle{Semantička analiza}
+	\begin{itemize}
+		\item Obilazak stabla
+		\item Skupljanje simbola
+		\item Skupljanje implicitnih tipova potrebnih za generisanje koda
+		\begin{itemize}
+			\item Tipovi niza
+			\item Tipovi metoda
+		\end{itemize}
+		\item Provera pravila jezika:
+		\begin{itemize}
+		    \item Sva imena su deklarisana pre prve upotrebe
+			\item Tipovi u izrazima su kompatibilni
+			\item Dodela samo promenljivima
+			\item \code(break) samo unutar petlje
+			\item \code{return} postoji u funcijama koje proizvode vrednost
+			\item \code(main) postoji, ne prima argumente i ne proizvodi vrednost
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+
+% semantika - slika
+
+\begin{frame}[c]
+	\frametitle{Simboli}
+	\begin{center}
+	\scalebox{0.6}{
+		\input{symbols-uml.tex}
+	}
+	\end{center}
+\end{frame}
+
+
+% generisanje koda
+
+\begin{frame}
+	\frametitle{Generisanje koda}
+	\begin{itemize}
+	    \item Ceo program sa standardnom bibliotekom u jednom modulu
+		\item Registruju se tipovi iz tabele simbola, globalne konstante i promenljive
+		\item Prolazak kroz tela funkcija
+		\item Provera izpravnosti modula i izvršavanje optimizacija
+	\end{itemize}
+\end{frame}
+
+% primeri
+
+\begin{frame}[fragile]
+	\frametitle{Generisanje koda - standardna biblioteka}
+	\begin{lstlisting}
+define i32 @len({ i32, i8* }) {
+entry:
+  ; getting pointer of first field of a struct
+  %len_ptr = getelementptr { i32, i8* }*
+      %0, i32 0, i32 0
+  ; loading the value and returning it
+  %len = load i32* %len_ptr
+  ret i32 %len
+}
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{Generisanje koda - standardna biblioteka}
+	\begin{lstlisting}
+; while (i > 0) {
+;  i = i - 1;
+; }
+while.1:
+  %i.1 = load i32 %i
+  %lt_tmp = icmp sgt i32 %i.1, 0
+  %br i1 %lt_tmp, label loop.1, label whilecont.1
+loop.1:
+  %i.2 = load i32 %i
+  %sub_tmp = sub i32 %i.2, 1
+  %store i32 %i.2, i32* %i
+  %br label while.1
+whilecont.1:
+; ...
+\end{lstlisting}
+\end{frame}
+
+
+\section{Dalja unapređenja}
+% zakljucak
+\begin{frame}
+	\frametitle{Dalja unapređenja}
+	\begin{itemize}
+	\item Objektno orijentisano programiranje
+	\item Tipovi \code{boolean} i \code{string}
+	\item Linker
+	\item Biblioteka kao zaseban modul
+	\end{itemize}
+\end{frame}
+
+\end{document}

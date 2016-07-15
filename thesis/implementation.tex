@@ -5,10 +5,34 @@ Ovo poglavlje opisuje arhitekturu i implementacione detalje. Posebna pažnja je 
 
 \section{Parser}
 
-Kako ANTLR generiše C kod, rezultat parsiranja programa je struktura koja predstavlja sintaksno stablo.
+Ako se uporede BNF gramatika iz MicroJava specifikacije i listing ANTLR gramatike, vidi se da je bilo moguće preslikati sintaksna pravila bez većih izmena.
+Glavni dodatak u ANTLR gramatici jesu izrazi za konstrukciju sintaksnog stabla.
+Primer programa i generisanog sintaksnog stabla nalazi se u dodatku \ref{ch:example}.
+
+U slučaju sintaksne greške, čvor će biti označen kao nevalidan, ali će ostatak stabla biti dostupan, tako da je moguće izvršiti dodatnu analizu validnog koda.
+
+Kako ANTLR generiše C kod, rezultat parsiranja programa je struktura \mj{ANTLR3\_BASE\_TREE\_struct} koja predstavlja sintaksno stablo.
+Struktura sadrži podatke kao što su tip tokena trenutnog čvora, tekst i lokacija izvornog koda koja odgovara čvoru, roditelja i listu dece.
+Tip tokena je celobrojna konstanta čiju vrednost dodeljuje ANTLR prilikom generisanja koda.
 Za jednostavniji rad  u C++u sa dobijenom strukturom implementirane su
-\mj{AstWalker}, \mj{NodeVisitor} i \mj{nodeiterator} klase i nekoliko pomoćnih funkcija. \mj{AstWalker} prihvata registraciju podrazumevanog posetioca kao i instancu posetioca po tipu AST čvora.
-Klasa \mj{nodeiterator} služi za obilazak dece datog čvora.
+\mj{AstWalker}, \mj{NodeVisitor} i \mj{nodeiterator} klase i nekoliko pomoćnih funkcija.
+
+\begin{figure}[h]
+	\centering
+	\input{visitor-uml.tex}
+	\caption{Klase koje pružaju pomoć prilikom obilaska sintasnog stabla}
+	\label{fig:visitor}
+\end{figure}
+
+\mj{AstWalker} prihvata registraciju podrazumevanog posetioca kao i instancu posetioca po tipu AST čvora.
+Pozivanjem metode \mj{visit(AST node)}, dati čvor se smešta na stek i poziva se odgovarajući \mj{Visitor} za tip tog noda.
+U toku rada, \mj{Visitor} može da poziva metode relativne za trenutni čvor, kao što su \mj{tokenText()}, \mj{firstChild()} ili \mj{lastChild()}.
+Po potrebi, za svako dete-čvor može pozivati \mj{visit()} metodu \mj{AstWalker} klase.
+Kada se obrada čvora završi, \mj{AstWalker} skida čvor sa steka i vraća kontrolu pozivaocu.
+
+Klasa \mj{nodeiterator} je implementacija \mj{std::iterator} interfejsa.
+Inicijalizuje se čvorom sintaksnog stabla i iterira po deci datog čvora. 
+Pošto implementira sve metode predviđene \mj{std::random\_access\_iterator\_tag}-om, moguće je iterirati unapred i unazad, kao i zahtevati odredjeno dete-čvor po indeksu.
 
 \section{Semantika}
 
@@ -20,7 +44,6 @@ U MicroJavi možemo izdvojiti nekoliko vrsta simbola, kao što su primitivni tip
 Radi što lakše analize, a kasnije i generisanja koda, ovi simboli predstavljeni su hijerarhijom klasa prikazanoj na dijagramu \ref{fig:symbols}.
 
 \begin{figure}[h]
-
 	\centering
 	\input{symbols-uml.tex}
 	\caption{Pojednostavljena struktura klasa koje predstavljaju simbole}
@@ -36,7 +59,7 @@ Tipovi nizova i metoda se implicitno registruju u globalnu tabelu simbola prilik
 
 MicroJava metod je implementiran kao vrednost koja ima tip.
 Tip metoda sastoji se od povratnog tipa i tipa argumenata. 
-U fazi semantičke analize, tip se koristi za proveru argumenata i dodele rezultata promenljivoj prilikom poziva metode.
+U fazi semantičke analize, tip se koristi za proveru argumenata i dodelu rezultata promenljivoj prilikom poziva metode.
 Kasnije se u fazi generisanja koda ponovo koristi za pravljenje ekvivalentnog LLVM tipa.
 Takođe, metode poseduju i dva opsega vidljivosti, za lokalne promenjive i argumente.
 
@@ -47,7 +70,7 @@ Takođe, metode poseduju i dva opsega vidljivosti, za lokalne promenjive i argum
 	\label{fig:scopes} 
 \end{figure}
 
-I opsezi vidljivosti imaju svoju hijerarhiju, prikazanu na slici \ref{fig:scopes}.
+Opsezi vidljivosti takođe imaju svoju hijerarhiju, prikazanu na slici \ref{fig:scopes}.
 Osnovna funkcionalnost, definisanje i pronalaženje simbola, implementirana je u klasi \mj{Scope}.
 Globalni opseg, implementiran u klasi \mj{GlobalScope}, sadrži sve predefinisane tipove i simbole, kao i implicitno generisane tipove nizova i potpise metoda.
 Globalni opseg takođe sadrži i referencu na objekat tipa \mj{Program} koja predstavlja spoljnu klasu MicroJava programa.
@@ -58,6 +81,17 @@ Ulazni fajl je nevalidan, ako do kraja njegove obrade nije definisana tačno jed
 
 Koristeći \mj{AstWalker} klasu definisanu u \mj{parser} paketu, za svaki tip tokena iz sintaksnog stabla definisana je \mj{Visitor} klasa koja proverava semantičku ispravnost izraza i sakuplja simbole. 
 Svi posetioci poseduju referencu na objekat tipa \mj{Symbols} koji predstavlja fasadu ka konkretnim simbolima i opsezima vidljivosti \ref{fig:symbols-facade}.
+
+U ovom koraku se proveravaju pravila definisana kontekstnim uslovima MicroJava specifikacije:
+\begin{itemize}
+\item Sva imena su deklarisana pre prvog korišćenja
+\item Vrednosti sa leve strane iskaza dodele su promenljive, a ne konstante
+\item Tipovi promenljivih ili literala odgovaraju izrazu u kome se nalaze
+\item Instrukcija \code{break} se nalazi unutar petlje
+\item Funkcija koja vraća vrednost sadrži \code{return} iskaz i vraćena vrednost je ispravnog tipa
+\item Postoji metoda \code{main} koja ne prima argumente i ne vraća vrednost
+\end{itemize}
+
 Sa uspešno izvršenom proverom ulaznog programa i popunjenom tabelom simbola, sve je spremno za generisanje koda.
 \begin{figure}[h]
 	\centering
@@ -69,14 +103,196 @@ Sa uspešno izvršenom proverom ulaznog programa i popunjenom tabelom simbola, s
 
 \section{Generisanje koda}
 
-Ceo MicroJava program sa svim predefinisanim funkcijama smešten je u jedan LLVM modul. Implementacija se oslanja na sledeće funcije iz standardne C biblioteke: \mj{i8* @malloc(i64)},
-\mj{i32 @putchar(i32)}, 
-\mj{i32 @\_\_isoc99\_scanf(i8*, ...)}, 
-\mj{i32 @printf(i8*, ...)} i 
-\mj{i32 @getchar()}.
+LLVM program se sastoji od modula.
+Svaki moul predstavlja jednu kompilacionu jedinicu izvornog jezika i sastoji se od funkcija, globalnih promenljivih i deklaracija tipova i spoljnih imena.
 
-Nizovi su implementirani kao struktura \mj{\{ i32, i8* \}} za dužinu niza i same elemente, pa je \mj{len()} funkcija implementirana kao prosto čitanje polja iz strukture.
+U slučaju MicroJave, ceo program sa svim predefinisanim funkcijama smešten je u jedan LLVM modul.
 
-Slično tome, \mj{ord()} i \mj{chr()} funkcije su implementirane kao proširenje celobrojnog tipa iz 8 u 32 bita, odnosno zadržavanje samo nižih 8 bita 32-bitnog broja.
+Dok se po drugi put prolazi kroz sintaksno stablo, pozivaju se metode LLVM API-ja kojima se postepeno generiše model programa predstavljen u memoriji.
+Primeri generisanog koda su reprezentacija memorijskog modela u LLVM sintaksi.
+
+Deklarišu se sledeće funkcije iz standardne C biblioteke jer se implementacija oslanja na njih:
+
+\begin{lstlisting}
+declare i8* @malloc(i64)
+declare i32 @putchar(i32)
+declare i32 @__isoc99_scanf(i8*, ...)
+declare i32 @printf(i8*, ...)
+declare i32 @getchar()
+\end{lstlisting}
+
+Definisane su i sledeće globalne konstante:
+
+\begin{lstlisting}
+; end of line character
+@eol = constant i8 10
+; null pointer
+@null = constant i8* zeroinitializer
+; "%d" string used as an argument for scanf/printf when reading and writing integers
+@mj.dec_fmt = private constant [3 x i8] c"%d\00"
+\end{lstlisting}
+
+Predefinisane funkcije jezika su takođe umetnute direktno u modul.
+
+Nizovi su implementirani kao struktura \mj{\{ i32, i8* \}} za dužinu niza i pokazivača na same elemente, pa je \mj{len()} funkcija implementirana kao prosto čitanje polja iz strukture.
+
+\begin{lstlisting}
+define i32 @len({ i32, i8* }) {
+entry:
+  ; getting pointer of first field of a struct
+  %len_ptr = getelementptr { i32, i8* }* %0, i32 0, i32 0
+  ; loading the value and returning it
+  %len = load i32* %len_ptr
+  ret i32 %len
+}
+\end{lstlisting}
+
+Funkcije \mj{ord()} i \mj{chr()} su implementirane kao proširenje celobrojnog tipa iz 8 u 32 bita, odnosno zadržavanje samo nižih 8 bita 32-bitnog broja:
+
+\begin{lstlisting}
+define i32 @ord(i8) {
+entry:
+  %1 = sext i8 %0 to i32
+  ret i32 %1
+}
+
+define i8 @chr(i32) {
+entry:
+  %1 = trunc i32 %0 to i8
+  ret i8 %1
+}
+\end{lstlisting}
 
 Koristeći popunjenu tabelu simbola, prolazi se još jednom kroz sintaksno stablo i generišu LLVM instrukcije.
+
+Funkcije, tipovi, globalne promenljive i konstante unutar MicroJava programa su takođe definisani na globalnom nivou unutar modula.
+Da bi se izbegla kolizija sa već predefinisanim imenima, na početak imena ovih entiteta se dodaje prefiks.
+U zavisnosti od trenutnog opsega vidljivosti, ime će se razrešiti u odgovarajuću LLVM vrednost.
+
+Klase iz programa se definišu u vidu LLVM struktura.
+Na primer klasa \mj{List} u programu \mj{Example} koja se sastoji od jednog celobrojnog polja i reference na naredni element liste bi bila definisana na sledeći način:
+
+\begin{lstlisting}
+%"Example::List" = type { %"Example::List"*, i32 }
+\end{lstlisting}
+
+Primer definisane celobrojne konstante i promenljive korisnički definisanog tipa:
+
+\begin{lstlisting}
+@"Example::MAX_SIZE" = constant i32 100
+@"Example::list" = global %"Example::List"* null
+\end{lstlisting}
+
+Zatim se prelazi na generisanje tela funkcija.
+Funkcija se sastoji od liste blokova, a blokovi se sastoje od liste instrukcija.
+Blokovi takođe poseduju labelu koja može da se koristi kao argument instrukciji skoka.
+Poslednja instrukcija svakog bloka mora biti "terminalna" odnosno instrukcija skoka ili povratak iz funkcije.
+
+\begin{lstlisting}
+
+define i32 @"Example::f(i32) {
+entry:
+  ; ...
+  ; generated instructions
+  ; ...
+  ret i32 %result
+}
+\end{lstlisting}
+
+Ključne reči \mj{read} i \mj{write} se u zavisnosti od tipa promenljive pretvori ili u poziv C funkciji \code{getchar} odnosno \code{putchar} ili, u slucaju celobrojnog tipa, \code{scanf} odnosno \code{printf}.
+Primer čitanja vrednosti celobrojnog tipa:
+
+\begin{lstlisting}
+%charCount = call i32 (i8*, ...)* @__isoc99_scanf(
+    i8* getelementptr inbounds ([3 x i8]* @mj.dec_fmt, i32 0, i32 0),
+    i32* %iPtr
+)
+\end{lstlisting}
+
+Ključna reč \mj{new} se oslanja na C funkciju \code{malloc}:
+
+\begin{lstlisting}
+; newList = new List
+%voidptr.1 = call i8* @malloc(i64 16)
+%newList.ptr = bitcast i8* %voidptr.1 to %"Example::List"*
+store %"Example::List"* %newList.ptr, %"Example::List"** %newList
+\end{lstlisting}
+
+Aritmetičko-logičke instrukcije imaju direktne ekvivalente unutar LLVM-a.
+Promenljive su predstavljene pokazivačem na vrednost koju je potrebno učitati u registar instrukcijom \code{load} pre upotrebe u izrazu.
+Vrednost rezultata se dodeljuje promenljivoj instrukcijom \code{store}:
+
+\begin{lstlisting}
+; a = a + 1
+%a.1 = load i32 %a
+%add_tmp = add i32 %a.1, 1
+store i32 %tmp, i32* %a
+\end{lstlisting}
+
+Razlog za ovakav pristup je SSA forma LLVM koda, koja ne dozvoljava da se vrednost registra menja.
+Na ovaj način vrednost registra \code{\%a} je konstantna adresa, dok se na mestima gde se vrednost te adrese koristi, koriste novi privremeni registri.
+Prilikom generisanja izvršnog koda, moguće je ukloniti suvišne instrukcije, kao što su uzastopni \code{store}/\code{load} parovi, propuštanjem ovako naivno izgenerisanog koda kroz optimizacione prolaze.
+
+Instrukcije kontrole toka: \mj{if} i \mj{while} su implementirane kao niz blokova instrukcija.
+U prvom bloku se nalazi kod za izračunavanje uslova i uslovnog skoka na odgovarajuću labelu.
+Potom sledi blok ili lista blokova koja odgovara instrukcijama generisanim iz iskaza unutar \mj{if}/\mj{else}/\mj{while}.
+Na kraju se napravi prazan blok koji se setuje kao odredište za instrukcije koje dolaze nakon instrukcija kontrola toka i na čiju labelu se skače kada želimo da izađemo iz \mj{if}/\mj{else}/\mj{while} bloka.
+
+\begin{lstlisting}
+; while (i > 0) {
+;  i = i - 1;
+; }
+while.1:
+  %i.1 = load i32 %i
+  %lt_tmp = icmp sgt i32 %i.1, 0
+  %br i1 %lt_tmp, label loop.1, label whilecont.1
+loop.1:
+  %i.2 = load i32 %i
+  %sub_tmp = sub i32 %i.2, 1
+  %store i32 %i.2, i32* %i
+  %br label while.1
+whilecont.1:
+; ...
+\end{lstlisting}
+
+Pristup elementima niza i poljima klasa implementira se pomoću LLVM instrukcije za pokazivačku aritmetiku \code{getelementptr} i \code{load} odnosno \code{store} instrukcije, koja zapravo pristupi izračunatoj adresi.
+Polja unutar strukture su anonimna, pa je potrebno pamtiti njihove redne brojeve koji se prosleđuju instrukciji \code{getelementptr}.
+Pošto je vrednost promenljive tipa klase implementirana kao pokazvač na strukturu, prvi indeks koji se prosleđuje \code{getelementptr} instrukciji je 0, da bi se dereferencirao sam pokazivač, pa tek onda sledi redni broj polja strukture koje se učitava:
+
+\begin{lstlisting}
+%valPtr = getelementptr %"Example::List"* %listVal, i32 0, i32 1
+%val = load i32* %valPtr
+\end{lstlisting}
+
+Na kraju se dodaje i metoda \code{main} koja predstavlja polaznu tačku programa.
+Ona samo poziva korisnički definisanu main funkciju i vraća vrednost 0 kao znak uspešno završenog programa.
+
+\begin{lstlisting}
+define i32 @main() {
+entry:
+  call void @"Example::main"()
+  ret i32 0
+}
+\end{lstlisting}
+
+Kada se kompletira proces generisanja modula, moguće ga je dalje menjati i primenjivati optimizacione algoritme.
+Rezultujući kod se može serijalizovati na disk za kasnije izvršavanje ili izvršiti odmah prosleđivanjem ugrađenom JIT kompajleru.
+Ova implementacija MicroJave se sastoji od dva odvojena izvršna programa: \code{mjc} i \code{mji}.
+Program \code{mjc} je kompajler i u zavisnosti od opcija će generisati LLVM tekstualnu reprezentaciju, bajt-kod ili objektni fajl sa mašinskim instrukcijama.
+Program \code{mji} je interpreter i odmah po generisanju memorijskog modela prelazi na izvršavanje.
+
+\section{Ograničenja i specifičnosti implementacije}
+
+Ovaj rad implementira uprošćenu verziju MicroJave koja ne podržava neke korisne konstrukte kao što su: 
+\begin{itemize}
+\item objektno orijentisano programiranje
+\item dodelu \mj{boolean} vrednosti promenljivima
+\item \mj{string} tip i literale
+\end{itemize}
+
+Svaki program sadrzi celu kopiju standardne biblioteke, umesto da je biblioteka zaseban modul koji se povezuje sa glavnim programom.
+
+Komanda \mj{mjc} ume samo da generiše objektni fajl, dok se povezivanje u izvršni fajl mora zasebno izvršiti pomoću zasebnog programa.
+
+Još jedna specifičnost implementacije je da specifikacija stavlja ograničenja na veličinu ulaznog fajla, broj promenljivih i slično.
+Nikakve provere tog tipa nisu implementirane u okviru ovog rada, tako da su ograničenja programa, ograničenja računara na kome se prevodilac izvršava.

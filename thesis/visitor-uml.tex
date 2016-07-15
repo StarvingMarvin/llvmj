@@ -1,0 +1,61 @@
+\begin{tikzpicture}
+	\tikzumlset{font=\footnotesize}
+
+	\begin{umlpackage}[x=0,y=0]{parser}
+
+		\umlclass[x=20pt,y=20pt]{AstWalker}
+			{
+				- stack: vector$\langle$AST$\rangle$		
+			}{
+	            + addVisitor(tokenType: uint32\_t, visitor: NodeVisitor): void \\
+	            + getVisitor(uint32\_t tokenType): NodeVisitor \\
+	            + visit(AST ast): void \\
+	            + tokenType(): uint32\_t \\
+	            + tokenText(): char$\ast$ \\
+	            + childCount(): size\_t \\
+	            + nilNode(): bool \\
+	            + printPosition(ostream\& os): ostream\& \\
+	            + firstChild(): nodeiterator \\
+	            + lastChild(): nodeiterator \\
+	            + currentNode(): AST \\
+	            + template $\langle$class T$\rangle$ setData(T$\ast$ data): void \\
+	            + template $\langle$class T$\rangle$ getData(): T$\ast$
+			}
+
+		\umlclass[x=20pt,y=200pt]{NodeVisitor}
+			{}{
+				+ operator()(walker: AstWalker): void
+			}
+			
+		\umlemptyclass[x=250pt,y=20pt]{nodeiterator}
+		
+		\umlclass[x=250pt,y=190pt]{std::iterator}
+			{}{
+				+ operator++() \\
+			    + operator*() \\
+			    ...
+			}
+
+		
+		\umluniaggreg[attr=defaultVisitor|1, anchor1=54,anchor2=-20]
+			{AstWalker}{NodeVisitor}
+
+    	\umluniaggreg[attr=visitors|*,pos=0.5]
+			{AstWalker}{NodeVisitor}
+
+		\umldep[anchor1=-160,anchor2=126]
+			{NodeVisitor}{AstWalker}
+			
+		\umlimpl{nodeiterator}{std::iterator}
+		
+		\umluniassoc{AstWalker}{nodeiterator}		
+		
+%		\umlVHuniaggreg[attr=type|1,anchor1=-130, anchor2=-16,pos=1.9,align=left]
+%			{NamedValue}{Type}
+%	
+%		\umlHVHuniaggreg[attr=returnType|1, anchor1=10,  anchor2=-16, arm2=40pt, pos=1.4]
+%			{MethodType}{Type}
+%		\umlHVHuniaggreg[attr=*|arguments, anchor1=-10,  anchor2=-16, arm2=55pt, pos=1.8]
+%			{MethodType}{Type}
+	\end{umlpackage}
+\end{tikzpicture} 

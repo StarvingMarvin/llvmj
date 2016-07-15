@@ -1,0 +1,17 @@
+\chapter{Zaključak}
+\label{ch:zakljucak}
+
+Generisanje optimizovanog koda koji će da radi na više različitih procesorskih arhitektura i operativnih sistema je obiman posao koji je često morao biti ponovljan za svaki novi programski jezik ili novu implementaciju postojecih jezika.
+U poslednjih nekoliko godina prisustvovali smo povećanom interesovanju za dizajniranje novih jezika, pa ga tako Rust, Swift i Julia koriste u svojoj implementaciji.
+Takođe je postojanje LLVM-a dovelo do pravljenja novih implemendacija postojećih jezika kao što je pre svega Clang projekat koji implementira C, C++ i Objective C komplajlere.
+
+U poređenju sa generisanjem koda, parsiranje predstavlja manji izazov.
+Sve jedno u zavisnosti od potreba i preferenci, treba odabrati odgovarajući projekat koji će taj proces olakšati.
+Jedan od ciljeva koji sam želeo da ostvarim u procesu parsiranja jeste izbegavanje mešanja gramatike i C koda u istom fajlu.
+Iako ANTLR omogućava ovakav način rada, uz AST gramatku bilo je moguće skoro potpuno izbeći mešanje.
+Jedina mesta gde su upotrebljeni C izrazi su pozivanje \code{SKIP()} funkcije za ignorisanje sadržaja komentara i uklanjanje jednostrukih znakova navoda iz vrednosti neterminala za \code{char} literal.
+Drugi način na koji bi bilo moguće izbegnuti mešanje više jezika, jeste pristup koji imaju PEG parseri, gde se celokupan parser definiše pozivanjem odgovarajućih funkcija definisanih u parserskoj biblioteci.
+
+Postoji još dosta mogućnosti LLVM-a koje u ovom projektu nisu iskorišćene.
+Moguće je umetati anotacije u bajt kod i koristiti ih za čuvanje podataka o izvornom kodu iz kojeg je program generisan.
+Na osnovu anotacija moguće je realizovati profilisanje programa, izvršavanje programa instrukciju po instrukciju i slično.
